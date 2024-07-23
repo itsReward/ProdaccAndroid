@@ -35,13 +35,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             ProdaccTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize().systemBarsPadding()
-                        .padding(start = 10.dp, end = 10.dp),
-                    color = BabyPowder
-                ) {
-                    LogInScreen()
-                }
+                LogInScreen()
+
             }
         }
     }
