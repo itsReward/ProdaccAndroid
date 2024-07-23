@@ -1,4 +1,4 @@
-package com.example.prodacc.ui.theme
+package com.example.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -15,3 +15,7 @@ val Blue50 = Color(0xFFE3F2FD)
 val ElectricBlue = Color(0xFF77F4F5)
 
 val BabyPowder = Color(0xFFFDFFFC)
+val White = Color(0xFFFFFFFF)
+val Black = Color(0xFF000000)
+val DarkGrey = Color(0xFF333333)
+val Grey = Color(0xFF999999)
