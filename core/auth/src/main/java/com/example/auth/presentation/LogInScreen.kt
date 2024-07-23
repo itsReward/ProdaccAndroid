@@ -9,13 +9,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,14 +36,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role.Companion.Button
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.auth.R
+import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
+import com.example.designsystem.theme.DarkGrey
+import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.White
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogInScreen(
     viewModel: LogInViewModel = LogInViewModel(),
@@ -55,26 +70,61 @@ fun LogInScreen(
                 .background(Color.Blue)
                 .weight(1.5f)
                 .fillMaxWidth()
-                .systemBarsPadding(),
+                .systemBarsPadding()
+                .padding(top = 100.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ){
-            
-            Text(text = "Welcome", fontWeight = FontWeight.SemiBold, fontSize = 30.sp)
+            Image(
+                painter = painterResource(com.example.designsystem.R.drawable.prodacc_logo),
+                contentDescription = "logo",
+                modifier = Modifier.width(200.dp)
+            )
+
         }
+
         Column(
-            modifier = Modifier.weight(2.5f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .weight(2.5f)
+                .padding(start = 20.dp, end = 20.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
         ) {
 
+            Text(
+                text = "Welcome, Log in",
+                fontWeight = FontWeight.Bold,
+                fontSize = 30.sp,
+                color = BlueA700,
+                modifier = Modifier.padding(start = 5.dp, top = 35.dp, bottom = 25.dp)
+            )
 
+            TextField(
+                value = username,
+                onValueChange = { username = it },
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 5.dp),
+                label = { Text("username") },
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.Transparent,
+                )
+            )
 
-            OutlinedTextField(value = username, onValueChange = { username = it }, shape = RoundedCornerShape(50.dp),
-                modifier = Modifier.fillMaxWidth())
-            Spacer(modifier = Modifier.height(30.dp))
-            OutlinedTextField(value = password, onValueChange = { password = it }, shape = RoundedCornerShape(50.dp),
-                modifier = Modifier.fillMaxWidth())
+            TextField(
+                value = password,
+                onValueChange = { password = it },
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 5.dp),
+                label = { Text("password") },
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.Transparent,
+                )
+            )
+            Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {  },
                 colors = ButtonDefaults.buttonColors(
@@ -87,6 +137,28 @@ fun LogInScreen(
             ) {
                 Text(text = "LogIn")
             }
+
+            Text(
+                text = "If you do not have an account, consult the system administrator",
+                fontWeight = FontWeight.Normal,
+                fontStyle = FontStyle.Italic,
+                fontSize = 16.sp,
+                color = DarkGrey,
+                modifier = Modifier.padding(start = 5.dp ,top = 25.dp, bottom = 25.dp),
+                textAlign = TextAlign.Center
+            )
+
+
+        }
+        Column(
+            modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                textAlign = TextAlign.Center,
+                text = "Version 1.0 created with ❤ by Render Creative",
+                color = Grey,
+            )
         }
 
     }
