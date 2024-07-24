@@ -1,6 +1,6 @@
 package com.example.auth.presentation
 
-import android.widget.Button
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,19 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,36 +30,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.auth.R
-import com.example.designsystem.theme.Blue50
+import androidx.navigation.NavController
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.White
+import com.example.navigation.Route
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogInScreen(
-    viewModel: LogInViewModel = LogInViewModel(),
-){
+    navController: NavController
+) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
 
-    ){
-        Column (
+    ) {
+        Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(bottomEnd = 50.dp, bottomStart = 50.dp))
                 .background(Color.Blue)
@@ -74,7 +66,7 @@ fun LogInScreen(
                 .padding(top = 100.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
-        ){
+        ) {
             Image(
                 painter = painterResource(com.example.designsystem.R.drawable.prodacc_logo),
                 contentDescription = "logo",
@@ -126,10 +118,15 @@ fun LogInScreen(
             )
             Spacer(modifier = Modifier.height(20.dp))
             Button(
-                onClick = {  },
+                onClick = {
+                    try {
+                        navController.navigate(Route.JobCards.path)
+                    } catch (e: Exception) {
+                        Log.e("Navigation", "Error navigating to JobCards: ${e.message}")
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = BlueA700,
-                    contentColor = White
+                    containerColor = BlueA700, contentColor = White
                 ),
                 enabled = true,
                 shape = RoundedCornerShape(50.dp),
@@ -144,14 +141,16 @@ fun LogInScreen(
                 fontStyle = FontStyle.Italic,
                 fontSize = 16.sp,
                 color = DarkGrey,
-                modifier = Modifier.padding(start = 5.dp ,top = 25.dp, bottom = 25.dp),
+                modifier = Modifier.padding(start = 5.dp, top = 25.dp, bottom = 25.dp),
                 textAlign = TextAlign.Center
             )
 
 
         }
         Column(
-            modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(

@@ -28,6 +28,10 @@ android {
 
 dependencies {
     implementation(project(":core:designsystem"))
+    implementation(project(":core:navigation"))
+
+
+    implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
     val composeBom = platform("androidx.compose:compose-bom:2023.05.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)

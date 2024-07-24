@@ -34,11 +34,13 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             ProdaccTheme {
-                // A surface container using the 'background' color from the theme
-                LogInScreen()
+
+                AppNavigation()
 
             }
         }
     }
 }
+
+
 

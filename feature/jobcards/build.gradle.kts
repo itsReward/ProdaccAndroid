@@ -41,14 +41,21 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:navigation"))
+    implementation(project(":core:designsystem"))
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.compose.ui:ui:1.6.8")
 
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui:1.6.8")
+
     implementation("com.google.dagger:hilt-android:2.51")
+    implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
     kapt("com.google.dagger:hilt-android-compiler:2.51")
+
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
