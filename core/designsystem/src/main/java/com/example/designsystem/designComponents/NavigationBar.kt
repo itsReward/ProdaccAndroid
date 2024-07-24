@@ -48,7 +48,7 @@ fun navigationBar(navController : NavController ){
                     }
                           } ,
                 icon = { navigationBarItemIcon(item = item) },
-                alwaysShowLabel = false
+                alwaysShowLabel = true
             )
         }
     }

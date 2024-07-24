@@ -1,9 +1,9 @@
 package com.example.navigation
 
 sealed class Route(val path: String) {
-    object LogIn: Route("login")
-    object JobCards: Route("jobcards")
-    object Vehicles: Route("vehicles")
-    object Clients: Route("clients")
-    object Employees: Route("employees")
+    data object LogIn: Route("login")
+    data object JobCards: Route("jobcards")
+    data object Vehicles: Route("vehicles")
+    data object Clients: Route("clients")
+    data object Employees: Route("employees")
 }

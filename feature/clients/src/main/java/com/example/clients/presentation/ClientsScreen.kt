@@ -1,5 +1,6 @@
 package com.example.clients.presentation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,7 +13,7 @@ fun ClientsScreen( navController : NavController){
 
     Scaffold(
         bottomBar = { navigationBar(navController) }
-    ) {
-        Text(text = "clientsScreen")
+    ) {innerPadding ->
+        Text(text = "Clients", modifier = androidx.compose.ui.Modifier.padding(innerPadding))
     }
 }

@@ -1,5 +1,6 @@
 package com.example.employees.presentation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,7 +12,9 @@ import com.example.designsystem.designComponents.navigationBar
 fun EmployeesScreen(navController : NavController){
     Scaffold(
         bottomBar = { navigationBar(navController) }
-    ){
-        Text("Employees Screen")
+    ){innerPadding ->
+        Text(text = "Employees", modifier = androidx.compose.ui.Modifier.padding(innerPadding))
+
+
     }
 }
