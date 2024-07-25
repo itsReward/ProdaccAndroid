@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
+    //id("com.google.devtools.ksp") version "1.9.10-1.0.13"
 }
 
 android {
@@ -56,10 +57,7 @@ dependencies {
     implementation(project(":core:auth"))
     implementation(project(":core:navigation"))
     implementation(project(":core:designsystem"))
-    implementation(project(":feature:jobcards"))
-    implementation(project(":feature:vehicles"))
-    implementation(project(":feature:clients"))
-    implementation(project(":feature:employees"))
+    implementation(project(":core:database"))
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
@@ -79,6 +77,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
 
 
 }
