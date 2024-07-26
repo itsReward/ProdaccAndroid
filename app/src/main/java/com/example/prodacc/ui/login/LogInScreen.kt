@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.designsystem.designComponents.PasswordTextField
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
@@ -102,19 +103,10 @@ fun LogInScreen(
                     unfocusedIndicatorColor = Color.Transparent,
                 )
             )
+            
 
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 5.dp),
-                label = { Text("password") },
-                colors = TextFieldDefaults.colors(
-                    unfocusedIndicatorColor = Color.Transparent,
-                )
-            )
+            PasswordTextField(password = "") { }
+
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {

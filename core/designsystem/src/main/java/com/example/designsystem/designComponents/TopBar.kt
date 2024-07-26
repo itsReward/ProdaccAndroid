@@ -1,10 +1,13 @@
 package com.example.designsystem.designComponents
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
@@ -30,15 +33,12 @@ import com.example.designsystem.theme.Grey
 @Composable
 fun TopBar(title: String) {
     Column(
-        modifier = Modifier
-            .systemBarsPadding()
-            .padding(start = 10.dp, end = 10.dp)
+        modifier = Modifier.statusBarsPadding().padding(bottom = 10.dp)
     ) {
         TopAppBar(
             title = {
                 if (title != "Job Cards") Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineLarge
+                    text = title, style = MaterialTheme.typography.headlineLarge
                 ) else {
                     Image(
                         painter = painterResource(com.example.designsystem.R.drawable.prodacc_word),
@@ -48,37 +48,24 @@ fun TopBar(title: String) {
                     )
                 }
             },
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier
+                .padding(horizontal = 10.dp),
             actions = {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "More",
                     modifier = Modifier.size(30.dp)
                 )
-            },
-            //navigationIcon = {Icon(imageVector = Icons.Default.Menu, contentDescription = "Drawer", modifier = Modifier.size(30.dp))}
-
+            }
         )
         SearchBar(
-            query = "",
-            onQueryChange = {},
-            onSearch = {},
-            active = true,
-            onActiveChange = {},
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.Search,
-                    contentDescription = "search",
-                    tint = Grey
-                )
-            },
-            placeholder = { Text("Search") },
+            query = "", onQueryChange = {}, onSearch = {},
             modifier = Modifier
-                .clip(RoundedCornerShape(50.dp))
-                .wrapContentSize()
-                .height(60.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            placeHolder = "Search $title"
+        )
 
-        ) {}
 
     }
 

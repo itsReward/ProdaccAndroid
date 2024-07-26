@@ -1,8 +1,13 @@
 package com.example.designsystem.designComponents
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.People
@@ -73,7 +78,11 @@ fun NavigationBar(navController : NavController ){
             NavigationBarItem(
                 selected = selectedItem == index,
                 label = {
-
+                    AnimatedVisibility(
+                        visible = selectedItem == index,
+                        enter = fadeIn() + slideInVertically(),
+                        exit = fadeOut() + slideOutVertically()
+                    ) {
                         Text(
                             text = item,
                             fontWeight = if (selectedItem == index) {
@@ -87,6 +96,8 @@ fun NavigationBar(navController : NavController ){
                                 androidx.compose.material3.MaterialTheme.typography.labelSmall.fontSize
                             }
                         )
+                    }
+
 
 
                         },
@@ -94,21 +105,21 @@ fun NavigationBar(navController : NavController ){
                     selectedItem = index
                     when(item){
                         "Job Cards" -> {
-                            navController.navigate(Route.JobCards.path)
+                            navController.navigate(Route.JobCards.path){ popUpTo(Route.LogIn.path){inclusive = true} }
                         }
                         "Vehicles" -> {
-                            navController.navigate(Route.Vehicles.path)
+                            navController.navigate(Route.Vehicles.path){popUpTo(Route.JobCards.path) }
                         }
                         "Clients" -> {
-                            navController.navigate(Route.Clients.path)
+                            navController.navigate(Route.Clients.path){popUpTo(Route.JobCards.path) }
                         }
                         "Employees" -> {
-                            navController.navigate(Route.Employees.path)
+                            navController.navigate(Route.Employees.path){popUpTo(Route.JobCards.path) }
                         }
                     }
                 } ,
                 icon = { NavigationBarItemIcon(item = item, Modifier.scale(scale)) },
-                alwaysShowLabel = true,
+                alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
                     indicatorColor = Blue50,
                     unselectedIconColor = Grey,
