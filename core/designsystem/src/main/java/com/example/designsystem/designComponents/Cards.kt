@@ -153,7 +153,7 @@ fun JobStatusFilters() {
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, bottom = 5.dp)
+            .padding(start = 20.dp, bottom = 5.dp, end = 20.dp)
     ) {
 
         item {
