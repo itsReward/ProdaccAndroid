@@ -12,13 +12,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.designsystem.designComponents.EmployeeCategorisedList
 import com.example.designsystem.designComponents.NavigationBar
 import com.example.designsystem.designComponents.TopBar
 
 
 @Composable
 fun EmployeesScreen(navController : NavController){
+    val viewModel = EmployeesViewModel()
+
     Scaffold(
         topBar = { TopBar("Employees") },
         bottomBar = { NavigationBar(navController) },
@@ -31,9 +35,8 @@ fun EmployeesScreen(navController : NavController){
             }
         }
     ){innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            //Your content goes here
-            Text(text = "Employees")
+        Box(modifier = Modifier.padding(innerPadding).padding(horizontal = 10.dp)) {
+            EmployeeCategorisedList(categories = viewModel.employees)
         }
 
 

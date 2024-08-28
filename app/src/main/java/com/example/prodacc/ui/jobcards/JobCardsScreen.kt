@@ -1,12 +1,13 @@
 package com.example.prodacc.ui.jobcards
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -22,18 +23,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
+import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.JobStatusFilters
 import com.example.designsystem.designComponents.LargeJobCard
 import com.example.designsystem.designComponents.NavigationBar
-import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.SectionHeading
 import com.example.designsystem.designComponents.TopBar
+import com.example.designsystem.theme.DarkGrey
+import com.example.navigation.Route
 
 @Composable
 fun JobCardsScreen(
     navController: NavController
 ) {
     val scroll = rememberScrollState()
+    val viewModel = JobCardViewModel()
 
     Scaffold(
         topBar = { TopBar("Job Cards") },
@@ -49,14 +53,16 @@ fun JobCardsScreen(
         }
     ) { innerPadding ->
 
-        Column(modifier = Modifier
-            .padding(innerPadding)
-            .verticalScroll(scroll)) {
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .verticalScroll(scroll)
+        ) {
             SectionHeading(
                 text = "Today's Jobs",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 25.dp, top = 20.dp),
+                    .padding(start = 25.dp, top = 10.dp),
                 textAlign = TextAlign.Start
             )
 
@@ -71,34 +77,11 @@ fun JobCardsScreen(
                     .padding(horizontal = 20.dp)
             ) {
 
-                item {
+                items(viewModel.jobCards) { jobCard ->
                     LargeJobCard(
-                        jobCardName = "Mr Khumalo's W204",
-                        onClick = {}
-                    )
-                }
-                item {
-                    LargeJobCard(
-                        jobCardName = "Mr Khumalo's W204",
-                        onClick = {}
-                    )
-                }
-                item {
-                    LargeJobCard(
-                        jobCardName = "Mr Khumalo's W204",
-                        onClick = {}
-                    )
-                }
-                item {
-                    LargeJobCard(
-                        jobCardName = "Mr Khumalo's W204",
-                        onClick = {}
-                    )
-                }
-                item {
-                    LargeJobCard(
-                        jobCardName = "Mr Khumalo's W204",
-                        onClick = {}
+                        jobCardName = jobCard.jobCardName.substringAfter(" ",  " "),
+                        onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", jobCard.id.toString())) },
+                        jobCardDeadline = jobCard.jobCardDeadline
                     )
                 }
 
@@ -112,26 +95,18 @@ fun JobCardsScreen(
             )
 
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                //verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .sizeIn(maxHeight = 2000.dp)
                     .padding(horizontal = 20.dp)
             ) {
-                item {
-                    AllJobCardListItem(jobCardName = "Mr Moyo's Grand Cherokee", closedDate = "12:41 21 Jan 2024")
-                }
-                item {
-                    AllJobCardListItem(jobCardName = "Mr Moyo's Grand Cherokee", closedDate = "12:41 21 Jan 2024")
-                }
-                item {
-                    AllJobCardListItem(jobCardName = "Mr Moyo's Grand Cherokee", closedDate = "12:41 21 Jan 2024")
-                }
-                item {
-                    AllJobCardListItem(jobCardName = "Mr Moyo's Grand Cherokee", closedDate = "12:41 21 Jan 2024")
-                }
-                item {
-                    AllJobCardListItem(jobCardName = "Mr Moyo's Grand Cherokee", closedDate = "12:41 21 Jan 2024")
+                items(viewModel.pastJobCards) {
+                    AllJobCardListItem(
+                        jobCardName = it.jobCardName,
+                        closedDate = it.dateAndTimeClosed,
+                        onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", it.id.toString())) },
+                    )
                 }
             }
 

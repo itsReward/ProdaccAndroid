@@ -3,6 +3,7 @@ package com.example.designsystem.designComponents
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,11 +57,14 @@ import com.example.designsystem.theme.LightGreen
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.LightOrange
 import com.example.designsystem.theme.Red
+import com.example.designsystem.theme.generateRandomColor
+import java.time.LocalDateTime
 
 @Composable
 fun LargeJobCard(
     onClick: () -> Unit,
-    jobCardName: String
+    jobCardName: String,
+    jobCardDeadline: LocalDateTime
 ) {
     Card(
         onClick = onClick,
@@ -83,8 +87,8 @@ fun LargeJobCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                LargeJobCardName(name = jobCardName)
-                JobCardBodyText(text = "Due: 12:09 Today")
+                LargeTitleText(name = jobCardName)
+                BodyText(text = "Due: ${jobCardDeadline.dayOfWeek} ${jobCardDeadline.hour}:${jobCardDeadline.minute}")
 
 
             }
@@ -92,7 +96,7 @@ fun LargeJobCard(
             Row(
                 modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
             ) {
-                JobCardBodyText(text = "Check the breaks, Check the tires, Steering need attention \nPerform major service")
+                BodyText(text = "Check the breaks, Check the tires, Steering need attention \nPerform major service")
             }
 
             Row(
@@ -100,7 +104,7 @@ fun LargeJobCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                EmployeeAvatar(initials = "AT", color = DarkGrey, modifier = Modifier.weight(2f))
+                EmployeeAvatar(initials = "AT", modifier = Modifier.weight(2f))
                 LinearProgressIndicator(progress = { 3f / 5f }, modifier = Modifier.weight(2f))
             }
 
@@ -113,7 +117,11 @@ fun LargeJobCard(
 
 
 @Composable
-fun EmployeeAvatar(initials: String, color: Color, modifier: Modifier = Modifier) {
+fun EmployeeAvatar(initials: String, modifier: Modifier = Modifier) {
+    val color by remember {
+        mutableStateOf(generateRandomColor())
+    }
+
     Row(modifier = modifier) {
 
 
@@ -121,17 +129,19 @@ fun EmployeeAvatar(initials: String, color: Color, modifier: Modifier = Modifier
             modifier = Modifier
                 .clip(CircleShape)
                 .size(40.dp)
-                .background(Color.White)
-                .border(1.dp, LightGrey, CircleShape),
+                .background(color)
+                //.border(1.dp, LightGrey, CircleShape)
+            ,
             contentAlignment = Alignment.Center
         ) {
-            Image(
+            /*Image(
                 painter = painterResource(id = R.drawable.profile_avatar),
                 contentDescription = "Profile Icon",
                 colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(LightGrey),
                 modifier = Modifier.size(20.dp)
 
-            )
+            )*/
+            Text(text = initials, color = Color.White)
 
         }
     }
@@ -455,7 +465,11 @@ fun HistorySection(
                 .padding(end = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = sectionIcon, contentDescription = "History", modifier = Modifier.padding(end = 5.dp))
+            Icon(
+                imageVector = sectionIcon,
+                contentDescription = "History",
+                modifier = Modifier.padding(end = 5.dp)
+            )
             Text(
                 text = heading,
                 style = MaterialTheme.typography.titleMedium,
@@ -488,11 +502,13 @@ fun HistorySection(
 
 @Composable
 fun AllJobCardListItem(
-    jobCardName: String, closedDate: String
-){
-    Row (
-        modifier = Modifier.clip(RoundedCornerShape(10.dp))
-            .background(Blue50)
+    jobCardName: String, closedDate: LocalDateTime?,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            //.background(Blue50)
             .fillMaxWidth()
             .drawWithContent {
                 drawContent()
@@ -503,18 +519,17 @@ fun AllJobCardListItem(
                     strokeWidth = 1.5.dp.toPx()
                 )
             }
-
-            .padding(vertical = 20.dp, horizontal = 20.dp)
-            ,
+            .clickable(onClick = onClick)
+            .padding(vertical = 20.dp, horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
-    ){
+    ) {
         Text(
             text = jobCardName,
             style = MaterialTheme.typography.titleMedium
         )
         Text(
-            text = "Closed: $closedDate",
+            text = "Closed: ${if (closedDate != null) {"${closedDate.dayOfWeek} ${closedDate.month} ${closedDate.hour}:${closedDate.minute}"} else { "null" }} ",
             style = MaterialTheme.typography.bodyMedium
         )
     }

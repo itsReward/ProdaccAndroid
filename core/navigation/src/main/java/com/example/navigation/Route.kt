@@ -6,4 +6,7 @@ sealed class Route(val path: String) {
     data object Vehicles: Route("vehicles")
     data object Clients: Route("clients")
     data object Employees: Route("employees")
+
+    data object VehicleDetails: Route("vehicle_details/{vehicleId}")
+    data object JobCardDetails: Route("job_card/{jobCardId}")
 }

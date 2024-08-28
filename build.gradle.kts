@@ -9,6 +9,6 @@ plugins {
 }
 buildscript {
     dependencies {
-        classpath("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.0.0-1.0.23")
+        classpath("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:1.9.0-1.0.13")
     }
 }

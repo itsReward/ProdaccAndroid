@@ -1,6 +1,7 @@
 package com.example.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
+import kotlin.random.Random
 
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
@@ -35,3 +36,12 @@ val DarkRed = Color(0xFF8B0000)
 val Green = Color(0xFF00FF00)
 val LightGreen = Color(0xFF90EE90)
 val DarkGreen = Color(0xFF008000)
+
+
+fun generateRandomColor(): Color {
+    val random = Random.Default
+    val red = random.nextInt(256)
+    val green = random.nextInt(256)
+    val blue = random.nextInt(256)
+    return Color(red, green, blue, 255)
+}

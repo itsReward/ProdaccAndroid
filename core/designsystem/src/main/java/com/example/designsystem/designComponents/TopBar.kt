@@ -62,7 +62,7 @@ fun TopBar(title: String) {
             query = "", onQueryChange = {}, onSearch = {},
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 10.dp),
             placeHolder = "Search $title"
         )
 
