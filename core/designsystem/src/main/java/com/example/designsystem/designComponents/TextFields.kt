@@ -1,6 +1,7 @@
 package com.example.designsystem.designComponents
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -21,9 +23,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.designsystem.theme.DarkGrey
+import com.example.designsystem.theme.LightGrey
 
 @Composable
 fun PasswordTextField(
@@ -74,3 +79,28 @@ fun DisabledTextField(
         BodyText(text = " $text")
     }
 }
+@Composable
+fun DisplayTextField(
+    icon: ImageVector,
+    label: String,
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(imageVector = icon, contentDescription = "Icon", tint = DarkGrey)
+        Column (
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(text = text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 0.dp))
+            Text(text = label, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 0.dp))
+
+        }
+
+    }
+}
+

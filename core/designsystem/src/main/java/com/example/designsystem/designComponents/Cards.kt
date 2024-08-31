@@ -1,8 +1,6 @@
 package com.example.designsystem.designComponents
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,11 +39,12 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.example.designsystem.R
+import androidx.compose.ui.unit.sp
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGreen
@@ -104,7 +103,7 @@ fun LargeJobCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                EmployeeAvatar(initials = "AT", modifier = Modifier.weight(2f))
+                ProfileAvatar(initials = "AT", modifier = Modifier.weight(2f))
                 LinearProgressIndicator(progress = { 3f / 5f }, modifier = Modifier.weight(2f))
             }
 
@@ -117,7 +116,7 @@ fun LargeJobCard(
 
 
 @Composable
-fun EmployeeAvatar(initials: String, modifier: Modifier = Modifier) {
+fun ProfileAvatar(initials: String, modifier: Modifier = Modifier, size: Dp = 40.dp, textSize: TextUnit = 12.sp ) {
     val color by remember {
         mutableStateOf(generateRandomColor())
     }
@@ -128,7 +127,7 @@ fun EmployeeAvatar(initials: String, modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .size(40.dp)
+                .size(size)
                 .background(color)
                 //.border(1.dp, LightGrey, CircleShape)
             ,
@@ -141,7 +140,7 @@ fun EmployeeAvatar(initials: String, modifier: Modifier = Modifier) {
                 modifier = Modifier.size(20.dp)
 
             )*/
-            Text(text = initials, color = Color.White)
+            Text(text = initials, color = Color.White, fontSize = textSize)
 
         }
     }

@@ -1,6 +1,10 @@
 package com.example.designsystem.theme
 
 import android.app.Activity
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Business
+import androidx.compose.material.icons.outlined.Work
+import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -66,3 +70,6 @@ fun ProdaccTheme(
         content = content
     )
 }
+
+val workIcon = Icons.Outlined.WorkOutline
+val companyIcon = Icons.Outlined.Business

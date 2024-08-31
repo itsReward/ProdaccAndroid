@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.Text
 import com.example.designsystem.theme.DarkGrey
-import com.example.designsystem.theme.generateRandomColor
 import com.prodacc.data.remote.dao.Employee
 
 
@@ -36,7 +35,7 @@ fun EmployeeListCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ){
-            EmployeeAvatar(initials = "${employee.employeeName.first()}${employee.employeeSurname.first()}")
+            ProfileAvatar(initials = "${employee.employeeName.first()}${employee.employeeSurname.first()}")
             BodyText(text = "${employee.employeeName} ${employee.employeeSurname}")
         }
         Text(text = "${employee.rating}", color = DarkGrey)

@@ -40,7 +40,7 @@ fun ClientsScreen( navController : NavController){
         Column(
             modifier = Modifier.padding(innerPadding).padding(horizontal = 10.dp)
         ) {
-            CategorisedList(categories = clients )
+            CategorisedList(categories = clients, navController = navController)
         }
 
     }

@@ -1,6 +1,7 @@
 package com.example.designsystem.designComponents
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,20 +36,25 @@ fun LargeTitleText(name: String, color: Color = DarkGrey){
 }
 
 @Composable
-fun MediumTitleText(name: String){
-    Text(
-        text = name,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
-        color = DarkGrey
-    )
+fun MediumTitleText(name: String, modifier: Modifier = Modifier){
+    Row (
+        modifier = modifier
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = DarkGrey
+        )
+    }
+
 }
 
 @Composable
 fun BodyText(text: String, modifier: Modifier = Modifier){
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium,
+        style = MaterialTheme.typography.bodyLarge,
         color = DarkGrey,
         modifier = Modifier
     )

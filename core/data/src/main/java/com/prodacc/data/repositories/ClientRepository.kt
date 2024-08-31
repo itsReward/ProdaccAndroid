@@ -1,6 +1,7 @@
 package com.prodacc.data.repositories
 
 import com.prodacc.data.remote.dao.Client
+import com.prodacc.data.remote.dao.ClientVehicle
 import java.util.UUID
 
 class ClientRepository {
@@ -160,6 +161,29 @@ class ClientRepository {
         "tsitsi.mupfurume@binduranickel.co.zw",
         "tauranai.chinyanga@africansunhotels.co.zw"
     )
+    val mercedesModels = listOf(
+        "A-Class",
+        "B-Class",
+        "C-Class",
+        "E-Class",
+        "S-Class",
+        "CLA",
+        "CLS",
+        "GLA",
+        "GLB",
+        "GLC",
+        "GLE",
+        "GLS",
+        "G-Class",
+        "SL",
+        "SLC",
+        "AMG GT",
+        "EQC",
+        "EQS",
+        "EQB",
+        "EQE"
+    )
+
 
 
 
@@ -181,7 +205,16 @@ class ClientRepository {
                 phone = phoneNumbers.random(),
                 email = emailAddresses.random(),
                 address = homeAddresses.random(),
-                vehicle = listOf()
+                vehicle = generateVehiclesForClient(5)
+            )
+        }
+    }
+    private fun generateVehiclesForClient(size: Int = 2):List<ClientVehicle>{
+        return List(size){
+            ClientVehicle(
+                id = UUID.randomUUID(),
+                model = mercedesModels.random(),
+                make = "Mercedes Benz"
             )
         }
     }
