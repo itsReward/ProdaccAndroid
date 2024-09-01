@@ -11,20 +11,23 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.Text
-import com.example.designsystem.theme.Blue50
+import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGrey
-import com.example.navigation.Route
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.ClientVehicle
 
@@ -73,10 +76,7 @@ fun CategorisedList(
                     client = client,
                     onClick = {
                         navController.navigate(
-                            Route.ClientDetails.path.replace(
-                                "{clientId}",
-                                client.id.toString()
-                            )
+                            "client_details/${client.id}"
                         )
                     }
                 )
@@ -115,7 +115,9 @@ fun ClientVehicleRow(
 ){
     Row (
         modifier = Modifier
-            .wrapContentSize().clip(RoundedCornerShape(5.dp)).background(Blue50)
+            .wrapContentSize()
+            .clip(RoundedCornerShape(5.dp))
+            .background(CardGrey)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 20.dp)
 
@@ -128,4 +130,30 @@ data class ListCategory(
     val name: String,
     val items: List<Client>
 )
+
+@Composable
+fun EditTextFieldRow(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+){
+    Row (
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        Icon(imageVector = icon, contentDescription = "Icon", tint = DarkGrey)
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(text = label, color = DarkGrey)},
+            maxLines = 1,
+        )
+        androidx.compose.material3.IconButton(onClick = {}) {
+            Icon(imageVector = Icons.Default.Close, contentDescription = "Clear Field", tint = DarkGrey)
+        }
+    }
+}
 

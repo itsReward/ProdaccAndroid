@@ -1,7 +1,6 @@
 package com.example.prodacc.ui.vehicles.viewModels
 
 import androidx.compose.runtime.mutableStateOf
-import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.VehicleRepository
@@ -14,7 +13,7 @@ class VehicleDetailsViewModel(
 ) {
     val vehicle = vehicleRepository.getVehicleById(vehicleId)
     val vehicleJobCards = jobCardRepository.generateJobCards(20)
-    val clientList = clientsRepository.getClients()
+    val clientList = clientsRepository.getClientsList()
 
 
     val editVehicle = mutableStateOf(false)

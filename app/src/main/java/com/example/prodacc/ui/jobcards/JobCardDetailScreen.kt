@@ -2,7 +2,6 @@ package com.example.prodacc.ui.jobcards
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,7 +36,7 @@ import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.StepIndicator
 import com.example.designsystem.designComponents.TopBar
-import com.example.designsystem.theme.Blue50
+import com.example.designsystem.theme.CardGrey
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 
 
@@ -82,7 +81,7 @@ fun JobCardDetailScreen(
                     Row (
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Blue50)
+                            .background(CardGrey)
                             .height(2.dp)
                     ){
 
@@ -144,7 +143,7 @@ fun JobCardDetailScreen(
                         .clip(
                             RoundedCornerShape(20.dp)
                         )
-                        .background(Blue50)
+                        .background(CardGrey)
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
 

@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.designsystem.theme.Blue50
+import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
@@ -72,7 +72,7 @@ fun LargeJobCard(
             .fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Blue50
+            containerColor = CardGrey
         )
     ) {
         Column(

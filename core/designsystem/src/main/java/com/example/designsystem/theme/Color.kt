@@ -13,7 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 
 val BlueA700 = Color(0xFF2962FF)
 val Blue50 = Color(0xFFE3F2FD)
-val ElectricBlue = Color(0xFF77F4F5)
+val ElectricBlue = Color(0xFFB3B3B3)
 val DarkBlue = Color(0xFF6E8BD8)
 
 val BabyPowder = Color(0xFFFDFFFC)
@@ -22,7 +22,7 @@ val Black = Color(0xFF000000)
 val DarkGrey = Color(0xFF333333)
 val Grey = Color(0xFF818181)
 val LightGrey = Color(0xFFE6E6E6)
-
+val CardGrey = Color(0xFFF3F3F3)
 
 val Orange = Color(0xFFFFA500)
 val LightOrange = Color(0xFFFFD700)

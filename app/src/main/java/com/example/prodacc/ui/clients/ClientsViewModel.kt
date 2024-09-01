@@ -7,7 +7,7 @@ import com.prodacc.data.repositories.ClientRepository
 class ClientsViewModel(
     private val clientRepository: ClientRepository = ClientRepository()
 ) : ViewModel() {
-    private val _clients = mutableStateOf(clientRepository.getClients())
+    private val _clients = mutableStateOf(clientRepository.getClientsList())
     val clients = _clients.value.groupBy { it.clientName.first() }.toSortedMap()
 
 }

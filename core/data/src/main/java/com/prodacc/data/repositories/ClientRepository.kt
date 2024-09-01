@@ -186,11 +186,18 @@ class ClientRepository {
 
 
 
-
-    fun getClients() = generateClients(20)
-    fun getClient(id : UUID): Client{
-        return generateClients(1).random()
+    private val clients: List<Client> by lazy {
+        generateClients(20)
     }
+
+    fun getClientsList(): List<Client> {
+        return clients
+    }
+
+    fun getClient(id: UUID): Client {
+        return clients.last()
+    }
+
 
 
     private fun generateClients(i: Int): List<Client> {

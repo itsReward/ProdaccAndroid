@@ -1,6 +1,5 @@
 package com.example.prodacc.ui.jobcards
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,11 +25,10 @@ import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.JobStatusFilters
 import com.example.designsystem.designComponents.LargeJobCard
-import com.example.designsystem.designComponents.NavigationBar
+import com.example.prodacc.navigation.NavigationBar
 import com.example.designsystem.designComponents.SectionHeading
 import com.example.designsystem.designComponents.TopBar
-import com.example.designsystem.theme.DarkGrey
-import com.example.navigation.Route
+import com.example.prodacc.navigation.Route
 
 @Composable
 fun JobCardsScreen(

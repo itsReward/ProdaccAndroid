@@ -17,12 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.designsystem.designComponents.NavigationBar
+import com.example.prodacc.navigation.NavigationBar
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.designComponents.VehicleStatusFilters
 import com.example.designsystem.designComponents.VehiclesList
 import com.example.designsystem.theme.LightGrey
-import com.example.navigation.Route
+import com.example.prodacc.navigation.Route
 
 @Composable
 fun VehiclesScreen(

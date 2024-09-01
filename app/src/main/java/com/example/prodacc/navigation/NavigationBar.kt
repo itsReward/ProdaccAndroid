@@ -1,4 +1,4 @@
-package com.example.designsystem.designComponents
+package com.example.prodacc.navigation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -8,10 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -27,12 +23,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.wear.compose.navigation.currentBackStackEntryAsState
-import com.example.designsystem.theme.Blue50
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkBlue
 import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGrey
-import com.example.navigation.Route
+import com.example.designsystem.theme.car
+import com.example.designsystem.theme.people
+import com.example.designsystem.theme.work
 
 
 @Composable
@@ -41,10 +39,10 @@ fun NavigationBar(navController : NavController ){
     val currentRoute = navBackStackEntry?.destination?.route
 
     var selectedItem = when (currentRoute) {
-        Route.JobCards.path -> 0
-        Route.Vehicles.path -> 1
-        Route.Clients.path -> 2
-        Route.Employees.path -> 3
+        com.example.prodacc.navigation.Route.JobCards.path -> 0
+        com.example.prodacc.navigation.Route.Vehicles.path -> 1
+        com.example.prodacc.navigation.Route.Clients.path -> 2
+        com.example.prodacc.navigation.Route.Employees.path -> 3
         else -> 0 // Default to Job Cards
     }
 
@@ -105,23 +103,27 @@ fun NavigationBar(navController : NavController ){
                     selectedItem = index
                     when(item){
                         "Job Cards" -> {
-                            navController.navigate(Route.JobCards.path){ popUpTo(Route.LogIn.path){inclusive = true} }
+                            navController.navigate(com.example.prodacc.navigation.Route.JobCards.path){ popUpTo(
+                                com.example.prodacc.navigation.Route.LogIn.path){inclusive = true} }
                         }
                         "Vehicles" -> {
-                            navController.navigate(Route.Vehicles.path){popUpTo(Route.JobCards.path) }
+                            navController.navigate(com.example.prodacc.navigation.Route.Vehicles.path){popUpTo(
+                                com.example.prodacc.navigation.Route.JobCards.path) }
                         }
                         "Clients" -> {
-                            navController.navigate(Route.Clients.path){popUpTo(Route.JobCards.path) }
+                            navController.navigate(com.example.prodacc.navigation.Route.Clients.path){popUpTo(
+                                com.example.prodacc.navigation.Route.JobCards.path) }
                         }
                         "Employees" -> {
-                            navController.navigate(Route.Employees.path){popUpTo(Route.JobCards.path) }
+                            navController.navigate(com.example.prodacc.navigation.Route.Employees.path){popUpTo(
+                                com.example.prodacc.navigation.Route.JobCards.path) }
                         }
                     }
                 } ,
                 icon = { NavigationBarItemIcon(item = item, Modifier.scale(scale)) },
                 alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Blue50,
+                    indicatorColor = CardGrey,
                     unselectedIconColor = Grey,
                     unselectedTextColor = Grey,
                     selectedIconColor = DarkBlue,
@@ -136,16 +138,16 @@ fun NavigationBar(navController : NavController ){
 fun NavigationBarItemIcon(item: String, modifier: Modifier) {
     return when(item){
         "Job Cards" -> {
-            Icon(imageVector = Icons.Default.Work, contentDescription = "JobCards", modifier = modifier )
+            Icon(imageVector = work, contentDescription = "JobCards", modifier = modifier )
         }
         "Vehicles" -> {
-            Icon(imageVector = Icons.Default.DirectionsCar, contentDescription = "Vehicles", modifier = modifier )
+            Icon(imageVector = car, contentDescription = "Vehicles", modifier = modifier )
         }
         "Clients" -> {
-            Icon(imageVector = Icons.Default.People, contentDescription = "Clients", modifier = modifier )
+            Icon(imageVector = people, contentDescription = "Clients", modifier = modifier )
         }
         "Employees" -> {
-            Icon(imageVector = Icons.Default.People, contentDescription = "Employees", modifier = modifier )
+            Icon(imageVector = people, contentDescription = "Employees", modifier = modifier )
         }
 
         else -> {

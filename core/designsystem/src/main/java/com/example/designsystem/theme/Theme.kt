@@ -2,8 +2,13 @@ package com.example.designsystem.theme
 
 import android.app.Activity
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.Male
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.outlined.Business
-import androidx.compose.material.icons.outlined.Work
+import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -20,14 +25,14 @@ import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = BlueA700,
-    secondary = Blue50,
+    secondary = CardGrey,
     tertiary = Pink80,
     background = Color.White,
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = BlueA700,
-    secondary = Blue50,
+    secondary = CardGrey,
     tertiary = Pink40,
 
     background = BabyPowder,
@@ -73,3 +78,9 @@ fun ProdaccTheme(
 
 val workIcon = Icons.Outlined.WorkOutline
 val companyIcon = Icons.Outlined.Business
+val work = Icons.Default.Work
+val car = Icons.Default.DirectionsCar
+val people = Icons.Default.People
+val male = Icons.Filled.Male
+val female = Icons.Filled.Female
+val contactDetails = Icons.Outlined.Contacts

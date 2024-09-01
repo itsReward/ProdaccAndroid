@@ -1,4 +1,4 @@
-package com.example.navigation
+package com.example.prodacc.navigation
 
 sealed class Route(val path: String) {
     data object LogIn: Route("login")
@@ -11,4 +11,7 @@ sealed class Route(val path: String) {
     data object JobCardDetails: Route("job_card/{jobCardId}")
     data object ClientDetails: Route("client_details/{clientId}")
     data object EmployeeDetails: Route("employee_details/{employeeId}")
+
+    data object EditClient: Route("edit_client/{clientId}")
+    data object NewClient: Route("new_client")
 }

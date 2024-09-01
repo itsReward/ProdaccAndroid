@@ -15,6 +15,8 @@ class EditVehicleDetailsViewModel(
     private val _uiState = mutableStateOf(vehicle)
     val uiState : State<Vehicle> = _uiState
 
+    val clients = clientRepository.getClientsList()
+
 
     private fun updateUiState(update: Vehicle.() -> Vehicle) {
         _uiState.value = _uiState.value.update()

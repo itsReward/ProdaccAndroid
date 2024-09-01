@@ -15,8 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.CategorisedList
 import com.example.designsystem.designComponents.ListCategory
-import com.example.designsystem.designComponents.NavigationBar
+import com.example.prodacc.navigation.NavigationBar
 import com.example.designsystem.designComponents.TopBar
+import com.example.prodacc.navigation.Route
 
 
 @Composable
@@ -30,7 +31,7 @@ fun ClientsScreen( navController : NavController){
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { },
+                onClick = { navController.navigate(Route.NewClient.path) },
                 shape = CircleShape,
                 containerColor = Color.White) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")

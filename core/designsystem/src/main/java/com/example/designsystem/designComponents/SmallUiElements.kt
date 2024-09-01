@@ -1,18 +1,13 @@
 package com.example.designsystem.designComponents
 
-import android.graphics.drawable.Icon
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Garage
 import androidx.compose.material.icons.filled.Warehouse
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -29,7 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.designsystem.theme.Blue50
+import com.example.designsystem.theme.CardGrey
 import com.prodacc.data.remote.dao.Client
 import java.util.UUID
 
@@ -42,7 +37,7 @@ fun RoundedHeader(title: String) {
                 .clip(
                     RoundedCornerShape(40.dp)
                 )
-                .border(2.dp, Blue50, RoundedCornerShape(40.dp))
+                .border(2.dp, CardGrey, RoundedCornerShape(40.dp))
                 //.background(Blue50)
                 .padding(horizontal = 10.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,

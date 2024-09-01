@@ -8,14 +8,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.EmployeeCategorisedList
-import com.example.designsystem.designComponents.NavigationBar
+import com.example.prodacc.navigation.NavigationBar
 import com.example.designsystem.designComponents.TopBar
 
 

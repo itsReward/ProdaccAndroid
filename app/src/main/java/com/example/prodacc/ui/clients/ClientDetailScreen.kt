@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +23,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,11 +36,11 @@ import com.example.designsystem.designComponents.DisplayTextField
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
-import com.example.designsystem.theme.Blue50
+import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.companyIcon
 import com.example.designsystem.theme.workIcon
-import com.example.navigation.Route
+import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModel
 import java.util.UUID
 
@@ -70,7 +68,9 @@ fun ClientDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = {
+                        navController.navigate(Route.EditClient.path.replace("{clientId}", client.id.toString()))
+                    }) {
                         Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
                     }
                     IconButton(onClick = {}) {
@@ -113,7 +113,7 @@ fun ClientDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Blue50)
+                        .background(CardGrey)
                         .padding(horizontal = 20.dp, vertical = 10.dp),
                     horizontalAlignment = Alignment.Start
                 ) {
@@ -149,7 +149,7 @@ fun ClientDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Blue50)
+                        .background(CardGrey)
                         .padding(horizontal = 20.dp, vertical = 20.dp),
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
