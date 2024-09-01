@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.Contacts
+import androidx.compose.material.icons.outlined.DirectionsCarFilled
 import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -84,3 +85,4 @@ val people = Icons.Default.People
 val male = Icons.Filled.Male
 val female = Icons.Filled.Female
 val contactDetails = Icons.Outlined.Contacts
+val vehicleIcon = Icons.Outlined.DirectionsCarFilled

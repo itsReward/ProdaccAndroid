@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,11 +33,13 @@ import com.example.designsystem.designComponents.Details
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.DarkGrey
+import com.example.designsystem.theme.vehicleIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModel
 
 @Composable
-fun VehicleDetailsScreen(
+fun EditVehicleDetailsScreen(
     navController: NavController,
     vehicleId: String
 ) {
@@ -49,8 +55,7 @@ fun VehicleDetailsScreen(
     ) {
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(bottomEnd = 30.dp))
-                .background(Color.Blue)
+                //.background(Color.Blue)
                 .wrapContentSize()
                 .systemBarsPadding()
                 .fillMaxWidth()
@@ -68,11 +73,11 @@ fun VehicleDetailsScreen(
                 com.example.designsystem.designComponents.IconButton(
                     onClick = { navController.navigateUp() },
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
-                    color = Color.White
+                    color = DarkGrey
                 )
                 LargeTitleText(
-                    name = "${viewModel.vehicle.clientSurname}'s ${viewModel.vehicle.model}",
-                    color = Color.White
+                    name = "Edit Vehicle",
+                    color = DarkGrey
                 )
             }
 
@@ -83,25 +88,15 @@ fun VehicleDetailsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End
             ) {
-                if (viewModel.editVehicle.value) {
-                    com.example.designsystem.designComponents.IconButton(
-                        onClick = viewModel::saveVehicle,
-                        icon = Icons.AutoMirrored.Filled.Send,
-                        color = Color.White
-                    )
-                } else {
-                    com.example.designsystem.designComponents.IconButton(
-                        onClick = viewModel.editVehicleViewModel::onEditVehicleToggle,
-                        icon = Icons.Filled.Edit,
-                        color = Color.White
-                    )
 
+                Button(onClick = { /*TODO*/ }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
+                    Text(text = "Save", color = Color.White)
                 }
 
                 com.example.designsystem.designComponents.IconButton(
                     onClick = { },
                     icon = Icons.Filled.Delete,
-                    color = Color.White
+                    color = DarkGrey
                 )
             }
 
@@ -113,61 +108,30 @@ fun VehicleDetailsScreen(
         Column(
             modifier = Modifier.padding(10.dp)
         ) {
+            Column (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 5.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ){
+                Icon(imageVector = vehicleIcon, contentDescription = "Vehicle Icon", modifier = Modifier.size(60.dp))
+                LargeTitleText(name = "${viewModel.vehicle.clientSurname}'s ${viewModel.vehicle.color} ${viewModel.vehicle.model}")
+            }
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 5.dp),
+                    .padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 MediumTitleText(name = "Details")
             }
 
-            Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .wrapContentSize()
-                    .fillMaxWidth()
-                    .background(CardGrey)
-                    .padding(horizontal = 10.dp, vertical = 10.dp)
-            ) {
-
-                Details(
-                    edit = viewModel.editVehicleViewModel.editVehicle.value,
-                    vehicle = viewModel.editVehicleViewModel.uiState.value,
-                    clients = viewModel.clientList,
-                    onVehicleModelChange = viewModel.editVehicleViewModel::updateModel,
-                    onRegNumberChange = viewModel.editVehicleViewModel::updateRegNumber,
-                    onVehicleMakeChange = viewModel.editVehicleViewModel::updateMake,
-                    onChassisNumberChange = viewModel.editVehicleViewModel::updateChassisNumber
-                ) {
-
-                }
 
 
-            }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                MediumTitleText(name = "JobCards")
-            }
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                items(viewModel.vehicleJobCards) {
-                    AllJobCardListItem(
-                        jobCardName = it.jobCardName,
-                        closedDate = it.dateAndTimeClosed,
-                        onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", it.id.toString())) },
-                    )
-                }
-            }
 
 
         }

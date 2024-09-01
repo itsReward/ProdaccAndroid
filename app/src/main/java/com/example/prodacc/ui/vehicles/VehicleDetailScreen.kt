@@ -91,7 +91,7 @@ fun VehicleDetailsScreen(
                     )
                 } else {
                     com.example.designsystem.designComponents.IconButton(
-                        onClick = viewModel.editVehicleViewModel::onEditVehicleToggle,
+                        onClick = {navController.navigate(Route.EditVehicle.path.replace("{vehicleId}", vehicleId))},
                         icon = Icons.Filled.Edit,
                         color = Color.White
                     )

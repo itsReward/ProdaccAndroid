@@ -16,6 +16,8 @@ class EditVehicleDetailsViewModel(
     val uiState : State<Vehicle> = _uiState
 
     val clients = clientRepository.getClientsList()
+    val vehicleModels = vehicleRepository.mercedesModels
+    val make = listOf("Mercedes-Benz", "Jeep")
 
 
     private fun updateUiState(update: Vehicle.() -> Vehicle) {
