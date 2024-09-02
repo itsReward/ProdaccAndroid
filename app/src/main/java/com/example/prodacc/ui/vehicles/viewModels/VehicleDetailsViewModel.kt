@@ -19,7 +19,7 @@ class VehicleDetailsViewModel(
     val editVehicle = mutableStateOf(false)
 
 
-    val editVehicleViewModel = EditVehicleDetailsViewModel(vehicle = vehicle)
+    //val editVehicleViewModel = EditVehicleDetailsViewModel(vehicle = vehicle)
 
     fun toggleEditVehicle () {
         editVehicle.value = !editVehicle.value

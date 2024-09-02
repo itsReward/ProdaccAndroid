@@ -10,9 +10,9 @@ import java.util.UUID
 class EditVehicleDetailsViewModel(
     private val vehicleRepository: VehicleRepository = VehicleRepository(),
     private val clientRepository: ClientRepository = ClientRepository(),
-    private val vehicle: Vehicle
+    private val vehicleId: UUID
 ) {
-    private val _uiState = mutableStateOf(vehicle)
+    private val _uiState = mutableStateOf(vehicleRepository.getVehicleById(vehicleId))
     val uiState : State<Vehicle> = _uiState
 
     val clients = clientRepository.getClientsList()
@@ -24,10 +24,18 @@ class EditVehicleDetailsViewModel(
         _uiState.value = _uiState.value.update()
     }
 
-    val editVehicle = mutableStateOf(false)
+    val vehicleMakeDropdown = mutableStateOf(false)
+    val vehicleModelDropdown = mutableStateOf(false)
+    val vehicleClientDropdown = mutableStateOf(false)
 
-    fun onEditVehicleToggle() {
-        editVehicle.value = !editVehicle.value
+    fun onVehicleMakeToggle() {
+        vehicleMakeDropdown.value = !vehicleMakeDropdown.value
+    }
+    fun onVehicleModelToggle() {
+        vehicleModelDropdown.value = !vehicleModelDropdown.value
+    }
+    fun onVehicleClientToggle() {
+        vehicleClientDropdown.value = !vehicleClientDropdown.value
     }
 
     fun updateModel(model : String){

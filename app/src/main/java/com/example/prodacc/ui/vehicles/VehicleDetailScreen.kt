@@ -134,16 +134,8 @@ fun VehicleDetailsScreen(
             ) {
 
                 Details(
-                    edit = viewModel.editVehicleViewModel.editVehicle.value,
-                    vehicle = viewModel.editVehicleViewModel.uiState.value,
-                    clients = viewModel.clientList,
-                    onVehicleModelChange = viewModel.editVehicleViewModel::updateModel,
-                    onRegNumberChange = viewModel.editVehicleViewModel::updateRegNumber,
-                    onVehicleMakeChange = viewModel.editVehicleViewModel::updateMake,
-                    onChassisNumberChange = viewModel.editVehicleViewModel::updateChassisNumber
-                ) {
-
-                }
+                    vehicle = viewModel.vehicle
+                )
 
 
             }

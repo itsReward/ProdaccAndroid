@@ -18,84 +18,62 @@ import java.util.UUID
 
 @Composable
 fun Details(
-    edit: Boolean,
-    vehicle: Vehicle,
-    clients: List<Client>,
-    onVehicleModelChange: (String) -> Unit,
-    onRegNumberChange: (String) -> Unit,
-    onVehicleMakeChange: (String) -> Unit,
-    onChassisNumberChange: (String) -> Unit,
-    onClientIdChange: (UUID) -> Unit,
-
+    vehicle: Vehicle
+){
+    Column(
+        modifier = Modifier
+            .wrapContentSize()
+            .padding(vertical = 15.dp, horizontal = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-    if (edit) {
-        Column(
-            modifier = Modifier.wrapContentSize(),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            TextField(value = vehicle.model, onValueChange = onVehicleModelChange)
-            TextField(value = vehicle.make, onValueChange = onVehicleMakeChange)
-            TextField(value = vehicle.regNumber, onValueChange = onRegNumberChange)
-            TextField(value = vehicle.chassisNumber, onValueChange = onChassisNumberChange)
-            ClientDropdown(clients = clients, onClientSelected = onClientIdChange)
+        Row {
+            DisabledTextField(
+                label = "Model",
+                text = vehicle.model,
+                modifier = Modifier.weight(1f)
+            )
+            DisabledTextField(
+                label = "Make",
+                text = vehicle.make,
+                modifier = Modifier.weight(1f)
+            )
         }
-    } else {
-        Column(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(vertical = 15.dp, horizontal = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row {
-                DisabledTextField(
-                    label = "Model",
-                    text = vehicle.model,
-                    modifier = Modifier.weight(1f)
-                )
-                DisabledTextField(
-                    label = "Make",
-                    text = vehicle.make,
-                    modifier = Modifier.weight(1f)
-                )
-            }
 
 
-            Row {
-                DisabledTextField(
-                    label = "Color",
-                    text = vehicle.color,
-                    modifier = Modifier.weight(1f)
-                )
-                DisabledTextField(
-                    label = "Client",
-                    text = "${vehicle.clientName} ${vehicle.clientSurname}",
-                    modifier = Modifier.weight(1f)
-                )
+        Row {
+            DisabledTextField(
+                label = "Color",
+                text = vehicle.color,
+                modifier = Modifier.weight(1f)
+            )
+            DisabledTextField(
+                label = "Client",
+                text = "${vehicle.clientName} ${vehicle.clientSurname}",
+                modifier = Modifier.weight(1f)
+            )
 
-            }
+        }
 
-            Row {
-                DisabledTextField(
-                    label = "Reg.Number",
-                    text = vehicle.regNumber,
-                    modifier = Modifier.weight(1f)
-                )
-
-
-            }
-
-            Row {
-                DisabledTextField(
-                    label = "Chassis No.",
-                    text = vehicle.chassisNumber,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+        Row {
+            DisabledTextField(
+                label = "Reg.Number",
+                text = vehicle.regNumber,
+                modifier = Modifier.weight(1f)
+            )
 
 
         }
+
+        Row {
+            DisabledTextField(
+                label = "Chassis No.",
+                text = vehicle.chassisNumber,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+
     }
+
 }
