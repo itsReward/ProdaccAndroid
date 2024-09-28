@@ -36,7 +36,9 @@ fun VehiclesScreen(
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { }, shape = CircleShape, containerColor = Color.White
+                onClick = {
+                    navController.navigate(Route.NewVehicle.path)
+                }, shape = CircleShape, containerColor = Color.White
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
             }

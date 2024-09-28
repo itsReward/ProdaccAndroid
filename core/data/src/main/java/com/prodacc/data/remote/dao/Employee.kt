@@ -4,7 +4,7 @@ import java.util.UUID
 
 data class Employee (
     val id : UUID,
-    val employeeName: String,
+    var employeeName: String,
     val employeeSurname: String,
     val rating: Float,
     val employeeRole: String,

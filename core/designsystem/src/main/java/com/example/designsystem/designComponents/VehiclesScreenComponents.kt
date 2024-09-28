@@ -5,39 +5,39 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Warehouse
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
+import androidx.wear.compose.material.Button
 import com.example.designsystem.theme.BlueA700
-import com.example.designsystem.theme.DarkGreen
-import com.example.designsystem.theme.DarkOrange
-import com.example.designsystem.theme.Green
+import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
-import com.example.designsystem.theme.LightGreen
-import com.example.designsystem.theme.LightGrey
-import com.example.designsystem.theme.LightOrange
-import com.example.designsystem.theme.Red
+import com.prodacc.data.remote.dao.Client
+import java.util.UUID
+import kotlin.reflect.KFunction1
 
 @Composable
 fun VehiclesList(
@@ -49,7 +49,8 @@ fun VehiclesList(
 ){
     Row (
         modifier = Modifier
-            .fillMaxWidth().drawWithContent {
+            .fillMaxWidth()
+            .drawWithContent {
                 drawContent()
                 drawLine(
                     color = borderColor,
@@ -165,4 +166,70 @@ fun VehicleStatusFilters(
     }
 
 
+}
+
+@Composable
+fun ClientsDropDown(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    clients: List<Client>,
+    onClientSelected: KFunction1<UUID, Unit>
+){
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier
+            .padding(10.dp)
+            ,
+        properties = PopupProperties(
+            excludeFromSystemGesture = false
+        )
+    ) {
+
+        Row {
+
+            SearchBar(
+                query = "",
+                onQueryChange = {},
+                onSearch = {},
+                placeHolder = "Search Clients",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+
+        LazyColumn(
+            modifier = Modifier.size(width = 800.dp, height = 800.dp)
+        ) {
+            items(clients){ client ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = "${client.clientName} ${client.clientSurname}",
+                            color = DarkGrey
+                        )
+                    },
+                    onClick = {
+                        onClientSelected(client.id)
+                        run(onDismissRequest)
+                    },
+                    modifier = Modifier.width( 250.dp)
+                )
+
+            }
+        }
+
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 20.dp),
+            verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.End
+        ) {
+            androidx.compose.material3.Button(onClick = onDismissRequest) {
+                Text(text = "Cancel")
+            }
+        }
+
+    }
 }

@@ -2,6 +2,7 @@ package com.example.designsystem.designComponents
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.wear.compose.material.Text
 import com.example.designsystem.theme.DarkGrey
 import com.prodacc.data.remote.dao.Employee
@@ -22,12 +24,14 @@ import com.prodacc.data.remote.dao.Employee
 
 @Composable
 fun EmployeeListCard(
-    employee: Employee
+    employee: Employee,
+    onClick: () -> Unit
 ){
     Row(
         modifier = Modifier
             .padding(horizontal = 10.dp, vertical = 10.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ){
@@ -44,25 +48,6 @@ fun EmployeeListCard(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun EmployeeCategorisedList(
-    categories : List<EmployeeListCategory>,
-    modifier: Modifier = Modifier
-){
-    LazyColumn (
-        modifier = modifier
-    ){
-        categories.forEach{ category ->
-            stickyHeader {
-                EmployeeCategoryHeader(text = category.name)
-            }
-            items(category.items){ employee ->
-                EmployeeListCard(employee = employee)
-            }
-        }
-    }
-}
 
 @Composable
 fun EmployeeCategoryHeader(

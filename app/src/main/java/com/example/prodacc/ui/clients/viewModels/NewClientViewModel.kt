@@ -1,12 +1,9 @@
 package com.example.prodacc.ui.clients.viewModels
 
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.prodacc.ui.clients.stateClasses.AddClientState
-import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
-import java.util.UUID
 
 class NewClientViewModel(
     private val clientRepository: ClientRepository = ClientRepository()

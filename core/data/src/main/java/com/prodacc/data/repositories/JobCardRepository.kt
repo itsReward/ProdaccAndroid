@@ -123,4 +123,7 @@ class JobCardRepository {
             )
         }
     }
+    fun getJobCard(id: UUID): JobCard {
+        return generateJobCards().first()
+    }
 }

@@ -1,4 +1,4 @@
-package com.example.prodacc.ui.employees
+package com.example.prodacc.ui.employees.viewModels
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel

@@ -6,11 +6,15 @@ sealed class Route(val path: String) {
     //JobCards Screens
     data object JobCards: Route("jobcards")
     data object JobCardDetails: Route("job_card/{jobCardId}")
+    data object EditJobCard: Route("edit_job_card/{jobCardId}")
+    data object NewJobCard: Route("new_job_card")
 
 
     //Employee Screens
     data object Employees: Route("employees")
     data object EmployeeDetails: Route("employee_details/{employeeId}")
+    data object EditEmployee: Route("edit_employee/{employeeId}")
+    data object NewEmployee: Route("new_employee")
 
 
     //Vehicle Screens
