@@ -1,4 +1,4 @@
-package com.example.prodacc.ui.clients
+package com.example.prodacc.ui.clients.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

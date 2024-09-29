@@ -11,16 +11,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.prodacc.ui.login.LogInScreen
-import com.example.prodacc.ui.clients.ClientsScreen
+import com.example.prodacc.ui.clients.screens.ClientsScreen
 import com.example.prodacc.ui.employees.screens.EmployeesScreen
-import com.example.prodacc.ui.jobcards.JobCardsScreen
-import com.example.prodacc.ui.clients.ClientDetailScreen
-import com.example.prodacc.ui.clients.EditClientDetailScreen
-import com.example.prodacc.ui.clients.NewClientScreen
+import com.example.prodacc.ui.jobcards.screens.JobCardsScreen
+import com.example.prodacc.ui.clients.screens.ClientDetailScreen
+import com.example.prodacc.ui.clients.screens.EditClientDetailScreen
+import com.example.prodacc.ui.clients.screens.NewClientScreen
 import com.example.prodacc.ui.employees.screens.EditEmployeeScreen
 import com.example.prodacc.ui.employees.screens.EmployeeDetailScreen
 import com.example.prodacc.ui.employees.screens.NewEmployeeScreen
-import com.example.prodacc.ui.jobcards.JobCardDetailScreen
+import com.example.prodacc.ui.jobcards.screens.JobCardDetailScreen
+import com.example.prodacc.ui.jobcards.screens.NewJobCardScreen
 import com.example.prodacc.ui.vehicles.EditVehicleDetailsScreen
 import com.example.prodacc.ui.vehicles.NewVehicleScreen
 import com.example.prodacc.ui.vehicles.VehicleDetailsScreen
@@ -51,6 +52,17 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         ) { backStackEntry ->
             val jobCardId = backStackEntry.arguments?.getString("jobCardId") ?: ""
             JobCardDetailScreen(navController, jobCardId)
+        }
+        composable(
+            route = Route.NewJobCard.path,
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            }
+        ){
+            NewJobCardScreen(navController)
         }
 
 

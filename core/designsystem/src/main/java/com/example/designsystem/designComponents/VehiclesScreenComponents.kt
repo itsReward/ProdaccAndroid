@@ -36,6 +36,7 @@ import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
 import com.prodacc.data.remote.dao.Client
+import com.prodacc.data.remote.dao.Vehicle
 import java.util.UUID
 import kotlin.reflect.KFunction1
 
@@ -225,6 +226,72 @@ fun ClientsDropDown(
                 .padding(end = 20.dp),
             verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.End
+        ) {
+            androidx.compose.material3.Button(onClick = onDismissRequest) {
+                Text(text = "Cancel")
+            }
+        }
+
+    }
+}
+
+@Composable
+fun VehiclesDropDown(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    vehicles: List<Vehicle>,
+    onVehicleSelected: KFunction1<UUID, Unit>
+){
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier
+            .padding(10.dp)
+        ,
+        properties = PopupProperties(
+            excludeFromSystemGesture = false
+        )
+    ) {
+
+        Row {
+
+            SearchBar(
+                query = "",
+                onQueryChange = {},
+                onSearch = {},
+                placeHolder = "Search Vehicles",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+
+        LazyColumn(
+            modifier = Modifier.size(width = 800.dp, height = 800.dp)
+        ) {
+            items(vehicles){ vehicle ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = "${vehicle.color} ${vehicle.model} - ${vehicle.regNumber}",
+                            color = DarkGrey
+                        )
+                    },
+                    onClick = {
+                        onVehicleSelected(vehicle.id)
+                        run(onDismissRequest)
+                    },
+                    modifier = Modifier.width( 250.dp)
+                )
+
+            }
+        }
+
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 20.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.End
         ) {
             androidx.compose.material3.Button(onClick = onDismissRequest) {
                 Text(text = "Cancel")

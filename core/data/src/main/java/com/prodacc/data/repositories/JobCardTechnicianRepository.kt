@@ -4,9 +4,8 @@ import com.prodacc.data.remote.dao.JobCardTechnician
 import java.util.UUID
 
 class JobCardTechnicianRepository {
-    private val jobCardTechnicians: List<JobCardTechnician> by lazy {
-        generateJobCardTechnicians(20)
-    }
+    private val jobCardTechnicians: List<JobCardTechnician> = generateJobCardTechnicians(20)
+
 
     fun getJobCardTechnicians(): List<JobCardTechnician> {
         return jobCardTechnicians

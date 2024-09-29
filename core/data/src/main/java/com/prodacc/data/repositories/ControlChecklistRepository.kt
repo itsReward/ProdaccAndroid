@@ -5,9 +5,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class ControlChecklistRepository {
-    private val controlChecklists: List<ControlChecklist> by lazy {
-        generateControlChecklists(20)
-    }
+    private val controlChecklists: List<ControlChecklist> = generateControlChecklists(20)
+
 
     fun getControlChecklists(): List<ControlChecklist> {
         return controlChecklists

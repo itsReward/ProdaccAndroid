@@ -5,9 +5,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class StateChecklistRepository {
-    private val stateChecklists: List<StateChecklist> by lazy {
-        generateStateChecklists(20)
-    }
+    private val stateChecklists: List<StateChecklist> = generateStateChecklists(20)
+
 
     fun getStateChecklists(): List<StateChecklist> {
         return stateChecklists

@@ -102,11 +102,6 @@ fun NewVehicleScreen(
                     Text(text = "Save", color = Color.White)
                 }
 
-                com.example.designsystem.designComponents.IconButton(
-                    onClick = { },
-                    icon = Icons.Filled.Delete,
-                    color = DarkGrey
-                )
             }
         }
 

@@ -1,4 +1,4 @@
-package com.example.prodacc.ui.clients
+package com.example.prodacc.ui.clients.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -18,6 +18,7 @@ import com.example.designsystem.designComponents.ListCategory
 import com.example.prodacc.navigation.NavigationBar
 import com.example.designsystem.designComponents.TopBar
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.clients.viewModels.ClientsViewModel
 
 
 @Composable

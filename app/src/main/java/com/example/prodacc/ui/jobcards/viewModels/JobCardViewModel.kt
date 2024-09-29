@@ -1,4 +1,4 @@
-package com.example.prodacc.ui.jobcards
+package com.example.prodacc.ui.jobcards.viewModels
 
 import androidx.lifecycle.ViewModel
 import com.prodacc.data.repositories.JobCardRepository

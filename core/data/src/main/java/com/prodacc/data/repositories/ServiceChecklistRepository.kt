@@ -5,9 +5,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class ServiceChecklistRepository {
-    private val serviceChecklists: List<ServiceChecklist> by lazy {
-        generateServiceChecklists(20)
-    }
+    private val serviceChecklists: List<ServiceChecklist> = generateServiceChecklists(20)
 
     fun getServiceChecklists(): List<ServiceChecklist> {
         return serviceChecklists

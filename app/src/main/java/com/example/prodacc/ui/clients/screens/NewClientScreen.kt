@@ -1,4 +1,4 @@
-package com.example.prodacc.ui.clients
+package com.example.prodacc.ui.clients.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
@@ -47,9 +46,7 @@ import com.example.designsystem.theme.contactDetails
 import com.example.designsystem.theme.female
 import com.example.designsystem.theme.male
 import com.example.designsystem.theme.workIcon
-import com.example.prodacc.ui.clients.viewModels.EditClientDetailsViewModel
 import com.example.prodacc.ui.clients.viewModels.NewClientViewModel
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

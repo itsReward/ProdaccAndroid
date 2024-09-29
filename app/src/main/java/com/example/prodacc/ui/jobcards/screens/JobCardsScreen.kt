@@ -1,4 +1,4 @@
-package com.example.prodacc.ui.jobcards
+package com.example.prodacc.ui.jobcards.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,6 +29,7 @@ import com.example.prodacc.navigation.NavigationBar
 import com.example.designsystem.designComponents.SectionHeading
 import com.example.designsystem.designComponents.TopBar
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
 
 @Composable
 fun JobCardsScreen(
@@ -42,7 +43,7 @@ fun JobCardsScreen(
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { },
+                onClick = { navController.navigate(Route.NewJobCard.path) },
                 shape = CircleShape,
                 containerColor = Color.White
             ) {
