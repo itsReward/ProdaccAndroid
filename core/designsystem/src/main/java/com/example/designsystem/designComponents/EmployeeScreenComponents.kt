@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,6 +22,7 @@ import androidx.navigation.NavController
 import androidx.wear.compose.material.Text
 import com.example.designsystem.theme.DarkGrey
 import com.prodacc.data.remote.dao.Employee
+import java.util.UUID
 
 
 @Composable
@@ -76,4 +79,20 @@ data class EmployeeListCategory(
     val name : String,
     val items : List<Employee>
 )
+
+@Composable
+fun EmployeeDropDown(
+    list: List<Employee>,
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    onItemClick: (UUID) -> Unit
+){
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
+        list.forEach { it ->
+            DropdownMenuItem(text = {
+                Text(text = "${it.employeeName} ${it.employeeSurname}")
+            }, onClick = { onItemClick(it.id) })
+        }
+    }
+}
 

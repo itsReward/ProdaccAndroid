@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
@@ -24,10 +25,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.designsystem.designComponents.EmployeeDropDown
 import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.SectionHeading
+import com.example.designsystem.designComponents.SectionLineHeadingSeperator
 import com.example.designsystem.designComponents.VehiclesDropDown
+import com.example.designsystem.theme.car
 import com.example.prodacc.ui.jobcards.viewModels.NewJobCardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,6 +43,7 @@ fun NewJobCardScreen(
 ) {
     val viewModel = NewJobCardViewModel()
     var vehicleExpanded by remember { mutableStateOf(false) }
+    var serviceAdvisorExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -70,42 +77,112 @@ fun NewJobCardScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(horizontal = 20.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Row {
+            Row() {
+                Icon(
+                    imageVector = car,
+                    contentDescription = "Navigate Back",
+                    modifier = Modifier.padding(end = 15.dp)
+                )
+                Column (
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = "${viewModel.vehicleState?.color} ${viewModel.vehicleState?.model} ${viewModel.vehicleState?.regNumber}",
+                        onValueChange = {},
+                        label = { Text(text = "Vehicle") },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { vehicleExpanded = !vehicleExpanded }) {
+                                Icon(
+                                    imageVector = Icons.Filled.KeyboardArrowDown,
+                                    contentDescription = "Drop down"
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    VehiclesDropDown(
+                        expanded = vehicleExpanded,
+                        onDismissRequest = { vehicleExpanded = !vehicleExpanded },
+                        vehicles = viewModel.vehicles,
+                        onVehicleSelected = viewModel::updateVehicle
+                    )
+                    OutlinedTextField(
+                        value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",
+                        onValueChange = {},
+                        modifier = Modifier.fillMaxWidth(),
+                        readOnly = true,
+                        label = { Text(text = "Client")}
+                    )
+
+                }
+
+
+
+            }
+
+
+
+
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ){
+
+                SectionLineHeadingSeperator(heading = "Team")
+
                 OutlinedTextField(
-                    value = "${viewModel.vehicleState?.color} ${viewModel.vehicleState?.model} ${viewModel.vehicleState?.regNumber}",
+                    value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",
                     onValueChange = {},
-                    label = { Text(text = "Vehicle") },
+                    modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
+                    label = { Text(text = "Service Advisor")},
                     trailingIcon = {
-                        IconButton(onClick = { vehicleExpanded = !vehicleExpanded }) {
+                        IconButton(onClick = { /*TODO*/ }) {
                             Icon(
                                 imageVector = Icons.Filled.KeyboardArrowDown,
                                 contentDescription = "Drop down"
                             )
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth()
+                    }
                 )
 
-                VehiclesDropDown(
-                    expanded = vehicleExpanded,
-                    onDismissRequest = { vehicleExpanded = !vehicleExpanded },
-                    vehicles = viewModel.vehicles,
-                    onVehicleSelected = viewModel::updateVehicle
+                EmployeeDropDown(
+                    list = viewModel.employees,
+                    expanded = viewModel.serviceAdvisorDropDown.value,
+                    onDismissRequest = { viewModel.serviceAdvisorDropDown.value = !viewModel.serviceAdvisorDropDown.value },
+                    onItemClick = viewModel::updateServiceAdvisor
                 )
 
+                OutlinedTextField(
+                    value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",
+                    onValueChange = {},
+                    modifier = Modifier.fillMaxWidth(),
+                    readOnly = true,
+                    label = { Text(text = "Supervisor")},
+                    trailingIcon = {
+                        IconButton(onClick = { /*TODO*/ }) {
+                            Icon(
+                                imageVector = Icons.Filled.KeyboardArrowDown,
+                                contentDescription = "Drop down"
+                            )
+                        }
+                    }
+                )
 
+                EmployeeDropDown(
+                    list = viewModel.employees,
+                    expanded = serviceAdvisorExpanded,
+                    onDismissRequest = { serviceAdvisorExpanded = !serviceAdvisorExpanded },
+                    onItemClick = viewModel::updateServiceAdvisor
+                )
             }
 
-            OutlinedTextField(
-                value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",
-                onValueChange = {},
-                modifier = Modifier.fillMaxWidth(),
-                readOnly = true,
-                label = { Text(text = "Client")}
-            )
+
+
 
         }
     }

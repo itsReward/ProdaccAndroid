@@ -32,9 +32,13 @@ class NewJobCardViewModel(
     private val jobCardReport: JobCardReportRepository = JobCardReportRepository()
 ) :ViewModel(){
 
-    private val employees = employeeRepository.getEmployees()
-    private val clients = clientRepository.getClientsList()
+    val employees = employeeRepository.getEmployees()
+    val clients = clientRepository.getClientsList()
     val vehicles = vehicleRepository.getVehicles()
+
+    val serviceAdvisorDropDown = mutableStateOf(false)
+    val supervisor = mutableStateOf(false)
+    val technicians = mutableStateOf(false)
 
     private val _state = mutableStateOf(
         NewJobCardState(
@@ -51,6 +55,13 @@ class NewJobCardViewModel(
 
     private fun updateState(update: (NewJobCardState) -> NewJobCardState){
         _state.value = update(_state.value)
+    }
+
+    fun  updateServiceAdvisor (id: UUID){
+        val employee = employeeRepository.getEmployee(id)
+        updateState {
+            it.copy(serviceAdvisorId = employee.id)
+        }
     }
 
 
