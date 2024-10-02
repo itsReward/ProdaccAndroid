@@ -149,7 +149,8 @@ fun NewJobCardScreen(
                     label = { Text(text = "Service Advisor") },
                     leadingIcon = { Icon(imageVector = person, contentDescription = "employee") },
                     trailingIcon = {
-                        IconButton(onClick = { /*TODO*/ }) {
+                        IconButton(onClick = { /*TODO*/ }
+                        ) {
                             Icon(
                                 imageVector = Icons.Filled.KeyboardArrowDown,
                                 contentDescription = "Drop down"
