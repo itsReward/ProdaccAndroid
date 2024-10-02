@@ -61,8 +61,9 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     animationSpec = tween(durationMillis = 300)
                 )
             }
-        ){
-            NewJobCardScreen(navController)
+        ){ backStackEntry ->
+            val vehicleId = backStackEntry.arguments?.getString("vehicleId") ?: ""
+            NewJobCardScreen(navController, vehicleId)
         }
 
 

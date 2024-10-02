@@ -29,12 +29,15 @@ class NewJobCardViewModel(
     private val timeSheet: TimeSheetRepository = TimeSheetRepository(),
     private val jobCardReportRepository: JobCardReportRepository = JobCardReportRepository(),
     private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository(),
-    private val jobCardReport: JobCardReportRepository = JobCardReportRepository()
+    private val jobCardReport: JobCardReportRepository = JobCardReportRepository(),
+    vehicleId: String
 ) :ViewModel(){
 
     val employees = employeeRepository.getEmployees()
     val clients = clientRepository.getClientsList()
     val vehicles = vehicleRepository.getVehicles()
+
+    val vehicle = vehicleRepository.getVehicleById(UUID.fromString(vehicleId))
 
     val serviceAdvisorDropDown = mutableStateOf(false)
     val supervisor = mutableStateOf(false)
@@ -42,7 +45,7 @@ class NewJobCardViewModel(
 
     private val _state = mutableStateOf(
         NewJobCardState(
-            null,
+            vehicle.id,
             null,
             null,
             null

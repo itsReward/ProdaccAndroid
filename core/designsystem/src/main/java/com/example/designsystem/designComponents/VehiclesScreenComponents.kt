@@ -23,6 +23,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -240,7 +241,8 @@ fun VehiclesDropDown(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     vehicles: List<Vehicle>,
-    onVehicleSelected: KFunction1<UUID, Unit>
+    onVehicleSelected: KFunction1<UUID, Unit>,
+    newVehicle: () -> Unit = {}
 ){
     DropdownMenu(
         expanded = expanded,
@@ -253,7 +255,7 @@ fun VehiclesDropDown(
         )
     ) {
 
-        Row {
+        Column {
 
             SearchBar(
                 query = "",
@@ -262,6 +264,17 @@ fun VehiclesDropDown(
                 placeHolder = "Search Vehicles",
                 modifier = Modifier.fillMaxWidth()
             )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TextButton(onClick = newVehicle) {
+                    Text(text = "Add New Vehicle")
+                }
+            }
+
+
         }
 
 
@@ -280,7 +293,7 @@ fun VehiclesDropDown(
                         onVehicleSelected(vehicle.id)
                         run(onDismissRequest)
                     },
-                    modifier = Modifier.width( 250.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
 
             }

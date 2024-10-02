@@ -36,14 +36,16 @@ import com.example.designsystem.designComponents.VehiclesDropDown
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.car
 import com.example.designsystem.theme.person
+import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.jobcards.viewModels.NewJobCardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewJobCardScreen(
     navController: NavController,
+    vehicleId: String
 ) {
-    val viewModel = NewJobCardViewModel()
+    val viewModel = NewJobCardViewModel(vehicleId = vehicleId)
     var vehicleExpanded by remember { mutableStateOf(false) }
     var serviceAdvisorExpanded by remember { mutableStateOf(false) }
 
@@ -110,7 +112,8 @@ fun NewJobCardScreen(
                         expanded = vehicleExpanded,
                         onDismissRequest = { vehicleExpanded = !vehicleExpanded },
                         vehicles = viewModel.vehicles,
-                        onVehicleSelected = viewModel::updateVehicle
+                        onVehicleSelected = viewModel::updateVehicle,
+                        newVehicle = { navController.navigate(route = Route.NewVehicle.path) }
                     )
                     OutlinedTextField(
                         value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",

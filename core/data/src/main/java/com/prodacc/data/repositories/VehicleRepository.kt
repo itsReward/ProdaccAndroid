@@ -93,7 +93,7 @@ class VehicleRepository {
         "Sithole"
     )
 
-    fun getVehicleById(id: Any): Vehicle {
+    fun getVehicleById(id: UUID): Vehicle {
         return Vehicle(
             id = UUID.randomUUID(),
             model = mercedesModels.random(),
