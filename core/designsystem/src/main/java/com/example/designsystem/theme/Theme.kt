@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.Contacts
@@ -86,3 +87,4 @@ val male = Icons.Filled.Male
 val female = Icons.Filled.Female
 val contactDetails = Icons.Outlined.Contacts
 val vehicleIcon = Icons.Outlined.DirectionsCarFilled
+val person = Icons.Default.Person

@@ -1,5 +1,6 @@
 package com.example.prodacc.ui.jobcards.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
@@ -17,6 +17,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,15 +27,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.EmployeeDropDown
 import com.example.designsystem.designComponents.LargeTitleText
-import com.example.designsystem.designComponents.SectionHeading
-import com.example.designsystem.designComponents.SectionLineHeadingSeperator
 import com.example.designsystem.designComponents.VehiclesDropDown
+import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.car
+import com.example.designsystem.theme.person
 import com.example.prodacc.ui.jobcards.viewModels.NewJobCardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,16 +78,16 @@ fun NewJobCardScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp, vertical = 20.dp),
+                .padding(horizontal = 10.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Row() {
+            Row {
                 Icon(
                     imageVector = car,
                     contentDescription = "Navigate Back",
                     modifier = Modifier.padding(end = 15.dp)
                 )
-                Column (
+                Column(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     OutlinedTextField(
@@ -115,11 +117,10 @@ fun NewJobCardScreen(
                         onValueChange = {},
                         modifier = Modifier.fillMaxWidth(),
                         readOnly = true,
-                        label = { Text(text = "Client")}
+                        label = { Text(text = "Client") }
                     )
 
                 }
-
 
 
             }
@@ -129,17 +130,24 @@ fun NewJobCardScreen(
 
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ){
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier
+                    .clip(
+                        RoundedCornerShape(20.dp)
+                    )
+                    .background(CardGrey)
+                    .padding(vertical = 10.dp, horizontal = 5.dp)
+            ) {
 
-                SectionLineHeadingSeperator(heading = "Team")
+                // SectionLineHeadingSeperator(heading = "Team")
 
-                OutlinedTextField(
+                TextField(
                     value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",
                     onValueChange = {},
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
-                    label = { Text(text = "Service Advisor")},
+                    label = { Text(text = "Service Advisor") },
+                    leadingIcon = { Icon(imageVector = person, contentDescription = "employee") },
                     trailingIcon = {
                         IconButton(onClick = { /*TODO*/ }) {
                             Icon(
@@ -147,22 +155,32 @@ fun NewJobCardScreen(
                                 contentDescription = "Drop down"
                             )
                         }
-                    }
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
+                    )
                 )
 
                 EmployeeDropDown(
                     list = viewModel.employees,
                     expanded = viewModel.serviceAdvisorDropDown.value,
-                    onDismissRequest = { viewModel.serviceAdvisorDropDown.value = !viewModel.serviceAdvisorDropDown.value },
+                    onDismissRequest = {
+                        viewModel.serviceAdvisorDropDown.value =
+                            !viewModel.serviceAdvisorDropDown.value
+                    },
                     onItemClick = viewModel::updateServiceAdvisor
                 )
 
-                OutlinedTextField(
+                TextField(
                     value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",
                     onValueChange = {},
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
-                    label = { Text(text = "Supervisor")},
+                    label = { Text(text = "Supervisor") },
+                    leadingIcon = { Icon(imageVector = person, contentDescription = "employee") },
                     trailingIcon = {
                         IconButton(onClick = { /*TODO*/ }) {
                             Icon(
@@ -170,7 +188,13 @@ fun NewJobCardScreen(
                                 contentDescription = "Drop down"
                             )
                         }
-                    }
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
+                    )
                 )
 
                 EmployeeDropDown(
@@ -180,8 +204,6 @@ fun NewJobCardScreen(
                     onItemClick = viewModel::updateServiceAdvisor
                 )
             }
-
-
 
 
         }
