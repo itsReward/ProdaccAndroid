@@ -49,6 +49,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     AnimatedContentTransitionScope.SlideDirection.Left,
                     animationSpec = tween(durationMillis = 300)
                 )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(durationMillis = 300)
+                )
             }
         ) { backStackEntry ->
             val jobCardId = backStackEntry.arguments?.getString("jobCardId") ?: ""
@@ -59,6 +65,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             enterTransition = {
                 slideIntoContainer(
                     AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
                     animationSpec = tween(durationMillis = 300)
                 )
             }
@@ -86,6 +98,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     AnimatedContentTransitionScope.SlideDirection.Left,
                     animationSpec = tween(durationMillis = 300)
                 )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(durationMillis = 300)
+                )
             }
         ) { backStackEntry ->
             val vehicleId = backStackEntry.arguments?.getString("vehicleId") ?: ""
@@ -99,6 +117,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     AnimatedContentTransitionScope.SlideDirection.Up,
                     animationSpec = tween(durationMillis = 300)
                 )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(durationMillis = 300)
+                )
             }
         ) { backStackEntry ->
             val vehicleId = backStackEntry.arguments?.getString("vehicleId") ?: ""
@@ -109,6 +133,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             enterTransition = {
                 slideIntoContainer(
                     AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
                     animationSpec = tween(durationMillis = 300)
                 )
             }
@@ -132,6 +162,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     AnimatedContentTransitionScope.SlideDirection.Left,
                     animationSpec = tween(durationMillis = 300)
                 )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(durationMillis = 300)
+                )
             }
         ) { backStackEntry ->
             val clientId = backStackEntry.arguments?.getString("clientId") ?: ""
@@ -145,6 +181,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     AnimatedContentTransitionScope.SlideDirection.Up,
                     animationSpec = tween(durationMillis = 300)
                 )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(durationMillis = 300)
+                )
             }
         ) { backStackEntry ->
             val clientId = backStackEntry.arguments?.getString("clientId") ?: ""
@@ -156,6 +198,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             enterTransition = {
                 slideIntoContainer(
                     AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
                     animationSpec = tween(durationMillis = 300)
                 )
             }
@@ -179,6 +227,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     animationSpec = tween(durationMillis = 300)
                 )
             },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            },
             arguments = listOf(navArgument("employeeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
@@ -192,6 +246,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     animationSpec = tween(durationMillis = 300)
                 )
             },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            },
             arguments = listOf(navArgument("employeeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
@@ -202,6 +262,12 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             enterTransition = {
                 slideIntoContainer(
                     AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
                     animationSpec = tween(durationMillis = 300)
                 )
             }

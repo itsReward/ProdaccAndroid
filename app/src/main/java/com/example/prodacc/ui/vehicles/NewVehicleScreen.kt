@@ -1,5 +1,6 @@
 package com.example.prodacc.ui.vehicles
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,7 +57,9 @@ fun NewVehicleScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
+            .background(Color.White)
             .fillMaxSize()
+
 
     ) {
         Row(

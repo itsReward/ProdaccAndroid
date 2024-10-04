@@ -54,7 +54,7 @@ fun JobCardDetailScreen(
     Column(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.background(Color.White).fillMaxSize()
 
     ) {
         TopBar(jobCardName = viewModel.jobCard.jobCardName, navController = navController, onClickPeople = {showDialog = !showDialog}, onClickDelete = {})

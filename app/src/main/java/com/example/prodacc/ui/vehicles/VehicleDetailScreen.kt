@@ -44,6 +44,7 @@ fun VehicleDetailsScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
+            .background(Color.White)
             .fillMaxSize()
 
     ) {
