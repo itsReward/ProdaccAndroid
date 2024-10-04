@@ -1,24 +1,19 @@
 package com.example.designsystem.designComponents
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -26,14 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.designsystem.theme.BlueA700
-import com.example.designsystem.theme.Grey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(title: String) {
+fun TopBar(title: String, onClick: () -> Unit) {
     Column(
-        modifier = Modifier.statusBarsPadding().padding(bottom = 10.dp)
+        modifier = Modifier
+            .statusBarsPadding()
+            .padding(bottom = 10.dp)
     ) {
         TopAppBar(
             title = {
@@ -58,14 +55,19 @@ fun TopBar(title: String) {
                 )
             }
         )
-        SearchBar(
-            query = "", onQueryChange = {}, onSearch = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp),
-            placeHolder = "Search $title"
-        )
-
+        Column (
+            modifier = Modifier.padding(horizontal = 10.dp)
+        ){
+            CustomSearchBar(
+                query = "", onQueryChange = {}, onSearch = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .clickable { onClick() },
+                placeHolder = "Search $title"
+            )
+        }
 
     }
 

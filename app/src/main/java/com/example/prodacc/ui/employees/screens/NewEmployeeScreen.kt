@@ -165,7 +165,9 @@ fun NewEmployeeScreen(
                         }
                     }
 
-                    Row {
+                    Row (
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Icon(
                             imageVector = workIcon,
                             contentDescription = "Work Icon",
@@ -178,13 +180,15 @@ fun NewEmployeeScreen(
                                 value = state.value.employeeDepartment?: "",
                                 onValueChange = viewModel::updateDepartment,
                                 label = { Text(text = "Department") },
-                                readOnly = true
+                                readOnly = true,
+                                modifier = Modifier.fillMaxWidth()
                             )
                             OutlinedTextField(
                                 value = state.value.employeeRole?: "",
                                 onValueChange = viewModel::updateJobTitle,
                                 label = { Text(text = "Job Title") },
-                                readOnly = true
+                                readOnly = true,
+                                modifier = Modifier.fillMaxWidth()
                             )
 
 

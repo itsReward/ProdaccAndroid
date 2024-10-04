@@ -32,7 +32,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
-import androidx.wear.compose.material.Button
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
@@ -62,14 +61,15 @@ fun VehiclesList(
                 )
             }
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 20.dp),
+            .padding(horizontal = 20.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ){
         Column (
             modifier = Modifier.fillMaxHeight()
                 ,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+            //verticalAlignment = Alignment.CenterVertically
         ) {
             LargeTitleText(regNumber)
             BodyText(text = vehicleModel)
@@ -190,7 +190,7 @@ fun ClientsDropDown(
 
         Row {
 
-            SearchBar(
+            CustomSearchBar(
                 query = "",
                 onQueryChange = {},
                 onSearch = {},
@@ -248,6 +248,7 @@ fun VehiclesDropDown(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
         modifier = Modifier
+            .fillMaxSize()
             .padding(10.dp)
         ,
         properties = PopupProperties(
@@ -257,7 +258,7 @@ fun VehiclesDropDown(
 
         Column {
 
-            SearchBar(
+            CustomSearchBar(
                 query = "",
                 onQueryChange = {},
                 onSearch = {},

@@ -29,4 +29,8 @@ sealed class Route(val path: String) {
     data object ClientDetails: Route("client_details/{clientId}")
     data object EditClient: Route("edit_client/{clientId}")
     data object NewClient: Route("new_client")
+
+    //Search Screen
+    data object Search: Route("search/{title}")
+
 }

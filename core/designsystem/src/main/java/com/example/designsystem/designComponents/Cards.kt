@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,8 +46,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.BlueA700
+import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.DarkOrange
@@ -68,7 +69,7 @@ fun LargeJobCard(
     Card(
         onClick = onClick,
         modifier = Modifier
-            .height(200.dp)
+            .wrapContentHeight()
             .fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
@@ -79,15 +80,19 @@ fun LargeJobCard(
             modifier = Modifier
                 .padding(vertical = 15.dp, horizontal = 20.dp)
                 .fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(top = 5.dp),
             ) {
                 LargeTitleText(name = jobCardName)
-                BodyText(text = "Due: ${jobCardDeadline.dayOfWeek} ${jobCardDeadline.hour}:${jobCardDeadline.minute}")
+                BodyText(
+                    text = "Due: ${
+                        jobCardDeadline.dayOfWeek.toString().lowercase()
+                            .replaceFirstChar { it.uppercase() }
+                    } ${jobCardDeadline.hour}:${jobCardDeadline.minute}",
+                    modifier = Modifier.padding(top = 2.dp)
+                )
 
 
             }
@@ -95,11 +100,11 @@ fun LargeJobCard(
             Row(
                 modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
             ) {
-                BodyText(text = "Check the breaks, Check the tires, Steering need attention \nPerform major service")
+                BodyTextItalic(text = "Check the breaks, Check the tires, Steering need attention \nPerform major service")
             }
 
             Row(
-                modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
+                //modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -116,7 +121,12 @@ fun LargeJobCard(
 
 
 @Composable
-fun ProfileAvatar(initials: String, modifier: Modifier = Modifier, size: Dp = 40.dp, textSize: TextUnit = 12.sp ) {
+fun ProfileAvatar(
+    initials: String,
+    modifier: Modifier = Modifier,
+    size: Dp = 40.dp,
+    textSize: TextUnit = 12.sp
+) {
     val color by remember {
         mutableStateOf(generateRandomColor())
     }
@@ -129,7 +139,7 @@ fun ProfileAvatar(initials: String, modifier: Modifier = Modifier, size: Dp = 40
                 .clip(CircleShape)
                 .size(size)
                 .background(color)
-                //.border(1.dp, LightGrey, CircleShape)
+            //.border(1.dp, LightGrey, CircleShape)
             ,
             contentAlignment = Alignment.Center
         ) {
@@ -528,7 +538,13 @@ fun AllJobCardListItem(
             style = MaterialTheme.typography.titleMedium
         )
         Text(
-            text = "Closed: ${if (closedDate != null) {"${closedDate.dayOfWeek} ${closedDate.month} ${closedDate.hour}:${closedDate.minute}"} else { "null" }} ",
+            text = "Closed: ${
+                if (closedDate != null) {
+                    "${closedDate.dayOfWeek} ${closedDate.month} ${closedDate.hour}:${closedDate.minute}"
+                } else {
+                    "null"
+                }
+            } ",
             style = MaterialTheme.typography.bodyMedium
         )
     }

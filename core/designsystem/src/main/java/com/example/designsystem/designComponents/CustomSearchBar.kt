@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -30,7 +31,7 @@ import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.Grey
 
 @Composable
-fun SearchBar(
+fun CustomSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
@@ -76,7 +77,7 @@ fun CustomTextField(
             }
         },
         interactionSource = interactionSource,
-        enabled = true,
+        enabled = false,
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),  // Add this
         keyboardActions = KeyboardActions(onSearch = { onSearch() })

@@ -28,7 +28,7 @@ fun ClientsScreen( navController : NavController){
     val clients = viewModel.clients.map { ListCategory(name = it.key.toString(), items = it.value) }
 
     Scaffold(
-        topBar = { TopBar("Clients") },
+        topBar = { TopBar("Clients"){navController.navigate(Route.Search.path.replace("{title}", "Clients"))} },
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(

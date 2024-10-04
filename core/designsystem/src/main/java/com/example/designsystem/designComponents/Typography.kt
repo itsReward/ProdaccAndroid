@@ -15,7 +15,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.DarkGrey
+import com.example.designsystem.theme.Grey
+import com.example.designsystem.theme.LightGrey
 
 @Composable
 fun SectionHeading(text: String, modifier: Modifier, textAlign: TextAlign?) {
@@ -76,6 +79,17 @@ fun BodyText(text: String, modifier: Modifier = Modifier){
         text = text,
         style = MaterialTheme.typography.bodyLarge,
         color = DarkGrey,
-        modifier = Modifier
+        modifier = modifier
+    )
+}
+
+@Composable
+fun BodyTextItalic(text: String, modifier: Modifier = Modifier){
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyLarge,
+        color = Grey,
+        modifier = modifier,
+        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
     )
 }

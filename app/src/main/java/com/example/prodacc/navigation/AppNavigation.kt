@@ -22,6 +22,7 @@ import com.example.prodacc.ui.employees.screens.EmployeeDetailScreen
 import com.example.prodacc.ui.employees.screens.NewEmployeeScreen
 import com.example.prodacc.ui.jobcards.screens.JobCardDetailScreen
 import com.example.prodacc.ui.jobcards.screens.NewJobCardScreen
+import com.example.prodacc.ui.search.screen.SearchScreen
 import com.example.prodacc.ui.vehicles.EditVehicleDetailsScreen
 import com.example.prodacc.ui.vehicles.NewVehicleScreen
 import com.example.prodacc.ui.vehicles.VehicleDetailsScreen
@@ -209,6 +210,24 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         }
 
 
-        // Add more composables for other routes
+        //SearchScreen
+        composable(
+            route = Route.Search.path,
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            }
+        ){ backStackEntry ->
+            val title = backStackEntry.arguments?.getString("title") ?: ""
+            SearchScreen(navController, title)
+        }
     }
 }

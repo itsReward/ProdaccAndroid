@@ -66,7 +66,7 @@ fun JobCardsScreen(
     var newJobCardDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopBar("Job Cards") },
+        topBar = { TopBar("Job Cards"){navController.navigate(Route.Search.path.replace("{title}", "Job Cards"))} },
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
@@ -86,7 +86,7 @@ fun JobCardsScreen(
                         .clip(RoundedCornerShape(10.dp))
                         .background(Color.White)
                         .wrapContentSize()
-                        .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 20.dp)
+                        .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 10.dp)
                 ) {
                     var vehicleExpanded by remember { mutableStateOf(false) }
 
@@ -96,27 +96,20 @@ fun JobCardsScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row (
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp,top = 20.dp, start = 10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ){
                             LargeTitleText(name = "New Job Card")
-                            IconButton(onClick = { newJobCardDialog = !newJobCardDialog }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Cancel"
-                                )
-
-                            }
                         }
 
-                        // MediumTitleText(name = "Select Vehicle")
                     }
 
 
                     TextField(
                         value = "${viewModel.vehicleState?.color} ${viewModel.vehicleState?.model} ${viewModel.vehicleState?.regNumber}",
                         onValueChange = {},
+                        placeholder = {Text(text = "Vehicle")},
                         label = { Text(text = "Vehicle") },
                         readOnly = true,
                         leadingIcon = {
@@ -163,9 +156,16 @@ fun JobCardsScreen(
 
                         }
 
-                        /*Button(onClick = { navController.navigate() }) {
-
-                        }*/
+                        Button(onClick = {
+                            navController.navigate(
+                                Route.NewJobCard.path.replace(
+                                    "vehicleId",
+                                    viewModel.vehicleState?.id.toString()
+                                )
+                            )
+                        }) {
+                            Text(text = "Proceed")
+                        }
                     }
 
 

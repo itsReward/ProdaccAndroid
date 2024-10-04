@@ -32,7 +32,7 @@ fun VehiclesScreen(
 
     Scaffold(
 
-        topBar = { TopBar("Vehicles") },
+        topBar = { TopBar("Vehicles"){navController.navigate(Route.Search.path.replace("{title}", "Vehicles"))} },
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(

@@ -30,7 +30,7 @@ fun EmployeesScreen(navController : NavController){
     val viewModel = EmployeesViewModel()
 
     Scaffold(
-        topBar = { TopBar("Employees") },
+        topBar = { TopBar("Employees"){navController.navigate(Route.Search.path.replace("{title}", "Employees"))} },
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
