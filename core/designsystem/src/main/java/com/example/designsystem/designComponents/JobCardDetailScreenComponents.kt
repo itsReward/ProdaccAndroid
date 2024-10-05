@@ -359,7 +359,6 @@ fun DateTimePickerTextField(
             value?.toLocalTime() ?: java.time.LocalTime.now()
         )
     }
-
     
     val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")
 
