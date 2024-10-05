@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardStatusRepository
+import java.time.LocalDateTime
 
 class JobCardDetailsViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
@@ -20,4 +21,24 @@ class JobCardDetailsViewModel(
         teamExpanded.value = !teamExpanded.value
     }
 
+
+    fun updateDateAndTimeIn(newDateTime: LocalDateTime) {
+        _jobCard.value = jobCard.copy(dateAndTimeIn = newDateTime)
+    }
+
+    fun updateEstimatedTimeOfCompletion(newDateTime: LocalDateTime) {
+        _jobCard.value = jobCard.copy(estimatedTimeOfCompletion = newDateTime)
+    }
+
+    fun updateJobCardDeadline(newDateTime: LocalDateTime) {
+        _jobCard.value = jobCard.copy(jobCardDeadline = newDateTime)
+    }
+
+    fun updateDateAndTimeClosed(newDateTime: LocalDateTime) {
+        _jobCard.value = jobCard.copy(dateAndTimeClosed = newDateTime)
+    }
+
+    fun updateDateAndTimeFrozen(newDateTime: LocalDateTime) {
+        _jobCard.value = jobCard.copy(dateAndTimeFrozen = newDateTime)
+    }
 }

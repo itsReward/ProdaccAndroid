@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,12 +33,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.example.designsystem.designComponents.DateTimePickerTextField
 import com.example.designsystem.designComponents.DisabledTextField
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.StepIndicator
 import com.example.designsystem.designComponents.TopBar
+import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.Grey
+import com.example.designsystem.theme.LightGrey
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 
 
@@ -54,7 +60,9 @@ fun JobCardDetailScreen(
     Column(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
-        modifier = Modifier.background(Color.White).fillMaxSize()
+        modifier = Modifier
+            .background(Color.White)
+            .fillMaxSize()
 
     ) {
         TopBar(jobCardName = viewModel.jobCard.jobCardName, navController = navController, onClickPeople = {showDialog = !showDialog}, onClickDelete = {})
@@ -112,8 +120,14 @@ fun JobCardDetailScreen(
             }
         }
 
+
+        //content
+
+
         Column(
-            modifier = Modifier.verticalScroll(scroll).animateContentSize()
+            modifier = Modifier
+                .verticalScroll(scroll)
+                .animateContentSize()
         ) {
             Row (
                 modifier = Modifier
@@ -127,6 +141,29 @@ fun JobCardDetailScreen(
                 )
             }
 
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Button(onClick = {}) {
+                    Text(text = "Vehicle")
+
+                }
+                Button(onClick = {}) {
+                    Text(text = "Vehicle")
+
+                }
+                Row (
+                    modifier = Modifier
+                        .size(200.dp, 50.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(Grey)
+
+                ){
+
+                }
+            }
 
 
             Column(
@@ -223,6 +260,80 @@ fun JobCardDetailScreen(
 
                 }
             }
+
+
+            DateTimePickerTextField(
+                value = viewModel.jobCard.dateAndTimeIn,
+                onValueChange = { viewModel.updateDateAndTimeIn(it) },
+                label = "Date In",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            DateTimePickerTextField(
+                value = viewModel.jobCard.estimatedTimeOfCompletion,
+                onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
+                label = "E.T.C.",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            DateTimePickerTextField(
+                value = viewModel.jobCard.jobCardDeadline,
+                onValueChange = { viewModel.updateJobCardDeadline(it) },
+                label = "Deadline",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            viewModel.jobCard.dateAndTimeClosed?.let {
+                DateTimePickerTextField(
+                    value = it,
+                    onValueChange = { newDateTime -> viewModel.updateDateAndTimeClosed(newDateTime) },
+                    label = "Date Closed",
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            viewModel.jobCard.dateAndTimeFrozen?.let {
+                DateTimePickerTextField(
+                    value = it,
+                    onValueChange = { newDateTime -> viewModel.updateDateAndTimeFrozen(newDateTime) },
+                    label = "Date Frozen",
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+                )
+            }
+
+
+
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp)
+            ) {
+                Button(
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Grey,
+                    )
+                ) {
+                    Text(text = "State Checklist")
+
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         }
