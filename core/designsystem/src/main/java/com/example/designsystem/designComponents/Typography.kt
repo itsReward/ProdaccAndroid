@@ -59,7 +59,7 @@ fun LargeTitleText(name: String, color: Color = DarkGrey){
 }
 
 @Composable
-fun MediumTitleText(name: String, modifier: Modifier = Modifier){
+fun MediumTitleText(name: String, modifier: Modifier = Modifier, color: Color = DarkGrey){
     Row (
         modifier = modifier
     ) {
@@ -67,7 +67,7 @@ fun MediumTitleText(name: String, modifier: Modifier = Modifier){
             text = name,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            color = DarkGrey
+            color = color
         )
     }
 

@@ -300,7 +300,7 @@ fun TopBar(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
                 color = Color.White
             )
-            LargeTitleText(
+            MediumTitleText(
                 name = jobCardName, color = Color.White
             )
         }

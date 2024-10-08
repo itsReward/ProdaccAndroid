@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,6 +44,7 @@ import com.example.designsystem.designComponents.Timesheets
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.Grey
+import com.example.designsystem.theme.checklistIcon
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import java.time.LocalTime
 
@@ -134,7 +136,8 @@ fun JobCardDetailScreen(
             modifier = Modifier
                 .verticalScroll(scroll)
                 .animateContentSize()
-                .padding(horizontal = 10.dp)
+                .padding(horizontal = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -320,18 +323,41 @@ fun JobCardDetailScreen(
 
 
             Row(
-                modifier = Modifier.padding(horizontal = 10.dp)
+                modifier = Modifier.padding(horizontal = 10.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Icon(imageVector = checklistIcon, contentDescription = "Checklist icon")
+                    Text(text = "Checklists", modifier = Modifier.padding(start = 5.dp))
+                }
+
                 Button(
                     onClick = {},
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Grey,
                     )
                 ) {
-                    Text(text = "State Checklist")
+                   // Icon(imageVector = checklistIcon, contentDescription = "")
+                    Text(text = "Control")
 
                 }
+
+                Button(
+                    onClick = {},
+                    modifier = Modifier,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Grey,
+                    )
+                ) {
+                    Text(text = "Service ")
+
+                }
+
+
             }
 
 
