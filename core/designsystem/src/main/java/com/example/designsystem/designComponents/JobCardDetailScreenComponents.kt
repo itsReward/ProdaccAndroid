@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -495,14 +496,20 @@ fun DatePickerContent(
 
 @Composable
 fun Timesheets(
+    profileInitials: String,
     title: String,
     startTime: LocalTime,
     endTime: LocalTime?
 ){
     Row (
-        modifier = Modifier.fillMaxWidth().background(Blue50).padding(horizontal = 10.dp, vertical = 5.dp).height(30.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Blue50)
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .wrapContentHeight(),
         verticalAlignment = Alignment.CenterVertically
     ){
+        ProfileAvatar(initials = profileInitials)
         Text(text = title, modifier = Modifier.weight(2f), color = Color.DarkGray)
         Row(
             modifier = Modifier.weight(2f),

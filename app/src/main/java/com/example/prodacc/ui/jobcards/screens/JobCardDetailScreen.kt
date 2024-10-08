@@ -302,22 +302,26 @@ fun JobCardDetailScreen(
                 Timesheets(
                     title = "Fixing Breaks",
                     startTime = LocalTime.of(12, 21),
-                    endTime = null
+                    endTime = null,
+                    profileInitials = "RM"
                 )
                 Timesheets(
                     title = "Wheel Alignment",
                     startTime = LocalTime.of(12, 21),
-                    endTime = null
+                    endTime = null,
+                    profileInitials = "MJ"
                 )
                 Timesheets(
                     title = "Engine Overhaul",
                     startTime = LocalTime.of(12, 21),
-                    endTime = null
+                    endTime = null,
+                    profileInitials = "PA"
                 )
                 Timesheets(
                     title = "Minor service",
                     startTime = LocalTime.of(12, 21),
-                    endTime = null
+                    endTime = null,
+                    profileInitials = "RM"
                 )
             }
 
