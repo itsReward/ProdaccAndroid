@@ -60,12 +60,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.wear.compose.material.Text
+import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
 import com.prodacc.data.remote.dao.JobCardStatus
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -487,6 +489,28 @@ fun DatePickerContent(
             val selectedDate =
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneOffset.UTC).toLocalDate()
             onDateSelected(selectedDate)
+        }
+    }
+}
+
+@Composable
+fun Timesheets(
+    title: String,
+    startTime: LocalTime,
+    endTime: LocalTime?
+){
+    Row (
+        modifier = Modifier.fillMaxWidth().background(Blue50).padding(horizontal = 10.dp, vertical = 5.dp).height(30.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        Text(text = title, modifier = Modifier.weight(2f), color = Color.DarkGray)
+        Row(
+            modifier = Modifier.weight(2f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ){
+            Text(text = "${startTime.hour}:${startTime.minute}", color = Color.DarkGray)
+            Text(text = if (endTime != null) "${endTime.hour}:${endTime.minute}" else "not entered", color = Color.DarkGray)
         }
     }
 }

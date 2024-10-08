@@ -6,7 +6,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,11 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,12 +39,12 @@ import com.example.designsystem.designComponents.DisabledTextField
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.StepIndicator
+import com.example.designsystem.designComponents.Timesheets
 import com.example.designsystem.designComponents.TopBar
-import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.Grey
-import com.example.designsystem.theme.LightGrey
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
+import java.time.LocalTime
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -54,7 +55,7 @@ fun JobCardDetailScreen(
     val viewModel = JobCardDetailsViewModel(job = jobCardId)
     val scroll = rememberScrollState()
     val statusScroll = rememberScrollState()
-    var showDialog by remember{ mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
 
     Column(
@@ -65,11 +66,15 @@ fun JobCardDetailScreen(
             .fillMaxSize()
 
     ) {
-        TopBar(jobCardName = viewModel.jobCard.jobCardName, navController = navController, onClickPeople = {showDialog = !showDialog}, onClickDelete = {})
+        TopBar(
+            jobCardName = viewModel.jobCard.jobCardName,
+            navController = navController,
+            onClickPeople = { showDialog = !showDialog },
+            onClickDelete = {})
 
-        if (showDialog){
+        if (showDialog) {
             Dialog(onDismissRequest = { showDialog = !showDialog }) {
-                Column (
+                Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color.White)
@@ -81,42 +86,43 @@ fun JobCardDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
-                    ){
+                    ) {
                         LargeTitleText(name = "Team")
 
                     }
 
-                    Row (
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(CardGrey)
                             .height(2.dp)
-                    ){
+                    ) {
 
                     }
-                    DisabledTextField(label = "Service Advisor", text = viewModel.jobCard.serviceAdvisorName)
+                    DisabledTextField(
+                        label = "Service Advisor",
+                        text = viewModel.jobCard.serviceAdvisorName
+                    )
                     DisabledTextField(label = "Supervisor", text = viewModel.jobCard.supervisorName)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
-                    ){
+                    ) {
                         MediumTitleText("Technicians: ")
                         TextButton(onClick = { /*TODO*/ }) {
                             Text(text = "Add")
                         }
                     }
-                    Row (
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
-                    ){
-                        Button(onClick = {showDialog = !showDialog}) {
+                    ) {
+                        Button(onClick = { showDialog = !showDialog }) {
                             Text(text = "close")
                         }
                     }
-
                 }
-
             }
         }
 
@@ -128,16 +134,17 @@ fun JobCardDetailScreen(
             modifier = Modifier
                 .verticalScroll(scroll)
                 .animateContentSize()
+                .padding(horizontal = 10.dp)
         ) {
-            Row (
+            Row(
                 modifier = Modifier
                     .padding(vertical = 10.dp)
                     .horizontalScroll(statusScroll),
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 StepIndicator(
-                    jobCardStatuses = viewModel.jobCardStatusList.subList(0,3)
+                    jobCardStatuses = viewModel.jobCardStatusList.subList(0, 3)
                 )
             }
 
@@ -151,16 +158,16 @@ fun JobCardDetailScreen(
 
                 }
                 Button(onClick = {}) {
-                    Text(text = "Vehicle")
+                    Text(text = "Client")
 
                 }
-                Row (
+                Row(
                     modifier = Modifier
                         .size(200.dp, 50.dp)
                         .clip(RoundedCornerShape(50.dp))
                         .background(Grey)
 
-                ){
+                ) {
 
                 }
             }
@@ -198,66 +205,6 @@ fun JobCardDetailScreen(
                             modifier = Modifier.weight(2f)
                         )
                     }
-
-
-
-                    FlowRow {
-                        DisabledTextField(
-                            label = "Date In",
-                            text = "${viewModel.jobCard.dateAndTimeIn.dayOfMonth} " +
-                                    "${viewModel.jobCard.dateAndTimeIn.month} " +
-                                    "${viewModel.jobCard.dateAndTimeIn.hour}:" +
-                                    "${viewModel.jobCard.dateAndTimeIn.minute}",
-                            modifier = Modifier.weight(2f)
-                        )
-                        DisabledTextField(
-                            label = "E.T.C.",
-                            text = "${viewModel.jobCard.estimatedTimeOfCompletion.dayOfMonth} " +
-                                    "${viewModel.jobCard.estimatedTimeOfCompletion.month} " +
-                                    "${viewModel.jobCard.estimatedTimeOfCompletion.hour}:" +
-                                    "${viewModel.jobCard.estimatedTimeOfCompletion.minute}",
-                            modifier = Modifier.weight(2f)
-                        )
-                    }
-
-                    Row {
-
-                        DisabledTextField(
-                            label = "Deadline",
-                            text = "${viewModel.jobCard.jobCardDeadline.dayOfMonth} " +
-                                    "${viewModel.jobCard.jobCardDeadline.month} " +
-                                    "${viewModel.jobCard.jobCardDeadline.hour}:" +
-                                    "${viewModel.jobCard.jobCardDeadline.minute}",
-                            modifier = Modifier.weight(2f)
-                        )
-                        if (viewModel.jobCard.dateAndTimeClosed != null) {
-                            DisabledTextField(
-                                label = "Date Closed",
-                                text = "${viewModel.jobCard.dateAndTimeClosed!!.dayOfMonth} " +
-                                        "${viewModel.jobCard.dateAndTimeClosed!!.month} " +
-                                        "${viewModel.jobCard.dateAndTimeClosed!!.hour}:" +
-                                        "${viewModel.jobCard.dateAndTimeClosed!!.minute}",
-                                modifier = Modifier.weight(2f)
-                            )
-                        }
-
-                    }
-
-                    Row {
-                        if (viewModel.jobCard.dateAndTimeFrozen != null) {
-                            DisabledTextField(
-                                label = "Date Frozen",
-                                text = "${viewModel.jobCard.dateAndTimeFrozen!!.dayOfMonth} " +
-                                        "${viewModel.jobCard.dateAndTimeFrozen!!.month} " +
-                                        "${viewModel.jobCard.dateAndTimeFrozen!!.hour}:" +
-                                        "${viewModel.jobCard.dateAndTimeFrozen!!.minute}",
-                                modifier = Modifier.weight(2f)
-                            )
-                        }
-
-                    }
-
-
                 }
             }
 
@@ -270,36 +217,30 @@ fun JobCardDetailScreen(
             )
 
             DateTimePickerTextField(
-                value = viewModel.jobCard.estimatedTimeOfCompletion,
-                onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
-                label = "E.T.C.",
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            DateTimePickerTextField(
                 value = viewModel.jobCard.jobCardDeadline,
                 onValueChange = { viewModel.updateJobCardDeadline(it) },
                 label = "Deadline",
                 modifier = Modifier.fillMaxWidth()
             )
 
-            viewModel.jobCard.dateAndTimeClosed?.let {
-                DateTimePickerTextField(
-                    value = it,
-                    onValueChange = { newDateTime -> viewModel.updateDateAndTimeClosed(newDateTime) },
-                    label = "Date Closed",
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
 
-            viewModel.jobCard.dateAndTimeFrozen?.let {
-                DateTimePickerTextField(
-                    value = it,
-                    onValueChange = { newDateTime -> viewModel.updateDateAndTimeFrozen(newDateTime) },
-                    label = "Date Frozen",
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
-                )
-            }
+            DateTimePickerTextField(
+                value = viewModel.jobCard.dateAndTimeClosed,
+                onValueChange = { newDateTime -> viewModel.updateDateAndTimeClosed(newDateTime) },
+                label = "Date Closed",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+
+            DateTimePickerTextField(
+                value = viewModel.jobCard.dateAndTimeFrozen,
+                onValueChange = { newDateTime -> viewModel.updateDateAndTimeFrozen(newDateTime) },
+                label = "Date Frozen",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp)
+            )
+
 
 
 
@@ -318,33 +259,67 @@ fun JobCardDetailScreen(
                 }
             }
 
+            OutlinedTextField(
+                value = "",
+                onValueChange = {it},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                label = {
+                    Text(
+                        text = "Service Advisor Report"
+                    )
+                }
+            )
+            OutlinedTextField(
+                value = "",
+                onValueChange = {it},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                label = {
+                    Text(
+                        text = "Diagnostics Report"
+                    )
+                }
+            )
 
+            DateTimePickerTextField(
+                value = viewModel.jobCard.estimatedTimeOfCompletion,
+                onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
+                label = "E.T.C.",
+                modifier = Modifier.fillMaxWidth()
+            )
 
+            Column (
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ){
+                MediumTitleText(name = "Timesheets/work done ")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+                Timesheets(
+                    title = "Fixing Breaks",
+                    startTime = LocalTime.of(12, 21),
+                    endTime = null
+                )
+                Timesheets(
+                    title = "Wheel Alignment",
+                    startTime = LocalTime.of(12, 21),
+                    endTime = null
+                )
+                Timesheets(
+                    title = "Engine Overhaul",
+                    startTime = LocalTime.of(12, 21),
+                    endTime = null
+                )
+                Timesheets(
+                    title = "Minor service",
+                    startTime = LocalTime.of(12, 21),
+                    endTime = null
+                )
+            }
 
 
         }
-
-
-
-
-
-
-
-
 
 
     }
