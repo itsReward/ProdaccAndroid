@@ -319,6 +319,22 @@ fun JobCardDetailScreen(
             }
 
 
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp)
+            ) {
+                Button(
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Grey,
+                    )
+                ) {
+                    Text(text = "State Checklist")
+
+                }
+            }
+
+
         }
 
 
