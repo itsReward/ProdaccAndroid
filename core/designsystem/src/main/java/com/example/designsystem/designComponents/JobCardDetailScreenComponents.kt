@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -56,6 +57,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,6 +67,7 @@ import androidx.navigation.NavController
 import androidx.wear.compose.material.Text
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
+import com.example.designsystem.theme.DarkGrey
 import com.prodacc.data.remote.dao.JobCardStatus
 import java.time.DayOfWeek
 import java.time.Instant
@@ -281,12 +286,12 @@ fun TopBar(
 ) {
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(bottomEnd = 30.dp))
-            .background(Color.Blue)
+            //.clip(RoundedCornerShape(bottomEnd = 30.dp))
+            .background(Color.White)
             .wrapContentSize()
-            .systemBarsPadding()
             .fillMaxWidth()
-            .padding(top = 20.dp),
+            .padding(top = 20.dp)
+            ,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
 
@@ -299,10 +304,10 @@ fun TopBar(
             IconButton(
                 onClick = { navController.navigateUp() },
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
-                color = Color.White
+                color = DarkGrey
             )
             MediumTitleText(
-                name = jobCardName, color = Color.White
+                name = jobCardName, color = DarkGrey
             )
         }
 
@@ -315,10 +320,10 @@ fun TopBar(
         ) {
 
             IconButton(
-                onClick = onClickPeople, icon = Icons.Default.People, color = Color.White
+                onClick = onClickPeople, icon = Icons.Default.People, color = DarkGrey
             )
             IconButton(
-                onClick = onClickDelete, icon = Icons.Filled.Delete, color = Color.White
+                onClick = onClickDelete, icon = Icons.Filled.Delete, color = DarkGrey
             )
         }
 
@@ -505,19 +510,19 @@ fun Timesheets(
         modifier = Modifier
             .fillMaxWidth()
             .background(Blue50)
-            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .padding(horizontal = 10.dp, vertical = 10.dp)
             .wrapContentHeight(),
         verticalAlignment = Alignment.CenterVertically
     ){
         ProfileAvatar(initials = profileInitials)
-        Text(text = title, modifier = Modifier.weight(2f), color = Color.DarkGray)
+        Text(text = title, modifier = Modifier.weight(2f).padding(start = 5.dp), color = Color.DarkGray)
         Row(
-            modifier = Modifier.weight(2f),
+            modifier = Modifier,
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ){
-            Text(text = "${startTime.hour}:${startTime.minute}", color = Color.DarkGray)
-            Text(text = if (endTime != null) "${endTime.hour}:${endTime.minute}" else "not entered", color = Color.DarkGray)
+            Text(text = "${startTime.hour}:${startTime.minute} -", color = Color.DarkGray)
+            Text(text = if (endTime != null) " ${endTime.hour}:${endTime.minute}" else " not entered", color = Color.DarkGray)
         }
     }
 }

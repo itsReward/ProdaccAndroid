@@ -4,6 +4,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -66,14 +68,15 @@ fun JobCardDetailScreen(
         modifier = Modifier
             .background(Color.White)
             .fillMaxSize()
+            .systemBarsPadding()
 
     ) {
         TopBar(
             jobCardName = viewModel.jobCard.jobCardName,
             navController = navController,
             onClickPeople = { showDialog = !showDialog },
-            onClickDelete = {})
-
+            onClickDelete = {}
+        )
         if (showDialog) {
             Dialog(onDismissRequest = { showDialog = !showDialog }) {
                 Column(
@@ -152,7 +155,7 @@ fun JobCardDetailScreen(
             }
 
 
-            Row(
+            /*Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
@@ -173,16 +176,14 @@ fun JobCardDetailScreen(
                 ) {
 
                 }
-            }
+            }*/
 
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(10.dp)
+                    //.padding(10.dp)
             ) {
-
-
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -198,16 +199,27 @@ fun JobCardDetailScreen(
 
                     Row {
                         DisabledTextField(
-                            label = "JobCard No.",
-                            text = viewModel.jobCard.jobCardNumber.toString(),
-                            modifier = Modifier.weight(2f)
-                        )
-                        DisabledTextField(
                             label = "Vehicle",
                             text = viewModel.jobCard.vehicleName,
                             modifier = Modifier.weight(2f)
                         )
+                        DisabledTextField(
+                            label = "Client",
+                            text = viewModel.jobCard.clientName.toString(),
+                            modifier = Modifier.weight(2f)
+                        )
+
                     }
+
+                    Row {
+                        DisabledTextField(
+                            label = "JobCard No.",
+                            text = viewModel.jobCard.jobCardNumber.toString(),
+                            modifier = Modifier
+                        )
+                    }
+
+
                 }
             }
 
