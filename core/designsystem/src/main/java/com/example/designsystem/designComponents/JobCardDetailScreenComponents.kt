@@ -10,9 +10,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,36 +23,50 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Garage
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,26 +74,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.wear.compose.material.Text
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
+import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
+import com.example.designsystem.theme.Green
+import com.example.designsystem.theme.Orange
 import com.prodacc.data.remote.dao.JobCardStatus
+import com.prodacc.data.remote.dao.TimeSheet
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -200,6 +223,50 @@ fun StepIndicator(
         /*      enter = slideInHorizontally(animationSpec = tween(durationMillis = 500)),
               exit = slideOutHorizontally(animationSpec = tween(durationMillis = 500))*/
     ) {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .clip(RoundedCornerShape(100.dp))
+            .clickable { expanded = !expanded }
+            .background(Blue50),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .background(
+                        when (jobCardStatuses.last().status) {
+                            "open" -> BlueA700
+                            "diagnostics" -> Orange
+                            "approval" -> Orange
+                            "work in progress" -> DarkGreen
+                            "testing" -> DarkGreen
+                            "done" -> DarkGreen
+                            else -> Color.Red
+                        }
+                    )
+                    //.clip(RoundedCornerShape(100.dp))
+                    .padding(end = 10.dp, top = 5.dp, bottom = 5.dp)
+                    .fillMaxWidth(
+                        when (jobCardStatuses.last().status) {
+                            "open" -> 0.1f
+                            "diagnostics" -> 0.2f
+                            "approval" -> 0.3f
+                            "work in progress" -> 0.5f
+                            "testing" -> 0.8f
+                            "done" -> 1f
+                            else -> 0.1f
+                        }
+                    ),
+                horizontalArrangement = Arrangement.End
+
+            ) {
+                Text(text = jobCardStatuses.last().status)
+
+            }
+        }
+
+        /*
         Row(horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.clickable { expanded = !expanded }) {
@@ -271,9 +338,57 @@ fun StepIndicator(
             )
 
             Spacer(modifier = Modifier.width(50.dp))
-        }
+        }*/
     }
 
+}
+
+
+@Composable
+fun ProgressIndicator(
+    jobCardStatuses: List<JobCardStatus>
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .clip(RoundedCornerShape(100.dp))
+            .background(Blue50),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxHeight()
+                .background(
+                    when (jobCardStatuses.last().status) {
+                        "open" -> BlueA700
+                        "diagnostics" -> Orange
+                        "approval" -> Orange
+                        "work_in_progress" -> Green
+                        "closed" -> Color.Green
+                        else -> Color.Red
+                    }
+                )
+                .clip(RoundedCornerShape(100.dp))
+                .padding(end = 5.dp)
+                .fillMaxWidth(
+                    when (jobCardStatuses.last().status) {
+                        "open" -> 0.1f
+                        "diagnostics" -> 0.2f
+                        "approval" -> 0.3f
+                        "work_in_progress" -> 0.5f
+                        "testing" -> 0.8f
+                        "closed" -> 1f
+                        else -> 0.1f
+                    }
+                ),
+            horizontalArrangement = Arrangement.End
+
+        ) {
+            Text(text = jobCardStatuses.last().status)
+
+        }
+    }
 }
 
 
@@ -286,18 +401,24 @@ fun TopBar(
 ) {
     Row(
         modifier = Modifier
-            //.clip(RoundedCornerShape(bottomEnd = 30.dp))
+            .shadow(
+                elevation = 4.dp,
+                shape = RectangleShape,
+                clip = false,
+                ambientColor = Color.Black,
+                spotColor = Color.Black
+            )
             .background(Color.White)
             .wrapContentSize()
             .fillMaxWidth()
-            .padding(top = 20.dp)
-            ,
+            .statusBarsPadding()
+            .padding(top = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
 
     ) {
         Row(
-            modifier = Modifier.weight(2f), verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.weight(3f), verticalAlignment = Alignment.CenterVertically
         ) {
 
 
@@ -313,7 +434,7 @@ fun TopBar(
 
         Row(
             modifier = Modifier
-                .weight(2f)
+                .weight(1f)
                 .padding(end = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
@@ -371,16 +492,37 @@ fun DateTimePickerTextField(
     val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")
 
     Column(modifier = modifier) {
-        OutlinedTextField(value = value?.format(formatter) ?: "",
+        TextField(
+            value = value?.format(formatter) ?: "",
             onValueChange = { },
-            label = { Text(label, color = Color.DarkGray) },
-            readOnly = true,
-            trailingIcon = {
-                Icon(imageVector = Icons.Default.DateRange,
-                    contentDescription = "Select date and time",
-                    modifier = Modifier.clickable { showDialog = true })
+            leadingIcon = {
+                Text(
+                    "$label :",
+                    color = Color.DarkGray,
+                    modifier = Modifier.padding(start = 15.dp)
+                )
             },
-            modifier = Modifier.fillMaxWidth()
+            enabled = false,
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Select date and time",
+                    modifier = Modifier
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showDialog = true },
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = CardGrey,
+                focusedContainerColor = CardGrey,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                disabledTextColor = Color.DarkGray,
+                disabledContainerColor = CardGrey,
+                disabledIndicatorColor = CardGrey,
+                disabledTrailingIconColor = Color.DarkGray
+            )
         )
 
         if (showDialog) {
@@ -421,7 +563,6 @@ fun DateTimePickerDialog(
     }, text = {
 
 
-
         Column(
         ) {
             HorizontalPager(
@@ -435,10 +576,10 @@ fun DateTimePickerDialog(
                         onDateSelected = { selectedDate = it })
                 }
             }
-            Row (
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
-            ){
+            ) {
                 MediumTitleText(name = "Swipe ${if (pagerState.currentPage == 0) "left" else "right"} to select ${if (pagerState.currentPage == 0) "date" else "time"}")
                 Icon(
                     imageVector = if (pagerState.currentPage == 0) Icons.Default.ArrowForward else Icons.Default.ArrowBack,
@@ -501,28 +642,371 @@ fun DatePickerContent(
 
 @Composable
 fun Timesheets(
-    profileInitials: String,
-    title: String,
-    startTime: LocalTime,
-    endTime: LocalTime?
-){
-    Row (
+    timeSheet: TimeSheet
+) {
+    val currentDateTime = LocalDate.now()
+    var timeSheetDialog by remember { mutableStateOf(false) }
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = { timeSheetDialog = !timeSheetDialog })
             .background(Blue50)
             .padding(horizontal = 10.dp, vertical = 10.dp)
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            ,
         verticalAlignment = Alignment.CenterVertically
-    ){
-        ProfileAvatar(initials = profileInitials)
-        Text(text = title, modifier = Modifier.weight(2f).padding(start = 5.dp), color = Color.DarkGray)
+    ) {
+        ProfileAvatar(initials = timeSheet.technicianName.first().toString())
+        Text(
+            text = timeSheet.sheetTitle, modifier = Modifier
+                .weight(2f)
+                .padding(start = 5.dp), color = Color.DarkGray
+        )
         Row(
             modifier = Modifier,
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
-        ){
-            Text(text = "${startTime.hour}:${startTime.minute} -", color = Color.DarkGray)
-            Text(text = if (endTime != null) " ${endTime.hour}:${endTime.minute}" else " not entered", color = Color.DarkGray)
+        ) {
+            Text(
+                text = if (currentDateTime == timeSheet.clockInDateAndTime.toLocalDate()) "${timeSheet.clockInDateAndTime.hour}:${timeSheet.clockInDateAndTime.minute} -"
+                else "${timeSheet.clockInDateAndTime} -",
+                color = Color.DarkGray
+            )
+            Text(
+                text = if (timeSheet.clockOutDateAndTime != null && currentDateTime == timeSheet.clockOutDateAndTime!!.toLocalDate()) " ${"${timeSheet.clockOutDateAndTime!!.hour}:${timeSheet.clockOutDateAndTime!!.minute}"}" else if (currentDateTime < timeSheet.clockOutDateAndTime!!.toLocalDate()) "${timeSheet.clockOutDateAndTime}" else " not entered",
+                color = Color.DarkGray
+            )
+        }
+    }
+
+    AnimatedVisibility(visible = timeSheetDialog) {
+        Dialog(
+            onDismissRequest = { timeSheetDialog = !timeSheetDialog }
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .clip(
+                        RoundedCornerShape(15.dp)
+                    )
+                    .background(Color.White)
+                    .padding(horizontal = 15.dp, vertical = 10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    MediumTitleText(name = timeSheet.sheetTitle)
+                    BodyTextItalic(text = "by ${ timeSheet.technicianName }")
+                }
+
+                OutlinedTextField(
+                    value = timeSheet.sheetTitle,
+                    onValueChange = {},
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(text = "Title", color = Color.DarkGray) }
+                )
+                DateTimePickerTextField(
+                    value = timeSheet.clockInDateAndTime,
+                    onValueChange = {},
+                    label = "Start"
+                )
+
+                DateTimePickerTextField(
+                    value = timeSheet.clockOutDateAndTime,
+                    onValueChange = {},
+                    label = "Stop"
+                )
+                OutlinedTextField(
+                    value = timeSheet.report,
+                    onValueChange = {},
+                    label = { androidx.compose.material3.Text(text = "Timesheet report") },
+                    modifier = Modifier
+                        .height(200.dp)
+                        .fillMaxWidth()
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = { timeSheetDialog = !timeSheetDialog }) {
+                        Text(text = "Cancel", color = BlueA700)
+                    }
+                    Button(onClick = {}) {
+                        Text(text = "Save")
+                    }
+                }
+            }
+        }
+
+
+    }
+}
+
+
+@Composable
+fun NewTimeSheet(
+    saveSheet: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(horizontal = 15.dp)
+    ) {
+        MediumTitleText(name = "New TimeSheet")
+        OutlinedTextField(
+            value = "",
+            onValueChange = {},
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(text = "Title", color = Color.DarkGray) }
+        )
+        DateTimePickerTextField(value = null, onValueChange = {}, label = "Start")
+
+        DateTimePickerTextField(value = null, onValueChange = {}, label = "Stop")
+        OutlinedTextField(
+            value = "",
+            onValueChange = {},
+            label = { androidx.compose.material3.Text(text = "Timesheet report") },
+            modifier = Modifier
+                .height(200.dp)
+                .fillMaxWidth()
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TextButton(onClick = onDismiss) {
+                Text(text = "Cancel", color = BlueA700, fontWeight = FontWeight.SemiBold)
+            }
+            Button(onClick = saveSheet) {
+                Text(text = "Save")
+            }
         }
     }
 }
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun ServiceChecklist(
+    jobCardName: String,
+    onClose: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+    val options = listOf("OK", "Rectified", "Not Authorised")
+    val technician = "Prosper"
+    val brakes = remember { mutableStateOf("OK") }
+    val lights = remember { mutableStateOf("OK") }
+    val wipers = remember { mutableStateOf("OK") }
+    val continuosBeltAndPulleys = remember { mutableStateOf("OK") }
+    val hooters = remember { mutableStateOf("OK") }
+    val battery = remember { mutableStateOf("OK") }
+    val airConDustFilter = remember { mutableStateOf("OK") }
+    val rearDiff = remember { mutableStateOf("OK") }
+    val gearBoxOil = remember { mutableStateOf("OK") }
+    val powerSteeringFluid = remember { mutableStateOf("OK") }
+    val coolant = remember { mutableStateOf("OK") }
+    val tyrePressure = remember { mutableStateOf("OK") }
+    val clock = remember { mutableStateOf("OK") }
+    val coolantPressureTest = remember { mutableStateOf("OK") }
+    val date = remember { mutableStateOf(LocalDateTime.now()) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("$jobCardName Service Checklist", style = MaterialTheme.typography.titleLarge, color = Color.DarkGray)
+                },
+                actions = {
+                    IconButton(onClick = onClose, icon = Icons.Default.Close, color = Color.DarkGray)
+                }
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Checklist created on ${date.value.truncatedTo(ChronoUnit.MINUTES)} by $technician",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = "Inspection Items",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp), color = Color.DarkGray
+            )
+
+            // Group the two FlowRows in a single Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OptionDropdown(label = "Brakes:", initialOption = brakes.value, options = options).also { brakes.value = it }
+                    OptionDropdown(label = "Lights:", initialOption = lights.value, options = options).also { lights.value = it }
+                    OptionDropdown(label = "Wipers:", initialOption = wipers.value, options = options).also { wipers.value = it }
+                    OptionDropdown(label = "Belt & Pulleys:", initialOption = continuosBeltAndPulleys.value, options = options).also { continuosBeltAndPulleys.value = it }
+                    OptionDropdown(label = "Hooters:", initialOption = hooters.value, options = options).also { hooters.value = it }
+                    OptionDropdown(label = "Battery:", initialOption = battery.value, options = options).also { battery.value = it }
+                    OptionDropdown(label = "Air-Con Filter:", initialOption = airConDustFilter.value, options = options).also { airConDustFilter.value = it }
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OptionDropdown(label = "Rear Diff:", initialOption = rearDiff.value, options = options).also { rearDiff.value = it }
+                    OptionDropdown(label = "Gearbox Oil:", initialOption = gearBoxOil.value, options = options).also { gearBoxOil.value = it }
+                    OptionDropdown(label = "Power Steering:", initialOption = powerSteeringFluid.value, options = options).also { powerSteeringFluid.value = it }
+                    OptionDropdown(label = "Coolant:", initialOption = coolant.value, options = options).also { coolant.value = it }
+                    OptionDropdown(label = "Tyre Pressure:", initialOption = tyrePressure.value, options = options).also { tyrePressure.value = it }
+                    OptionDropdown(label = "Clock:", initialOption = clock.value, options = options).also { clock.value = it }
+                    OptionDropdown(label = "Coolant Pressure:", initialOption = coolantPressureTest.value, options = options).also { coolantPressureTest.value = it }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                ElevatedButton(
+                    onClick = onClose,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                ) {
+                    Text("Save", color = Color.DarkGray)
+                }
+            }
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ChecklistItem(
+    label: String,
+    state: MutableState<String>,
+    options: List<String>
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                TextField(
+                    value = state.value,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    options.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                state.value = option
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OptionDropdown(label: String, initialOption: String?, options: List<String>, onSelect: (String) -> Unit = {}): String {
+    var selectedOption by remember { mutableStateOf(initialOption ?: "Select Status") }
+    var expanded by remember { mutableStateOf(false) }
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium
+                , color = Color.DarkGray
+            )
+            Box {
+                Text(
+                    text = selectedOption,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.clickable { expanded = true }
+                        .padding(8.dp)
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(4.dp)),
+                    color = Color.DarkGray
+                )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    options.forEach { option ->
+                        DropdownMenuItem(
+                            onClick = {
+                                selectedOption = option
+                                expanded = false
+                            },
+                            text = { Text(option, color = Color.DarkGray) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    return selectedOption
+}
+
+
+

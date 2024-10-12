@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class TimeSheetRepository {
-    private val timeSheets: List<TimeSheet> = generateTimeSheets(20)
+    private val timeSheets: List<TimeSheet> = generateTimeSheets(6)
 
 
     fun getTimeSheets(): List<TimeSheet> {

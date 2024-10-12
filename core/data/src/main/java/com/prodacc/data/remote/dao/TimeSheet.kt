@@ -8,7 +8,7 @@ data class TimeSheet(
     val sheetTitle: String,
     val report: String,
     val clockInDateAndTime: LocalDateTime,
-    val clockOutDateAndTime: LocalDateTime,
+    val clockOutDateAndTime: LocalDateTime?,
     val jobCardId: UUID,
     val jobCardName: String,
     val technicianId: UUID,
