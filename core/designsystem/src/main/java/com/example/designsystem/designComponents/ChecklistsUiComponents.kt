@@ -1,9 +1,7 @@
 package com.example.designsystem.designComponents
 
-import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,7 +15,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -36,7 +33,7 @@ import java.time.temporal.ChronoUnit
 
 @Composable
 fun StateChecklist(
-    jobCardName : String,
+    jobCardName: String,
     onClose: () -> Unit
 ) {
 
@@ -136,124 +133,410 @@ fun StateChecklist(
     val bonnetStar = remember { mutableStateOf(options[0]) }
     val grillStar = remember { mutableStateOf(options[0]) }
 
-    Column(modifier = Modifier
-        .padding(16.dp)
-        .verticalScroll(scrollState)) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(scrollState)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
-        ){
-            LargeTitleText( "$jobCardName State Checklist")
+        ) {
+            LargeTitleText("$jobCardName State Checklist")
             IconButton(onClick = onClose, icon = Icons.Default.Close, color = Color.DarkGray)
         }
 
 
         // Mileage and Fuel Level Section
         MediumTitleText("Mileage and Fuel Level")
-        OptionDropdown(label = "Millage In", initialOption = millageIn.value, options = listOf("Enter Mileage")) {newValue -> millageIn.value}
-        OptionDropdown(label = "Millage Out", initialOption = millageOut.value, options = listOf("Enter Mileage")) {newValue -> millageOut.value}
-        OptionDropdown(label = "Fuel Level In", initialOption = fuelLevelIn.value, options = fuelLevelOptions) {newValue -> fuelLevelIn.value}
-        OptionDropdown(label = "Fuel Level Out", initialOption = fuelLevelOut.value, options = fuelLevelOptions) {newValue -> fuelLevelOut.value}
+        OptionDropdown(
+            label = "Millage In",
+            initialOption = millageIn.value,
+            options = listOf("Enter Mileage")
+        ) { newValue -> millageIn.value }
+        OptionDropdown(
+            label = "Millage Out",
+            initialOption = millageOut.value,
+            options = listOf("Enter Mileage")
+        ) { newValue -> millageOut.value }
+        OptionDropdown(
+            label = "Fuel Level In",
+            initialOption = fuelLevelIn.value,
+            options = fuelLevelOptions
+        ) { newValue -> fuelLevelIn.value }
+        OptionDropdown(
+            label = "Fuel Level Out",
+            initialOption = fuelLevelOut.value,
+            options = fuelLevelOptions
+        ) { newValue -> fuelLevelOut.value }
 
         // Tools Section
         MediumTitleText("Tools")
-        OptionDropdown(label = "Wheel Spanner", initialOption = wheelSpanner.value, options = options) { newValue -> wheelSpanner.value = newValue }
-        OptionDropdown(label = "Jack", initialOption = jack.value, options = options) { newValue -> jack.value = newValue }
-        OptionDropdown(label = "Triangle", initialOption = triangle.value, options = options) { newValue -> triangle.value = newValue }
-        OptionDropdown(label = "First Aid Kit", initialOption = firstAidKit.value, options = options) { newValue -> firstAidKit.value = newValue }
-        OptionDropdown(label = "Spanners", initialOption = spanners.value, options = options) { newValue -> spanners.value = newValue }
-        OptionDropdown(label = "Fire Extinguisher", initialOption = fireExtinguisher.value, options = options) { newValue -> fireExtinguisher.value = newValue }
+        OptionDropdown(
+            label = "Wheel Spanner",
+            initialOption = wheelSpanner.value,
+            options = options
+        ) { newValue -> wheelSpanner.value = newValue }
+        OptionDropdown(
+            label = "Jack",
+            initialOption = jack.value,
+            options = options
+        ) { newValue -> jack.value = newValue }
+        OptionDropdown(
+            label = "Triangle",
+            initialOption = triangle.value,
+            options = options
+        ) { newValue -> triangle.value = newValue }
+        OptionDropdown(
+            label = "First Aid Kit",
+            initialOption = firstAidKit.value,
+            options = options
+        ) { newValue -> firstAidKit.value = newValue }
+        OptionDropdown(
+            label = "Spanners",
+            initialOption = spanners.value,
+            options = options
+        ) { newValue -> spanners.value = newValue }
+        OptionDropdown(
+            label = "Fire Extinguisher",
+            initialOption = fireExtinguisher.value,
+            options = options
+        ) { newValue -> fireExtinguisher.value = newValue }
 
         // Wheels and Tires Section
         MediumTitleText("Wheels and Tires")
-        OptionDropdown(label = "Wheel Studs", initialOption = wheelStuds.value, options = options) { newValue -> wheelStuds.value = newValue }
-        OptionDropdown(label = "Spare Wheel", initialOption = spareWheel.value, options = options) { newValue -> spareWheel.value = newValue }
-        OptionDropdown(label = "Size", initialOption = size.value, options = listOf("Enter Size")) { newValue -> size.value = newValue }
-        OptionDropdown(label = "Right Front Wheel", initialOption = rightFrontWheel.value, options = options) { newValue -> rightFrontWheel.value = newValue }
-        OptionDropdown(label = "Left Front Wheel", initialOption = leftFrontWheel.value, options = options) { newValue -> leftFrontWheel.value = newValue }
-        OptionDropdown(label = "Right Rear Wheel", initialOption = rightRearWheel.value, options = options) { newValue -> rightRearWheel.value = newValue }
-        OptionDropdown(label = "Left Rear Wheel", initialOption = leftRearWheel.value, options = options) { newValue -> leftRearWheel.value = newValue }
-        OptionDropdown(label = "Lock Nuts", initialOption = lockNuts.value, options = options) { newValue -> lockNuts.value = newValue }
-        OptionDropdown(label = "Hub Caps", initialOption = hubCaps.value, options = options) { newValue -> hubCaps.value = newValue }
+        OptionDropdown(
+            label = "Wheel Studs",
+            initialOption = wheelStuds.value,
+            options = options
+        ) { newValue -> wheelStuds.value = newValue }
+        OptionDropdown(
+            label = "Spare Wheel",
+            initialOption = spareWheel.value,
+            options = options
+        ) { newValue -> spareWheel.value = newValue }
+        OptionDropdown(
+            label = "Size",
+            initialOption = size.value,
+            options = listOf("Enter Size")
+        ) { newValue -> size.value = newValue }
+        OptionDropdown(
+            label = "Right Front Wheel",
+            initialOption = rightFrontWheel.value,
+            options = options
+        ) { newValue -> rightFrontWheel.value = newValue }
+        OptionDropdown(
+            label = "Left Front Wheel",
+            initialOption = leftFrontWheel.value,
+            options = options
+        ) { newValue -> leftFrontWheel.value = newValue }
+        OptionDropdown(
+            label = "Right Rear Wheel",
+            initialOption = rightRearWheel.value,
+            options = options
+        ) { newValue -> rightRearWheel.value = newValue }
+        OptionDropdown(
+            label = "Left Rear Wheel",
+            initialOption = leftRearWheel.value,
+            options = options
+        ) { newValue -> leftRearWheel.value = newValue }
+        OptionDropdown(
+            label = "Lock Nuts",
+            initialOption = lockNuts.value,
+            options = options
+        ) { newValue -> lockNuts.value = newValue }
+        OptionDropdown(
+            label = "Hub Caps",
+            initialOption = hubCaps.value,
+            options = options
+        ) { newValue -> hubCaps.value = newValue }
 
         // Continue similarly for Audio Equipment, Lights, Additional, Roller Blinds, Glass, Interior, and Star sections.
 
         // Audio Equipment Section
         MediumTitleText("Audio Equipment")
-        OptionDropdown(label = "Radio Tape", initialOption = radioTape.value, options = options) { newValue -> radioTape.value = newValue }
-        OptionDropdown(label = "Make", initialOption = make.value, options = listOf("Enter Make")) { newValue -> make.value = newValue }
-        OptionDropdown(label = "CD", initialOption = cd.value, options = options) { newValue -> cd.value = newValue }
-        OptionDropdown(label = "CD Shuttle", initialOption = cdShuttle.value, options = options) { newValue -> cdShuttle.value = newValue }
-        OptionDropdown(label = "Modulator", initialOption = modulator.value, options = options) { newValue -> modulator.value = newValue }
-        OptionDropdown(label = "USB", initialOption = usb.value, options = options) { newValue -> usb.value = newValue }
+        OptionDropdown(
+            label = "Radio Tape",
+            initialOption = radioTape.value,
+            options = options
+        ) { newValue -> radioTape.value = newValue }
+        OptionDropdown(
+            label = "Make",
+            initialOption = make.value,
+            options = listOf("Enter Make")
+        ) { newValue -> make.value = newValue }
+        OptionDropdown(
+            label = "CD",
+            initialOption = cd.value,
+            options = options
+        ) { newValue -> cd.value = newValue }
+        OptionDropdown(
+            label = "CD Shuttle",
+            initialOption = cdShuttle.value,
+            options = options
+        ) { newValue -> cdShuttle.value = newValue }
+        OptionDropdown(
+            label = "Modulator",
+            initialOption = modulator.value,
+            options = options
+        ) { newValue -> modulator.value = newValue }
+        OptionDropdown(
+            label = "USB",
+            initialOption = usb.value,
+            options = options
+        ) { newValue -> usb.value = newValue }
 
 
         // Lights Section
         MediumTitleText("Lights")
-        OptionDropdown(label = "Right Front Light", initialOption = rightFrontLight.value, options = options) { newValue -> rightFrontLight.value = newValue }
-        OptionDropdown(label = "Left Front Light", initialOption = leftFrontLight.value, options = options) { newValue -> leftFrontLight.value = newValue }
-        OptionDropdown(label = "Interior Light", initialOption = interiorLight.value, options = options) { newValue -> interiorLight.value = newValue }
-        OptionDropdown(label = "Fog Light", initialOption = fogLight.value, options = options) { newValue -> fogLight.value = newValue }
-        OptionDropdown(label = "Right Rear Light", initialOption = rightRearLight.value, options = options) { newValue -> rightRearLight.value = newValue }
-        OptionDropdown(label = "Left Rear Light", initialOption = leftRearLight.value, options = options) { newValue -> leftRearLight.value = newValue }
-        OptionDropdown(label = "Boot Light", initialOption = bootLight.value, options = options) { newValue -> bootLight.value = newValue }
-        OptionDropdown(label = "Bonnet Light", initialOption = bonnetLight.value, options = options) { newValue -> bonnetLight.value = newValue }
+        OptionDropdown(
+            label = "Right Front Light",
+            initialOption = rightFrontLight.value,
+            options = options
+        ) { newValue -> rightFrontLight.value = newValue }
+        OptionDropdown(
+            label = "Left Front Light",
+            initialOption = leftFrontLight.value,
+            options = options
+        ) { newValue -> leftFrontLight.value = newValue }
+        OptionDropdown(
+            label = "Interior Light",
+            initialOption = interiorLight.value,
+            options = options
+        ) { newValue -> interiorLight.value = newValue }
+        OptionDropdown(
+            label = "Fog Light",
+            initialOption = fogLight.value,
+            options = options
+        ) { newValue -> fogLight.value = newValue }
+        OptionDropdown(
+            label = "Right Rear Light",
+            initialOption = rightRearLight.value,
+            options = options
+        ) { newValue -> rightRearLight.value = newValue }
+        OptionDropdown(
+            label = "Left Rear Light",
+            initialOption = leftRearLight.value,
+            options = options
+        ) { newValue -> leftRearLight.value = newValue }
+        OptionDropdown(
+            label = "Boot Light",
+            initialOption = bootLight.value,
+            options = options
+        ) { newValue -> bootLight.value = newValue }
+        OptionDropdown(
+            label = "Bonnet Light",
+            initialOption = bonnetLight.value,
+            options = options
+        ) { newValue -> bonnetLight.value = newValue }
 
         // Additional Section
         MediumTitleText("Additional")
-        OptionDropdown(label = "Boot Handle", initialOption = bootHandle.value, options = options) { newValue -> bootHandle.value = newValue }
-        OptionDropdown(label = "Boot Mat", initialOption = bootMat.value, options = options) { newValue -> bootMat.value = newValue }
-        OptionDropdown(label = "Sun Roof", initialOption = sunRoof.value, options = options) { newValue -> sunRoof.value = newValue }
-        OptionDropdown(label = "Engine Covers", initialOption = engineCovers.value, options = options) { newValue -> engineCovers.value = newValue }
-        OptionDropdown(label = "Air Ducts", initialOption = airDucts.value, options = options) { newValue -> airDucts.value = newValue }
+        OptionDropdown(
+            label = "Boot Handle",
+            initialOption = bootHandle.value,
+            options = options
+        ) { newValue -> bootHandle.value = newValue }
+        OptionDropdown(
+            label = "Boot Mat",
+            initialOption = bootMat.value,
+            options = options
+        ) { newValue -> bootMat.value = newValue }
+        OptionDropdown(
+            label = "Sun Roof",
+            initialOption = sunRoof.value,
+            options = options
+        ) { newValue -> sunRoof.value = newValue }
+        OptionDropdown(
+            label = "Engine Covers",
+            initialOption = engineCovers.value,
+            options = options
+        ) { newValue -> engineCovers.value = newValue }
+        OptionDropdown(
+            label = "Air Ducts",
+            initialOption = airDucts.value,
+            options = options
+        ) { newValue -> airDucts.value = newValue }
 
 // Roller Blinds Section
         MediumTitleText("Roller Blinds")
-        OptionDropdown(label = "Rear Wind Screen", initialOption = rearWindScreen.value, options = options) { newValue -> rearWindScreen.value = newValue }
-        OptionDropdown(label = "Boot", initialOption = boot.value, options = options) { newValue -> boot.value = newValue }
-        OptionDropdown(label = "Engine Cover", initialOption = engineCover.value, options = options) { newValue -> engineCover.value = newValue }
-        OptionDropdown(label = "Bonnet Liner", initialOption = bonnetLiner.value, options = options) { newValue -> bonnetLiner.value = newValue }
-        OptionDropdown(label = "Right Front Door Trim", initialOption = rightFrontDoorTrim.value, options = options) { newValue -> rightFrontDoorTrim.value = newValue }
-        OptionDropdown(label = "Left Front Door Trim", initialOption = leftFrontDoorTrim.value, options = options) { newValue -> leftFrontDoorTrim.value = newValue }
-        OptionDropdown(label = "Right Rear Door Trim", initialOption = rightRearDoorTrim.value, options = options) { newValue -> rightRearDoorTrim.value = newValue }
-        OptionDropdown(label = "Left Rear Door Trim", initialOption = leftRearDoorTrim.value, options = options) { newValue -> leftRearDoorTrim.value = newValue }
-        OptionDropdown(label = "Right Front Sun Visor", initialOption = rightFrontSunVisor.value, options = options) { newValue -> rightFrontSunVisor.value = newValue }
-        OptionDropdown(label = "Left Front Sun Visor", initialOption = leftFrontSunVisor.value, options = options) { newValue -> leftFrontSunVisor.value = newValue }
-        OptionDropdown(label = "Over Mats", initialOption = overMats.value, options = options) { newValue -> overMats.value = newValue }
-        OptionDropdown(label = "Glove Compartment", initialOption = gloveCompartment.value, options = options) { newValue -> gloveCompartment.value = newValue }
-        OptionDropdown(label = "Mudflaps", initialOption = mudflaps.value, options = options) { newValue -> mudflaps.value = newValue }
+        OptionDropdown(
+            label = "Rear Wind Screen",
+            initialOption = rearWindScreen.value,
+            options = options
+        ) { newValue -> rearWindScreen.value = newValue }
+        OptionDropdown(
+            label = "Boot",
+            initialOption = boot.value,
+            options = options
+        ) { newValue -> boot.value = newValue }
+        OptionDropdown(
+            label = "Engine Cover",
+            initialOption = engineCover.value,
+            options = options
+        ) { newValue -> engineCover.value = newValue }
+        OptionDropdown(
+            label = "Bonnet Liner",
+            initialOption = bonnetLiner.value,
+            options = options
+        ) { newValue -> bonnetLiner.value = newValue }
+        OptionDropdown(
+            label = "Right Front Door Trim",
+            initialOption = rightFrontDoorTrim.value,
+            options = options
+        ) { newValue -> rightFrontDoorTrim.value = newValue }
+        OptionDropdown(
+            label = "Left Front Door Trim",
+            initialOption = leftFrontDoorTrim.value,
+            options = options
+        ) { newValue -> leftFrontDoorTrim.value = newValue }
+        OptionDropdown(
+            label = "Right Rear Door Trim",
+            initialOption = rightRearDoorTrim.value,
+            options = options
+        ) { newValue -> rightRearDoorTrim.value = newValue }
+        OptionDropdown(
+            label = "Left Rear Door Trim",
+            initialOption = leftRearDoorTrim.value,
+            options = options
+        ) { newValue -> leftRearDoorTrim.value = newValue }
+        OptionDropdown(
+            label = "Right Front Sun Visor",
+            initialOption = rightFrontSunVisor.value,
+            options = options
+        ) { newValue -> rightFrontSunVisor.value = newValue }
+        OptionDropdown(
+            label = "Left Front Sun Visor",
+            initialOption = leftFrontSunVisor.value,
+            options = options
+        ) { newValue -> leftFrontSunVisor.value = newValue }
+        OptionDropdown(
+            label = "Over Mats",
+            initialOption = overMats.value,
+            options = options
+        ) { newValue -> overMats.value = newValue }
+        OptionDropdown(
+            label = "Glove Compartment",
+            initialOption = gloveCompartment.value,
+            options = options
+        ) { newValue -> gloveCompartment.value = newValue }
+        OptionDropdown(
+            label = "Mudflaps",
+            initialOption = mudflaps.value,
+            options = options
+        ) { newValue -> mudflaps.value = newValue }
 
 
         // Glass Section
         MediumTitleText("Glass")
-        OptionDropdown(label = "Windscreen", initialOption = windscreen.value, options = options) { newValue -> windscreen.value = newValue }
-        OptionDropdown(label = "Rear Screen", initialOption = rearScreen.value, options = options) { newValue -> rearScreen.value = newValue }
-        OptionDropdown(label = "Right Front Glass", initialOption = rightFrontGlass.value, options = options) { newValue -> rightFrontGlass.value = newValue }
-        OptionDropdown(label = "Left Front Glass", initialOption = leftFrontGlass.value, options = options) { newValue -> leftFrontGlass.value = newValue }
-        OptionDropdown(label = "Right Rear Glass", initialOption = rightRearGlass.value, options = options) { newValue -> rightRearGlass.value = newValue }
-        OptionDropdown(label = "Left Rear Glass", initialOption = leftRearGlass.value, options = options) { newValue -> leftRearGlass.value = newValue }
-        OptionDropdown(label = "Interior Mirror", initialOption = interiorMirror.value, options = options) { newValue -> interiorMirror.value = newValue }
-        OptionDropdown(label = "Right Door Mirror", initialOption = rightDoorMirror.value, options = options) { newValue -> rightDoorMirror.value = newValue }
-        OptionDropdown(label = "Left Door Mirror", initialOption = leftDoorMirror.value, options = options) { newValue -> leftDoorMirror.value = newValue }
-        OptionDropdown(label = "Wipers", initialOption = wipers.value, options = options) { newValue -> wipers.value = newValue }
+        OptionDropdown(
+            label = "Windscreen",
+            initialOption = windscreen.value,
+            options = options
+        ) { newValue -> windscreen.value = newValue }
+        OptionDropdown(
+            label = "Rear Screen",
+            initialOption = rearScreen.value,
+            options = options
+        ) { newValue -> rearScreen.value = newValue }
+        OptionDropdown(
+            label = "Right Front Glass",
+            initialOption = rightFrontGlass.value,
+            options = options
+        ) { newValue -> rightFrontGlass.value = newValue }
+        OptionDropdown(
+            label = "Left Front Glass",
+            initialOption = leftFrontGlass.value,
+            options = options
+        ) { newValue -> leftFrontGlass.value = newValue }
+        OptionDropdown(
+            label = "Right Rear Glass",
+            initialOption = rightRearGlass.value,
+            options = options
+        ) { newValue -> rightRearGlass.value = newValue }
+        OptionDropdown(
+            label = "Left Rear Glass",
+            initialOption = leftRearGlass.value,
+            options = options
+        ) { newValue -> leftRearGlass.value = newValue }
+        OptionDropdown(
+            label = "Interior Mirror",
+            initialOption = interiorMirror.value,
+            options = options
+        ) { newValue -> interiorMirror.value = newValue }
+        OptionDropdown(
+            label = "Right Door Mirror",
+            initialOption = rightDoorMirror.value,
+            options = options
+        ) { newValue -> rightDoorMirror.value = newValue }
+        OptionDropdown(
+            label = "Left Door Mirror",
+            initialOption = leftDoorMirror.value,
+            options = options
+        ) { newValue -> leftDoorMirror.value = newValue }
+        OptionDropdown(
+            label = "Wipers",
+            initialOption = wipers.value,
+            options = options
+        ) { newValue -> wipers.value = newValue }
 
 
         // Interior Section
         MediumTitleText("Interior")
-        OptionDropdown(label = "Central Locking", initialOption = centralLocking.value, options = options) { newValue -> centralLocking.value = newValue }
-        OptionDropdown(label = "Dashboard", initialOption = dashBoard.value, options = options) { newValue -> dashBoard.value = newValue }
-        OptionDropdown(label = "Instrument Cluster", initialOption = instrumentCluster.value, options = options) { newValue -> instrumentCluster.value = newValue }
-        OptionDropdown(label = "Window Winders", initialOption = windowWinders.value, options = options) { newValue -> windowWinders.value = newValue }
-        OptionDropdown(label = "Cigarette Lighters", initialOption = cigaretteLighters.value, options = options) { newValue -> cigaretteLighters.value = newValue }
-        OptionDropdown(label = "Mats", initialOption = mats.value, options = options) { newValue -> mats.value = newValue }
-        OptionDropdown(label = "Owner's Manual", initialOption = ownersManual.value, options = options) { newValue -> ownersManual.value = newValue }
+        OptionDropdown(
+            label = "Central Locking",
+            initialOption = centralLocking.value,
+            options = options
+        ) { newValue -> centralLocking.value = newValue }
+        OptionDropdown(
+            label = "Dashboard",
+            initialOption = dashBoard.value,
+            options = options
+        ) { newValue -> dashBoard.value = newValue }
+        OptionDropdown(
+            label = "Instrument Cluster",
+            initialOption = instrumentCluster.value,
+            options = options
+        ) { newValue -> instrumentCluster.value = newValue }
+        OptionDropdown(
+            label = "Window Winders",
+            initialOption = windowWinders.value,
+            options = options
+        ) { newValue -> windowWinders.value = newValue }
+        OptionDropdown(
+            label = "Cigarette Lighters",
+            initialOption = cigaretteLighters.value,
+            options = options
+        ) { newValue -> cigaretteLighters.value = newValue }
+        OptionDropdown(
+            label = "Mats",
+            initialOption = mats.value,
+            options = options
+        ) { newValue -> mats.value = newValue }
+        OptionDropdown(
+            label = "Owner's Manual",
+            initialOption = ownersManual.value,
+            options = options
+        ) { newValue -> ownersManual.value = newValue }
 
 
         // Star Section
         MediumTitleText("Star")
-        OptionDropdown(label = "Boot Star", initialOption = bootStar.value, options = options) { newValue -> bootStar.value = newValue }
-        OptionDropdown(label = "Bonnet Star", initialOption = bonnetStar.value, options = options) { newValue -> bonnetStar.value = newValue }
-        OptionDropdown(label = "Grill Star", initialOption = grillStar.value, options = options) { newValue -> grillStar.value = newValue }
+        OptionDropdown(
+            label = "Boot Star",
+            initialOption = bootStar.value,
+            options = options
+        ) { newValue -> bootStar.value = newValue }
+        OptionDropdown(
+            label = "Bonnet Star",
+            initialOption = bonnetStar.value,
+            options = options
+        ) { newValue -> bonnetStar.value = newValue }
+        OptionDropdown(
+            label = "Grill Star",
+            initialOption = grillStar.value,
+            options = options
+        ) { newValue -> grillStar.value = newValue }
 
     }
 }
@@ -518,13 +801,7 @@ fun ControlChecklist(
                         initialOption = triangle.value,
                         options = itemOptions
                     ).also { triangle.value = it }
-                }
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+
                     OptionDropdown(
                         label = "Radios:",
                         initialOption = radios.value,
@@ -545,6 +822,55 @@ fun ControlChecklist(
                         initialOption = firstAidKit.value,
                         options = itemOptions
                     ).also { firstAidKit.value = it }
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OptionDropdown(
+                        label = "Window Switch:",
+                        initialOption = windowSwitch.value,
+                        options = itemOptions
+                    ).also { windowSwitch.value = it }
+                    OptionDropdown(
+                        label = "Belts:",
+                        initialOption = belts.value,
+                        options = itemOptions
+                    ).also { belts.value = it }
+                    OptionDropdown(
+                        label = "Mirrors:",
+                        initialOption = mirrors.value,
+                        options = itemOptions
+                    ).also { mirrors.value = it }
+                    OptionDropdown(
+                        label = "Brakes:",
+                        initialOption = brakes.value,
+                        options = itemOptions
+                    ).also { brakes.value = it }
+                    OptionDropdown(
+                        label = "Seat Belts:",
+                        initialOption = seatBelts.value,
+                        options = itemOptions
+                    ).also { seatBelts.value = it }
+                    OptionDropdown(
+                        label = "Air Ducts:",
+                        initialOption = airDucts.value,
+                        options = itemOptions
+                    ).also { airDucts.value = it }
+                    OptionDropdown(
+                        label = "Tyres:",
+                        initialOption = tyres.value,
+                        options = itemOptions
+                    ).also { tyres.value = it }
+                    OptionDropdown(
+                        label = "Any Other:",
+                        initialOption = anyOther.value,
+                        options = itemOptions
+                    ).also { anyOther.value }
+
+
                 }
             }
 

@@ -28,7 +28,6 @@ android {
 
 dependencies {
     implementation(project(":core:designsystem"))
-    implementation(project(":core:navigation"))
 
 
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")

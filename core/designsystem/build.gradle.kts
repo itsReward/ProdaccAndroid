@@ -39,7 +39,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:navigation"))
     implementation(project(":core:data"))
 
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.3")
