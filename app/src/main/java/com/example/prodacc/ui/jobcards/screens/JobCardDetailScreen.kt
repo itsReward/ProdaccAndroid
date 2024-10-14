@@ -2,6 +2,13 @@ package com.example.prodacc.ui.jobcards.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseInElastic
+import androidx.compose.animation.core.EaseInQuart
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.EaseOutQuart
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -178,6 +185,7 @@ fun JobCardDetailScreen(
                 modifier = Modifier
                     .padding(top = 20.dp)
                     .fillMaxWidth()
+                    .animateContentSize()
                 //.horizontalScroll(statusScroll)
                 ,
                 horizontalArrangement = Arrangement.Start,
@@ -537,8 +545,8 @@ fun JobCardDetailScreen(
 
     AnimatedVisibility(
         visible = showControlChecklistDialog,
-        enter = androidx.compose.animation.slideInVertically(),
-        exit = slideOutVertically()
+        enter = slideInVertically(animationSpec = tween(durationMillis = 500, easing = EaseIn )),
+        exit = slideOutVertically(animationSpec = tween(durationMillis = 500, easing = EaseOut ))
     ) {
 
 

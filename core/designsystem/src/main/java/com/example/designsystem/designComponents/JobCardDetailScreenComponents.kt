@@ -3,8 +3,12 @@ package com.example.designsystem.designComponents
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -116,8 +120,8 @@ fun StepIndicator(
 
     AnimatedVisibility(
         visible = expanded,
-        /*enter = slideInHorizontally(animationSpec = tween(durationMillis = 500)) + fadeIn(),
-        exit = slideOutVertically(animationSpec = tween(durationMillis = 10)) + fadeOut(animationSpec = tween(durationMillis = 400))*/
+        enter = slideInVertically(animationSpec = tween(durationMillis = 500)) ,
+        exit = slideOutVertically(animationSpec = tween(durationMillis = 500)) 
     ) {
         Column(
             modifier = Modifier
@@ -220,8 +224,8 @@ fun StepIndicator(
     }
     AnimatedVisibility(
         visible = !expanded,
-        /*      enter = slideInHorizontally(animationSpec = tween(durationMillis = 500)),
-              exit = slideOutHorizontally(animationSpec = tween(durationMillis = 500))*/
+              enter = slideInVertically(animationSpec = tween(durationMillis = 500, delayMillis = 500)),
+              exit = slideOutVertically(animationSpec = tween(durationMillis = 500))
     ) {
         Row(modifier = Modifier
             .fillMaxWidth()
@@ -822,10 +826,11 @@ fun ServiceChecklist(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("$jobCardName Service Checklist", style = MaterialTheme.typography.titleLarge, color = Color.DarkGray)
+                    //Text("$jobCardName Service Checklist", style = MaterialTheme.typography.titleLarge, color = Color.DarkGray)
+                    LargeTitleText(name = "$jobCardName Service Checklist")
                 },
-                actions = {
-                    IconButton(onClick = onClose, icon = Icons.Default.Close, color = Color.DarkGray)
+                navigationIcon = {
+                    IconButton(onClick = onClose, icon = Icons.Default.ArrowBack, color = Color.DarkGray)
                 }
             )
         }
@@ -902,7 +907,7 @@ fun ServiceChecklist(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                ElevatedButton(
+                Button(
                     onClick = onClose,
                     modifier = Modifier.padding(vertical = 16.dp)
                 ) {

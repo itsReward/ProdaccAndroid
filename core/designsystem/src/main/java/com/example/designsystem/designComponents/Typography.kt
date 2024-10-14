@@ -49,12 +49,13 @@ fun SectionLineHeadingSeperator(heading: String){
 
 
 @Composable
-fun LargeTitleText(name: String, color: Color = DarkGrey){
+fun LargeTitleText( name: String, modifier : Modifier = Modifier, color: Color = DarkGrey){
     Text(
         text = name,
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.SemiBold,
-        color = color
+        color = color,
+        modifier = modifier
     )
 }
 
