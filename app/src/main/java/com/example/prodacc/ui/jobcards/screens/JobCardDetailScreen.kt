@@ -573,6 +573,5 @@ fun JobCardDetailScreen(
 
     }
 
-
 }
 
