@@ -70,6 +70,7 @@ import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.checklistIcon
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import kotlinx.coroutines.launch
 
@@ -80,6 +81,8 @@ fun JobCardDetailScreen(
     navController: NavController, jobCardId: String
 ) {
     val viewModel = JobCardDetailsViewModel(job = jobCardId)
+    val employeesViewModel = EmployeesViewModel()
+
     val scroll = rememberScrollState()
     val statusScroll = rememberScrollState()
     var showDialog by remember { mutableStateOf(false) }
@@ -121,7 +124,10 @@ fun JobCardDetailScreen(
             TeamDialog(
                 onDismiss = { showDialog = !showDialog },
                 onAddNewTechnician = { showDialog = !showDialog },
-                jobCard = viewModel.jobCard
+                jobCard = viewModel.jobCard,
+                employees = employeesViewModel.employees,
+                onUpdateSupervisor = viewModel::updateSupervisor,
+                onUpdateServiceAdvisor = viewModel::updateServiceAdvisor
             )
         }
 
