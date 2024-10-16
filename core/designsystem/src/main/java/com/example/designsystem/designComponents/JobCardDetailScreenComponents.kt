@@ -69,6 +69,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -784,12 +785,7 @@ fun TeamDialog(
             TeamDialogCard(title = "Supervisor", employees = employees, initialEmployee = jobCard.supervisorName, onSelectNewEmployee = onUpdateSupervisor)
 
 
-            DisabledTextField(
-                label = "Service Advisor",
-                text = jobCard.serviceAdvisorName
-            )
 
-            DisabledTextField(label = "Supervisor", text = jobCard.supervisorName)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -837,26 +833,27 @@ fun TeamDialogCard(
             value = initialEmployee,
             onValueChange = {},
             //label = { Text(text = "Service Advisor", color = Color.DarkGray) },
-            shape = RoundedCornerShape(50.dp),
+            shape = RoundedCornerShape(10.dp),
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent
             ),
             trailingIcon = {
-                TextButton(onClick = {}) {
-                    Text(text = "Change", color = Color.Blue)
+                TextButton(onClick = {dropdownMenu = true}) {
+                    Text(text = "Change", color = Color.Blue, fontWeight = FontWeight.SemiBold)
                 }
-            }
+            },
+            modifier = Modifier.fillMaxWidth()
         )
         Box(modifier = Modifier
             .fillMaxWidth()
             .animateContentSize()) {
-            DropdownMenu(expanded = dropdownMenu, onDismissRequest = { dropdownMenu = false }) {
+            DropdownMenu(expanded = dropdownMenu, onDismissRequest = { dropdownMenu = false }, modifier = Modifier.padding(10.dp)) {
                 employees.forEach {
-                    Text(text = it.name)
+                    Text(text = it.name, color = Color.DarkGray, fontWeight = FontWeight.Bold)
                     it.items.forEach {
                         DropdownMenuItem(
-                            text = { Text(text = "${it.employeeName} ${it.employeeSurname}") },
+                            text = { Text(text = "${it.employeeName} ${it.employeeSurname}", color = Color.DarkGray) },
                             onClick = { onSelectNewEmployee(it.id)}
                         )
                     }
