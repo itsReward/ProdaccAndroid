@@ -7,11 +7,11 @@ class JobCardTechnicianRepository {
     private val jobCardTechnicians: List<JobCardTechnician> = generateJobCardTechnicians(20)
 
 
-    fun getJobCardTechnicians(): List<JobCardTechnician> {
+    fun getAllJobCardTechnicians(): List<JobCardTechnician> {
         return jobCardTechnicians
     }
 
-    fun getJobCardTechnician(jobCardId: UUID): JobCardTechnician? {
+    fun getJobCardTechnicians(jobCardId: UUID): JobCardTechnician? {
         return jobCardTechnicians.find { it.jobCardId == jobCardId }
     }
 

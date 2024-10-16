@@ -16,6 +16,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -745,7 +747,7 @@ fun NewTimeSheet(
 @Composable
 fun TeamDialog(
     onDismiss: () -> Unit,
-    onAddNewTechnician: (String) -> Unit,
+    onAddNewTechnician: (UUID) -> Unit,
     jobCard: JobCard,
     employees: List<EmployeeListCategory>,
     onUpdateServiceAdvisor: (UUID) -> Unit,
@@ -784,18 +786,8 @@ fun TeamDialog(
             TeamDialogCard(title = "Service Advisor", employees = employees, initialEmployee = jobCard.serviceAdvisorName, onSelectNewEmployee = onUpdateServiceAdvisor)
             TeamDialogCard(title = "Supervisor", employees = employees, initialEmployee = jobCard.supervisorName, onSelectNewEmployee = onUpdateSupervisor)
 
+            TechnicianRow(employees = employees, onAddNewTechnician = onAddNewTechnician)
 
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MediumTitleText("Technicians: ")
-                TextButton(onClick = { /*TODO*/ }) {
-                    androidx.compose.material3.Text(text = "Add")
-                }
-            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -823,10 +815,10 @@ fun TeamDialogCard(
     Column {
         androidx.compose.material3.Text(
             text = title,
-            fontSize = 12.sp,
+            //fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
             color = Color.DarkGray
         )
         TextField(
@@ -836,13 +828,17 @@ fun TeamDialogCard(
             shape = RoundedCornerShape(10.dp),
             colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent
+                focusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                disabledTextColor = Color.DarkGray,
+                disabledContainerColor = Blue50
             ),
             trailingIcon = {
                 TextButton(onClick = {dropdownMenu = true}) {
                     Text(text = "Change", color = Color.Blue, fontWeight = FontWeight.SemiBold)
                 }
             },
+            enabled = false,
             modifier = Modifier.fillMaxWidth()
         )
         Box(modifier = Modifier
@@ -862,6 +858,67 @@ fun TeamDialogCard(
             }
         }
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun TechnicianRow(
+    employees: List<EmployeeListCategory>,
+    onAddNewTechnician: (UUID) -> Unit,
+){
+    var dropdownMenu by remember {
+        mutableStateOf(false)
+    }
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            MediumTitleText("Technicians: ")
+            TextButton(onClick = { dropdownMenu = true }) {
+                androidx.compose.material3.Text(text = "Add")
+            }
+        }
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize()) {
+            DropdownMenu(expanded = dropdownMenu, onDismissRequest = { dropdownMenu = false }, modifier = Modifier.padding(10.dp)) {
+                employees.forEach {
+                    Text(text = it.name, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+                    it.items.forEach {
+                        DropdownMenuItem(
+                            text = { Text(text = "${it.employeeName} ${it.employeeSurname}", color = Color.DarkGray) },
+                            onClick = { onAddNewTechnician(it.id)}
+                        )
+                    }
+
+                }
+            }
+        }
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            //maxItemsInEachRow = 4,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            employees.subList(1, 4).forEach {
+                it.items.forEach {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clip(
+                            RoundedCornerShape(5.dp)).background(Blue50).padding(horizontal = 20.dp, vertical = 20.dp)
+                    ) {
+                        Text(text = it.employeeName, color = Color.DarkGray)
+                    }
+
+                }
+            }
+        }
+    }
+
 }
 
 

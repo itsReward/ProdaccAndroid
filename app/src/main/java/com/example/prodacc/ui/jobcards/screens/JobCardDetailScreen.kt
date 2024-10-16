@@ -123,7 +123,7 @@ fun JobCardDetailScreen(
         if (showDialog) {
             TeamDialog(
                 onDismiss = { showDialog = !showDialog },
-                onAddNewTechnician = { showDialog = !showDialog },
+                onAddNewTechnician = { },
                 jobCard = viewModel.jobCard,
                 employees = employeesViewModel.employees,
                 onUpdateSupervisor = viewModel::updateSupervisor,
