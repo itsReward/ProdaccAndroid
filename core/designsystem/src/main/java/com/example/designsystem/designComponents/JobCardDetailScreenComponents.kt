@@ -94,6 +94,7 @@ import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Green
 import com.example.designsystem.theme.Orange
+import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
 import com.prodacc.data.remote.dao.TimeSheet
 import java.time.DayOfWeek
@@ -348,52 +349,7 @@ fun StepIndicator(
 }
 
 
-@Composable
-fun ProgressIndicator(
-    jobCardStatuses: List<JobCardStatus>
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .clip(RoundedCornerShape(100.dp))
-            .background(Blue50),
-        horizontalArrangement = Arrangement.Start
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxHeight()
-                .background(
-                    when (jobCardStatuses.last().status) {
-                        "open" -> BlueA700
-                        "diagnostics" -> Orange
-                        "approval" -> Orange
-                        "work_in_progress" -> Green
-                        "closed" -> Color.Green
-                        else -> Color.Red
-                    }
-                )
-                .clip(RoundedCornerShape(100.dp))
-                .padding(end = 5.dp)
-                .fillMaxWidth(
-                    when (jobCardStatuses.last().status) {
-                        "open" -> 0.1f
-                        "diagnostics" -> 0.2f
-                        "approval" -> 0.3f
-                        "work_in_progress" -> 0.5f
-                        "testing" -> 0.8f
-                        "closed" -> 1f
-                        else -> 0.1f
-                    }
-                ),
-            horizontalArrangement = Arrangement.End
 
-        ) {
-            Text(text = jobCardStatuses.last().status)
-
-        }
-    }
-}
 
 
 @Composable
@@ -797,220 +753,67 @@ fun NewTimeSheet(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun ServiceChecklist(
-    jobCardName: String,
-    onClose: () -> Unit
-) {
-    val scrollState = rememberScrollState()
-    val options = listOf("OK", "Rectified", "Not Authorised")
-    val technician = "Prosper"
-    val brakes = remember { mutableStateOf("OK") }
-    val lights = remember { mutableStateOf("OK") }
-    val wipers = remember { mutableStateOf("OK") }
-    val continuosBeltAndPulleys = remember { mutableStateOf("OK") }
-    val hooters = remember { mutableStateOf("OK") }
-    val battery = remember { mutableStateOf("OK") }
-    val airConDustFilter = remember { mutableStateOf("OK") }
-    val rearDiff = remember { mutableStateOf("OK") }
-    val gearBoxOil = remember { mutableStateOf("OK") }
-    val powerSteeringFluid = remember { mutableStateOf("OK") }
-    val coolant = remember { mutableStateOf("OK") }
-    val tyrePressure = remember { mutableStateOf("OK") }
-    val clock = remember { mutableStateOf("OK") }
-    val coolantPressureTest = remember { mutableStateOf("OK") }
-    val date = remember { mutableStateOf(LocalDateTime.now()) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    //Text("$jobCardName Service Checklist", style = MaterialTheme.typography.titleLarge, color = Color.DarkGray)
-                    LargeTitleText(name = "$jobCardName Service Checklist")
-                },
-                navigationIcon = {
-                    IconButton(onClick = onClose, icon = Icons.Default.ArrowBack, color = Color.DarkGray)
-                }
-            )
-        }
+
+@Composable
+fun TeamDialog(
+    onDismiss: () -> Unit,
+    onAddNewTechnician: (String) -> Unit,
+    jobCard: JobCard,
+){
+    Dialog(
+        onDismissRequest = onDismiss
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(it)
-                .verticalScroll(scrollState)
-                .padding(16.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color.White)
+                .padding(20.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Checklist created on ${date.value.truncatedTo(ChronoUnit.MINUTES)} by $technician",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                LargeTitleText(name = "Team")
+
             }
 
-            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(CardGrey)
+                    .height(2.dp)
+            ) {
 
-            Text(
-                text = "Inspection Items",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp), color = Color.DarkGray
+            }
+            DisabledTextField(
+                label = "Service Advisor",
+                text = jobCard.serviceAdvisorName
             )
-
-            // Group the two FlowRows in a single Row
+            DisabledTextField(label = "Supervisor", text = jobCard.supervisorName)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OptionDropdown(label = "Brakes:", initialOption = brakes.value, options = options).also { brakes.value = it }
-                    OptionDropdown(label = "Lights:", initialOption = lights.value, options = options).also { lights.value = it }
-                    OptionDropdown(label = "Wipers:", initialOption = wipers.value, options = options).also { wipers.value = it }
-                    OptionDropdown(label = "Belt & Pulleys:", initialOption = continuosBeltAndPulleys.value, options = options).also { continuosBeltAndPulleys.value = it }
-                    OptionDropdown(label = "Hooters:", initialOption = hooters.value, options = options).also { hooters.value = it }
-                    OptionDropdown(label = "Battery:", initialOption = battery.value, options = options).also { battery.value = it }
-                    OptionDropdown(label = "Air-Con Filter:", initialOption = airConDustFilter.value, options = options).also { airConDustFilter.value = it }
-                }
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OptionDropdown(label = "Rear Diff:", initialOption = rearDiff.value, options = options).also { rearDiff.value = it }
-                    OptionDropdown(label = "Gearbox Oil:", initialOption = gearBoxOil.value, options = options).also { gearBoxOil.value = it }
-                    OptionDropdown(label = "Power Steering:", initialOption = powerSteeringFluid.value, options = options).also { powerSteeringFluid.value = it }
-                    OptionDropdown(label = "Coolant:", initialOption = coolant.value, options = options).also { coolant.value = it }
-                    OptionDropdown(label = "Tyre Pressure:", initialOption = tyrePressure.value, options = options).also { tyrePressure.value = it }
-                    OptionDropdown(label = "Clock:", initialOption = clock.value, options = options).also { clock.value = it }
-                    OptionDropdown(label = "Coolant Pressure:", initialOption = coolantPressureTest.value, options = options).also { coolantPressureTest.value = it }
+                MediumTitleText("Technicians: ")
+                TextButton(onClick = { /*TODO*/ }) {
+                    androidx.compose.material3.Text(text = "Add")
                 }
             }
-
-            Spacer(Modifier.height(16.dp))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                Button(
-                    onClick = onClose,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                ) {
-                    Text("Save", color = Color.DarkGray)
+                Button(onClick = onDismiss) {
+                    androidx.compose.material3.Text(text = "close")
                 }
             }
         }
     }
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ChecklistItem(
-    label: String,
-    state: MutableState<String>,
-    options: List<String>
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    OutlinedCard(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge)
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                TextField(
-                    value = state.value,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    options.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                state.value = option
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun OptionDropdown(label: String, initialOption: String?, options: List<String>, onSelect: (String) -> Unit = {}): String {
-    var selectedOption by remember { mutableStateOf(initialOption ?: "Select Status") }
-    var expanded by remember { mutableStateOf(false) }
-
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = label,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium
-                , color = Color.DarkGray
-            )
-            Box {
-                Text(
-                    text = selectedOption,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.clickable { expanded = true }
-                        .padding(8.dp)
-                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(4.dp)),
-                    color = Color.DarkGray
-                )
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    options.forEach { option ->
-                        DropdownMenuItem(
-                            onClick = {
-                                selectedOption = option
-                                expanded = false
-                            },
-                            text = { Text(option, color = Color.DarkGray) }
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    return selectedOption
 }
 
 

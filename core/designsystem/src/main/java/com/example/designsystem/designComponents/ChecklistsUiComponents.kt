@@ -1,7 +1,11 @@
 package com.example.designsystem.designComponents
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,12 +14,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,10 +33,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.BlueA700
 import java.time.LocalDateTime
@@ -571,6 +583,131 @@ fun StateChecklist(
     }
 }
 
+
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun ServiceChecklist(
+    jobCardName: String,
+    onClose: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+    val options = listOf("OK", "Rectified", "Not Authorised")
+    val technician = "Prosper"
+    val brakes = remember { mutableStateOf("OK") }
+    val lights = remember { mutableStateOf("OK") }
+    val wipers = remember { mutableStateOf("OK") }
+    val continuosBeltAndPulleys = remember { mutableStateOf("OK") }
+    val hooters = remember { mutableStateOf("OK") }
+    val battery = remember { mutableStateOf("OK") }
+    val airConDustFilter = remember { mutableStateOf("OK") }
+    val rearDiff = remember { mutableStateOf("OK") }
+    val gearBoxOil = remember { mutableStateOf("OK") }
+    val powerSteeringFluid = remember { mutableStateOf("OK") }
+    val coolant = remember { mutableStateOf("OK") }
+    val tyrePressure = remember { mutableStateOf("OK") }
+    val clock = remember { mutableStateOf("OK") }
+    val coolantPressureTest = remember { mutableStateOf("OK") }
+    val date = remember { mutableStateOf(LocalDateTime.now()) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    //Text("$jobCardName Service Checklist", style = MaterialTheme.typography.titleLarge, color = Color.DarkGray)
+                    LargeTitleText(name = "$jobCardName Service Checklist")
+                },
+                navigationIcon = {
+                    IconButton(onClick = onClose, icon = Icons.Default.ArrowBack, color = Color.DarkGray)
+                }
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    androidx.wear.compose.material.Text(
+                        text = "Checklist created on ${date.value.truncatedTo(ChronoUnit.MINUTES)} by $technician",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            androidx.wear.compose.material.Text(
+                text = "Inspection Items",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp), color = Color.DarkGray
+            )
+
+            // Group the two FlowRows in a single Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OptionDropdown(label = "Brakes:", initialOption = brakes.value, options = options).also { brakes.value = it }
+                    OptionDropdown(label = "Lights:", initialOption = lights.value, options = options).also { lights.value = it }
+                    OptionDropdown(label = "Wipers:", initialOption = wipers.value, options = options).also { wipers.value = it }
+                    OptionDropdown(label = "Belt & Pulleys:", initialOption = continuosBeltAndPulleys.value, options = options).also { continuosBeltAndPulleys.value = it }
+                    OptionDropdown(label = "Hooters:", initialOption = hooters.value, options = options).also { hooters.value = it }
+                    OptionDropdown(label = "Battery:", initialOption = battery.value, options = options).also { battery.value = it }
+                    OptionDropdown(label = "Air-Con Filter:", initialOption = airConDustFilter.value, options = options).also { airConDustFilter.value = it }
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OptionDropdown(label = "Rear Diff:", initialOption = rearDiff.value, options = options).also { rearDiff.value = it }
+                    OptionDropdown(label = "Gearbox Oil:", initialOption = gearBoxOil.value, options = options).also { gearBoxOil.value = it }
+                    OptionDropdown(label = "Power Steering:", initialOption = powerSteeringFluid.value, options = options).also { powerSteeringFluid.value = it }
+                    OptionDropdown(label = "Coolant:", initialOption = coolant.value, options = options).also { coolant.value = it }
+                    OptionDropdown(label = "Tyre Pressure:", initialOption = tyrePressure.value, options = options).also { tyrePressure.value = it }
+                    OptionDropdown(label = "Clock:", initialOption = clock.value, options = options).also { clock.value = it }
+                    OptionDropdown(label = "Coolant Pressure:", initialOption = coolantPressureTest.value, options = options).also { coolantPressureTest.value = it }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = onClose,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                ) {
+                    androidx.wear.compose.material.Text("Save", color = Color.DarkGray)
+                }
+            }
+        }
+    }
+}
+
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ControlChecklist(
@@ -919,4 +1056,50 @@ fun ControlChecklist(
             }
         }
     }
+}
+
+
+@Composable
+fun OptionDropdown(label: String, initialOption: String?, options: List<String>, onSelect: (String) -> Unit = {}): String {
+    var selectedOption by remember { mutableStateOf(initialOption ?: "Select Status") }
+    var expanded by remember { mutableStateOf(false) }
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            androidx.wear.compose.material.Text(
+                text = label,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray
+            )
+            Box {
+                androidx.wear.compose.material.Text(
+                    text = selectedOption,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.clickable { expanded = true }
+                        .padding(8.dp)
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(4.dp)),
+                    color = Color.DarkGray
+                )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    options.forEach { option ->
+                        DropdownMenuItem(
+                            onClick = {
+                                selectedOption = option
+                                expanded = false
+                            },
+                            text = { androidx.wear.compose.material.Text(option, color = Color.DarkGray) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    return selectedOption
 }

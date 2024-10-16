@@ -62,6 +62,7 @@ import com.example.designsystem.designComponents.NewTimeSheet
 import com.example.designsystem.designComponents.ServiceChecklist
 import com.example.designsystem.designComponents.StateChecklist
 import com.example.designsystem.designComponents.StepIndicator
+import com.example.designsystem.designComponents.TeamDialog
 import com.example.designsystem.designComponents.Timesheets
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.CardGrey
@@ -117,57 +118,11 @@ fun JobCardDetailScreen(
             onClickDelete = {}
         )
         if (showDialog) {
-            Dialog(onDismissRequest = { showDialog = !showDialog }) {
-                Column(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color.White)
-                        .padding(20.dp)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        LargeTitleText(name = "Team")
-
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(CardGrey)
-                            .height(2.dp)
-                    ) {
-
-                    }
-                    DisabledTextField(
-                        label = "Service Advisor",
-                        text = viewModel.jobCard.serviceAdvisorName
-                    )
-                    DisabledTextField(label = "Supervisor", text = viewModel.jobCard.supervisorName)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        MediumTitleText("Technicians: ")
-                        TextButton(onClick = { /*TODO*/ }) {
-                            Text(text = "Add")
-                        }
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Button(onClick = { showDialog = !showDialog }) {
-                            Text(text = "close")
-                        }
-                    }
-                }
-            }
+            TeamDialog(
+                onDismiss = { showDialog = !showDialog },
+                onAddNewTechnician = { showDialog = !showDialog },
+                jobCard = viewModel.jobCard
+            )
         }
 
 
