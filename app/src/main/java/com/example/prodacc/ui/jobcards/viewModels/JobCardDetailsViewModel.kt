@@ -6,6 +6,7 @@ import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardStatusRepository
 import com.prodacc.data.repositories.TimeSheetRepository
 import java.time.LocalDateTime
+import java.util.UUID
 
 class JobCardDetailsViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
@@ -43,5 +44,13 @@ class JobCardDetailsViewModel(
 
     fun updateDateAndTimeFrozen(newDateTime: LocalDateTime) {
         _jobCard.value = jobCard.copy(dateAndTimeFrozen = newDateTime)
+    }
+
+    fun updateSupervisor(id : UUID){
+
+    }
+
+    fun updateServiceAdvisor(id : UUID){
+
     }
 }

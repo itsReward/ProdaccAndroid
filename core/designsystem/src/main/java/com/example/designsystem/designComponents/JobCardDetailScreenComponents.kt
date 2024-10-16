@@ -3,6 +3,7 @@ package com.example.designsystem.designComponents
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -41,6 +43,8 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -78,6 +82,7 @@ import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Orange
+import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
 import com.prodacc.data.remote.dao.TimeSheet
@@ -90,6 +95,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.TimeZone
+import java.util.UUID
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -740,6 +746,9 @@ fun TeamDialog(
     onDismiss: () -> Unit,
     onAddNewTechnician: (String) -> Unit,
     jobCard: JobCard,
+    employees: List<EmployeeListCategory>,
+    onUpdateServiceAdvisor: (UUID) -> Unit,
+    onUpdateSupervisor: (UUID) -> Unit
 ) {
     Dialog(
         onDismissRequest = onDismiss
@@ -771,31 +780,8 @@ fun TeamDialog(
 
             }
 
-            Column {
-                androidx.compose.material3.Text(
-                    text = "Service Advisor",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color.DarkGray
-                )
-                TextField(
-                    value = jobCard.serviceAdvisorName,
-                    onValueChange = {},
-                    //label = { Text(text = "Service Advisor", color = Color.DarkGray) },
-                    shape = RoundedCornerShape(50.dp),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent
-                    ),
-                    trailingIcon = {
-                        TextButton(onClick = {}) {
-                            Text(text = "Change", color = Color.Blue)
-                        }
-                    }
-                )
-            }
+            TeamDialogCard(title = "Service Advisor", employees = employees, initialEmployee = jobCard.serviceAdvisorName, onSelectNewEmployee = onUpdateServiceAdvisor)
+            TeamDialogCard(title = "Supervisor", employees = employees, initialEmployee = jobCard.supervisorName, onSelectNewEmployee = onUpdateSupervisor)
 
 
             DisabledTextField(
@@ -826,5 +812,59 @@ fun TeamDialog(
     }
 }
 
+
+@Composable
+fun TeamDialogCard(
+    title: String,
+    employees: List<EmployeeListCategory>,
+    initialEmployee: String,
+    onSelectNewEmployee: (UUID) -> Unit
+) {
+    var dropdownMenu by remember {
+        mutableStateOf(false)
+    }
+
+    Column {
+        androidx.compose.material3.Text(
+            text = title,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.DarkGray
+        )
+        TextField(
+            value = initialEmployee,
+            onValueChange = {},
+            //label = { Text(text = "Service Advisor", color = Color.DarkGray) },
+            shape = RoundedCornerShape(50.dp),
+            colors = TextFieldDefaults.colors(
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
+            ),
+            trailingIcon = {
+                TextButton(onClick = {}) {
+                    Text(text = "Change", color = Color.Blue)
+                }
+            }
+        )
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize()) {
+            DropdownMenu(expanded = dropdownMenu, onDismissRequest = { dropdownMenu = false }) {
+                employees.forEach {
+                    Text(text = it.name)
+                    it.items.forEach {
+                        DropdownMenuItem(
+                            text = { Text(text = "${it.employeeName} ${it.employeeSurname}") },
+                            onClick = { onSelectNewEmployee(it.id)}
+                        )
+                    }
+
+                }
+            }
+        }
+    }
+}
 
 
