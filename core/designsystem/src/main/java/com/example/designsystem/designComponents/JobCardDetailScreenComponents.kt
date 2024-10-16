@@ -6,7 +6,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -14,9 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -32,45 +29,30 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -78,10 +60,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -92,7 +77,6 @@ import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
-import com.example.designsystem.theme.Green
 import com.example.designsystem.theme.Orange
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
@@ -104,7 +88,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -121,8 +104,8 @@ fun StepIndicator(
 
     AnimatedVisibility(
         visible = expanded,
-        enter = slideInVertically(animationSpec = tween(durationMillis = 500)) ,
-        exit = slideOutVertically(animationSpec = tween(durationMillis = 500)) 
+        enter = slideInVertically(animationSpec = tween(durationMillis = 500)),
+        exit = slideOutVertically(animationSpec = tween(durationMillis = 500))
     ) {
         Column(
             modifier = Modifier
@@ -225,8 +208,8 @@ fun StepIndicator(
     }
     AnimatedVisibility(
         visible = !expanded,
-              enter = slideInVertically(animationSpec = tween(durationMillis = 500, delayMillis = 500)),
-              exit = slideOutVertically(animationSpec = tween(durationMillis = 500))
+        enter = slideInVertically(animationSpec = tween(durationMillis = 500, delayMillis = 500)),
+        exit = slideOutVertically(animationSpec = tween(durationMillis = 500))
     ) {
         Row(modifier = Modifier
             .fillMaxWidth()
@@ -347,9 +330,6 @@ fun StepIndicator(
     }
 
 }
-
-
-
 
 
 @Composable
@@ -613,8 +593,7 @@ fun Timesheets(
             .clickable(onClick = { timeSheetDialog = !timeSheetDialog })
             .background(Blue50)
             .padding(horizontal = 10.dp, vertical = 10.dp)
-            .wrapContentHeight()
-            ,
+            .wrapContentHeight(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ProfileAvatar(initials = timeSheet.technicianName.first().toString())
@@ -655,12 +634,14 @@ fun Timesheets(
                     .padding(horizontal = 15.dp, vertical = 10.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp, bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
-                ){
+                ) {
                     MediumTitleText(name = timeSheet.sheetTitle)
-                    BodyTextItalic(text = "by ${ timeSheet.technicianName }")
+                    BodyTextItalic(text = "by ${timeSheet.technicianName}")
                 }
 
                 OutlinedTextField(
@@ -754,13 +735,12 @@ fun NewTimeSheet(
 }
 
 
-
 @Composable
 fun TeamDialog(
     onDismiss: () -> Unit,
     onAddNewTechnician: (String) -> Unit,
     jobCard: JobCard,
-){
+) {
     Dialog(
         onDismissRequest = onDismiss
     ) {
@@ -775,24 +755,54 @@ fun TeamDialog(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp)
+                    .drawBehind {
+                        drawLine(
+                            color = CardGrey,
+                            start = Offset(0F, 100f),
+                            end = Offset(size.maxDimension, 100f),
+                            strokeWidth = 6f
+                        )
+                    }
             ) {
                 LargeTitleText(name = "Team")
 
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(CardGrey)
-                    .height(2.dp)
-            ) {
-
+            Column {
+                androidx.compose.material3.Text(
+                    text = "Service Advisor",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.DarkGray
+                )
+                TextField(
+                    value = jobCard.serviceAdvisorName,
+                    onValueChange = {},
+                    //label = { Text(text = "Service Advisor", color = Color.DarkGray) },
+                    shape = RoundedCornerShape(50.dp),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
+                    ),
+                    trailingIcon = {
+                        TextButton(onClick = {}) {
+                            Text(text = "Change", color = Color.Blue)
+                        }
+                    }
+                )
             }
+
+
             DisabledTextField(
                 label = "Service Advisor",
                 text = jobCard.serviceAdvisorName
             )
+
             DisabledTextField(label = "Supervisor", text = jobCard.supervisorName)
             Row(
                 modifier = Modifier.fillMaxWidth(),
