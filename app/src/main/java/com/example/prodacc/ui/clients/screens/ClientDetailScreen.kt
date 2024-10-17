@@ -205,6 +205,5 @@ fun ClientDetailScreen(
 
         }
     }
-
-
+    
 }
