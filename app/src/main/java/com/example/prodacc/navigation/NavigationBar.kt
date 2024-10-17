@@ -43,7 +43,7 @@ fun NavigationBar(navController : NavController ){
         com.example.prodacc.navigation.Route.Vehicles.path -> 1
         com.example.prodacc.navigation.Route.Clients.path -> 2
         com.example.prodacc.navigation.Route.Employees.path -> 3
-        else -> 0 // Default to Job Cards
+        else -> 4 // Default to Job Cards
     }
 
 

@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,7 +46,7 @@ import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModel
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ClientDetailScreen(
     navController: NavController,
@@ -188,12 +190,13 @@ fun ClientDetailScreen(
                 }
 
                 MediumTitleText(name = "Vehicles", modifier = Modifier.padding(start = 20.dp, bottom = 10.dp))
-                LazyRow (
+                FlowRow (
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    items(client.vehicle){ vehicle ->
-                        ClientVehicleRow(vehicle = vehicle) {
-                            navController.navigate(Route.VehicleDetails.path.replace("{vehicleId}", vehicle.id.toString()))
+                    client.vehicle.forEach {
+                        ClientVehicleRow(vehicle = it) {
+                            navController.navigate(Route.VehicleDetails.path.replace("{vehicleId}", it.id.toString()))
                         }
                     }
                 }

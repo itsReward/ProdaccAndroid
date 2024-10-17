@@ -71,7 +71,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -85,7 +84,6 @@ import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Orange
-import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
 import com.prodacc.data.remote.dao.TimeSheet
