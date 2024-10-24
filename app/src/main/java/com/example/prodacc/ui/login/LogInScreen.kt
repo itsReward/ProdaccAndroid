@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.PasswordTextField
 import com.example.designsystem.theme.BlueA700
@@ -41,14 +42,17 @@ import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.White
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.login.viewmodel.LogInViewModel
 
 
 @Composable
 fun LogInScreen(
     navController: NavController
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val viewModel = LogInViewModel()
+
+    var username = viewModel.usernameState
+    var password = viewModel.passwordState.value
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -92,8 +96,8 @@ fun LogInScreen(
             )
 
             TextField(
-                value = username,
-                onValueChange = { username = it },
+                value = username.value,
+                onValueChange = viewModel::onUsernameChange,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -101,17 +105,19 @@ fun LogInScreen(
                 label = { Text("username") },
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
-                )
+                ),
+                singleLine = true
             )
             
-
-            PasswordTextField(password = "") { }
+            Text(text = username.value)
+            PasswordTextField(password = password) { viewModel.onPasswordChange(it) }
 
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {
                     try {
-                        navController.navigate(Route.JobCards.path)
+                        viewModel.onColorChange(Color.Red)
+                        //navController.navigate(Route.JobCards.path)
                     } catch (e: Exception) {
                         Log.e("Navigation", "Error navigating to JobCards: ${e.message}")
                     }
