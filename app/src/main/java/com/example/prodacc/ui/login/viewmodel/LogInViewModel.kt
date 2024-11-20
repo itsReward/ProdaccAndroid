@@ -24,7 +24,7 @@ class LogInViewModel(
     val passwordState = password
 
     private val _loginState = MutableStateFlow<LogInState>(LogInState.Idle)
-    val loginState = _loginState.asStateFlow()
+    val loginState = _loginState
 
 
     fun onUsernameChange(newUsername: String) {
@@ -37,13 +37,42 @@ class LogInViewModel(
 
     }
 
+    fun resetLoginState() {
+        _loginState.value = LogInState.Idle
+    }
 
+    fun logIn(){
+        _loginState.value = LogInState.Loading
+        viewModelScope.launch {
+            logInRepository.login(username.value, password.value).let { result ->
+                when (result) {
+                    is LogInRepository.LoginResult.Success -> {
+                        _loginState.value = LogInState.Success(result.token)
+                    }
+
+                    is LogInRepository.LoginResult.Error -> {
+                        _loginState.value = LogInState.Error(result.message!!.message)
+                    }
+
+                    is LogInRepository.LoginResult.NetworkError -> {
+                        _loginState.value = LogInState.Error("Network Error")
+                    }
+
+                    else -> {
+                        _loginState.value = LogInState.Idle
+                    }
+
+                }
+            }
+        }
+    }
 
 }
 
 sealed class LogInState {
     data object Idle: LogInState()
     data object Loading: LogInState()
-    data class Success(val data: Any): LogInState()
+    data class Success(val token: Any): LogInState()
     data class Error(val message: String): LogInState()
 }
+

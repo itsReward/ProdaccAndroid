@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.People
@@ -90,3 +91,4 @@ val contactDetails = Icons.Outlined.Contacts
 val vehicleIcon = Icons.Outlined.DirectionsCarFilled
 val person = Icons.Default.Person
 val checklistIcon = Icons.Default.Checklist
+val errorIcon = Icons.Default.Error

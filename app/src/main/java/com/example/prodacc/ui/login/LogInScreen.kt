@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,9 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -35,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.PasswordTextField
@@ -42,7 +49,9 @@ import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.White
+import com.example.designsystem.theme.errorIcon
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.login.viewmodel.LogInState
 import com.example.prodacc.ui.login.viewmodel.LogInViewModel
 
 
@@ -105,7 +114,8 @@ fun LogInScreen(
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
                 ),
-                singleLine = true
+                singleLine = true,
+                isError = if (viewModel.loginState.collectAsState().value is LogInState.Error) true else false
             )
             
 
@@ -114,11 +124,7 @@ fun LogInScreen(
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {
-                    try {
-                        navController.navigate(Route.JobCards.path)
-                    } catch (e: Exception) {
-                        Log.e("Navigation", "Error navigating to JobCards: ${e.message}")
-                    }
+                    viewModel.logIn()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = BlueA700, contentColor = White
@@ -156,5 +162,61 @@ fun LogInScreen(
             )
         }
 
+    }
+
+    viewModel.loginState.collectAsState().value.let { state ->
+        when (state) {
+            is LogInState.Idle -> {
+            }
+            is LogInState.Loading -> {
+                Dialog(onDismissRequest = {}) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color.White)
+                            .padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        CircularProgressIndicator(
+                            color = BlueA700,
+                            trackColor = Color.Transparent
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(text = "Logging In...")
+                    }
+
+                }
+            }
+            is LogInState.Success -> {
+                navController.navigate(Route.JobCards.path)
+            }
+            is LogInState.Error -> {
+                Dialog(onDismissRequest = viewModel::resetLoginState) {
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color.White)
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Icon(imageVector = errorIcon, contentDescription = "error")
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = state.message)
+                        }
+
+                    }
+
+
+                }
+            }
+
+            else -> {}
+        }
     }
 }
