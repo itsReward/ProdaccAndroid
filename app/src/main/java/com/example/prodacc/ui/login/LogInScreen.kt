@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,12 +48,10 @@ import com.example.prodacc.ui.login.viewmodel.LogInViewModel
 
 @Composable
 fun LogInScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: LogInViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    val viewModel = LogInViewModel()
 
-    var username = viewModel.usernameState
-    var password = viewModel.passwordState.value
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -96,7 +95,7 @@ fun LogInScreen(
             )
 
             TextField(
-                value = username.value,
+                value = viewModel.usernameState.collectAsState().value,
                 onValueChange = viewModel::onUsernameChange,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
@@ -109,15 +108,14 @@ fun LogInScreen(
                 singleLine = true
             )
             
-            Text(text = username.value)
-            PasswordTextField(password = password) { viewModel.onPasswordChange(it) }
+
+            PasswordTextField(password = viewModel.passwordState.collectAsState().value) { viewModel.onPasswordChange(it) }
 
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {
                     try {
-                        viewModel.onColorChange(Color.Red)
-                        //navController.navigate(Route.JobCards.path)
+                        navController.navigate(Route.JobCards.path)
                     } catch (e: Exception) {
                         Log.e("Navigation", "Error navigating to JobCards: ${e.message}")
                     }

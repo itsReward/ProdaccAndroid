@@ -7,6 +7,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prodacc.data.repositories.LogInRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
@@ -14,19 +17,18 @@ class LogInViewModel(
     private val logInRepository: LogInRepository = LogInRepository()
 ) : ViewModel() {
 
-    private var username = mutableStateOf("")
-    val usernameState: State<String> = username
-    private var password = mutableStateOf("")
-    val passwordState: State<String> = password
+    private var username = MutableStateFlow("")
+    val usernameState = username
 
-    private var color = mutableStateOf(Color.Blue)
-    val colorState: State<Color> = color
+    private var password = MutableStateFlow("")
+    val passwordState = password
+
+    private val _loginState = MutableStateFlow<LogInState>(LogInState.Idle)
+    val loginState = _loginState.asStateFlow()
+
 
     fun onUsernameChange(newUsername: String) {
-        viewModelScope.launch {
-            username.value = newUsername
-        }
-
+        username.value = newUsername
 
     }
 
@@ -35,8 +37,13 @@ class LogInViewModel(
 
     }
 
-    fun onColorChange(newColor: Color = Color.Red) {
-        color.value = newColor
-    }
 
+
+}
+
+sealed class LogInState {
+    data object Idle: LogInState()
+    data object Loading: LogInState()
+    data class Success(val data: Any): LogInState()
+    data class Error(val message: String): LogInState()
 }
