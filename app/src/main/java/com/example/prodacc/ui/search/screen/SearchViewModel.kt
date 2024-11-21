@@ -2,6 +2,8 @@ package com.example.prodacc.ui.search.screen
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
@@ -10,13 +12,14 @@ import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.EmployeeRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.VehicleRepository
+import kotlinx.coroutines.launch
 
 class SearchViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val employeeRepository: EmployeeRepository = EmployeeRepository(),
     private val clientRepository: ClientRepository = ClientRepository(),
     private val vehicleRepository: VehicleRepository = VehicleRepository()
-) {
+): ViewModel() {
     private val searchQuery = mutableStateOf("")
     val searchQueryState: State<String> = searchQuery
 
@@ -29,8 +32,17 @@ class SearchViewModel(
     private val vehicles = mutableStateOf(vehicleRepository.getVehicles())
     val vehiclesList: State<List<Vehicle>> = vehicles
 
-    private val jobCards = mutableStateOf(jobCardRepository.generateJobCards(10))
+    private val jobCards = mutableStateOf(emptyList<JobCard>())
     val jobCardsList: State<List<JobCard>> = jobCards
+
+    init {
+        viewModelScope.launch {
+            employees.value = employeeRepository.getEmployees()
+            clients.value = clientRepository.getClientsList()
+            vehicles.value = vehicleRepository.getVehicles()
+            jobCards.value = jobCardRepository.getJobCards()
+        }
+    }
 
 
     private fun updateSearchQuery(query: String){

@@ -73,6 +73,7 @@ import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -80,7 +81,7 @@ import kotlinx.coroutines.launch
 fun JobCardDetailScreen(
     navController: NavController, jobCardId: String
 ) {
-    val viewModel = JobCardDetailsViewModel(job = jobCardId)
+    val viewModel = JobCardDetailsViewModel(job = UUID.fromString(jobCardId))
     val employeesViewModel = EmployeesViewModel()
 
     val scroll = rememberScrollState()

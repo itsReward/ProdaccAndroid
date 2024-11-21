@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -136,6 +138,7 @@ fun LogInScreen(
                 Text(text = "LogIn")
             }
 
+
             Text(
                 text = "If you do not have an account, consult the system administrator",
                 fontWeight = FontWeight.Normal,
@@ -155,6 +158,27 @@ fun LogInScreen(
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            TextField(
+                value = viewModel.APIAddress.collectAsState().value,
+                onValueChange = viewModel::onAPIAddressChange,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 5.dp),
+                label = { Text("API Address") },
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+                singleLine = true,
+                trailingIcon = {
+                    IconButton(onClick = { viewModel.saveAPIAddress() }) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "save"
+                        )
+                    }
+                }
+            )
             Text(
                 textAlign = TextAlign.Center,
                 text = "Version 1.0 created with ❤ by Render Creative",

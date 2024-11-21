@@ -196,12 +196,14 @@ fun EmployeeDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(viewModel.jobCards){ jobCards ->
-                        AllJobCardListItem(
+                        if (jobCards != null) {
+                            AllJobCardListItem(
                                 jobCardName = jobCards.jobCardName,
-                            closedDate = jobCards.dateAndTimeClosed,
-                            onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", jobCards.id.toString())) }
+                                closedDate = jobCards.dateAndTimeClosed,
+                                onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", jobCards.id.toString())) }
 
-                        )
+                            )
+                        }
                     }
                 }
             }

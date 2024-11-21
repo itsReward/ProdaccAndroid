@@ -31,6 +31,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,11 +60,14 @@ import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
 
 @Composable
 fun JobCardsScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: JobCardViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val scroll = rememberScrollState()
-    val viewModel = JobCardViewModel()
     var newJobCardDialog by remember { mutableStateOf(false) }
+
+    val jobCards = viewModel.jobCards.collectAsState()
+    val pastJobCards = viewModel.pastJobCards.collectAsState()
 
     Scaffold(
         topBar = { TopBar("Job Cards"){navController.navigate(Route.Search.path.replace("{title}", "Job Cards"))} },
@@ -77,7 +81,7 @@ fun JobCardsScreen(
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
             }
         }
-    ) { innerPadding ->
+    ){ innerPadding ->
 
         AnimatedVisibility(visible = newJobCardDialog) {
             Dialog(onDismissRequest = { newJobCardDialog = !newJobCardDialog }) {
@@ -96,7 +100,9 @@ fun JobCardsScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row (
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp,top = 20.dp, start = 10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp, top = 20.dp, start = 10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ){
@@ -104,8 +110,6 @@ fun JobCardsScreen(
                         }
 
                     }
-
-
                     TextField(
                         value = "${viewModel.vehicleState?.color} ${viewModel.vehicleState?.model} ${viewModel.vehicleState?.regNumber}",
                         onValueChange = {},
@@ -191,6 +195,10 @@ fun JobCardsScreen(
 
             JobStatusFilters()
 
+            Button(onClick = { viewModel.updateJobCardsScreen() }) {
+                Text(text = "Update")
+            }
+
 
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -200,7 +208,7 @@ fun JobCardsScreen(
                     .padding(horizontal = 20.dp)
             ) {
 
-                items(viewModel.jobCards) { jobCard ->
+                items(jobCards.value) { jobCard ->
                     LargeJobCard(
                         jobCardName = jobCard.jobCardName.substringAfter(" ", " "),
                         onClick = {
@@ -231,7 +239,7 @@ fun JobCardsScreen(
                     .sizeIn(maxHeight = 2000.dp)
                     .padding(horizontal = 20.dp)
             ) {
-                items(viewModel.pastJobCards) {
+                items(viewModel.pastJobCards.value) {
                     AllJobCardListItem(
                         jobCardName = it.jobCardName,
                         closedDate = it.dateAndTimeClosed,
@@ -246,9 +254,7 @@ fun JobCardsScreen(
                     )
                 }
             }
-
-
         }
-
     }
 }
+

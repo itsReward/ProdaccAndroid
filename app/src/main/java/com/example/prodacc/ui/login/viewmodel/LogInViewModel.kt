@@ -1,15 +1,10 @@
 package com.example.prodacc.ui.login.viewmodel
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.repositories.LogInRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
@@ -26,6 +21,17 @@ class LogInViewModel(
     private val _loginState = MutableStateFlow<LogInState>(LogInState.Idle)
     val loginState = _loginState
 
+    private val _APIAddress = MutableStateFlow(ApiInstance.BASE_URL)
+    val APIAddress = _APIAddress
+
+    fun onAPIAddressChange(newAPIAddress: String) {
+        _APIAddress.value = newAPIAddress
+    }
+
+    fun saveAPIAddress() {
+        ApiInstance.BASE_URL = _APIAddress.value
+        logInRepository.reinitializeService()
+    }
 
     fun onUsernameChange(newUsername: String) {
         username.value = newUsername
@@ -41,7 +47,7 @@ class LogInViewModel(
         _loginState.value = LogInState.Idle
     }
 
-    fun logIn(){
+    fun logIn() {
         _loginState.value = LogInState.Loading
         viewModelScope.launch {
             logInRepository.login(username.value, password.value).let { result ->
@@ -51,7 +57,8 @@ class LogInViewModel(
                     }
 
                     is LogInRepository.LoginResult.Error -> {
-                        _loginState.value = LogInState.Error(result.message!!.message)
+                        _loginState.value = result.message?.let { LogInState.Error(it.message) }
+                            ?: LogInState.Error("Unknown Error")
                     }
 
                     is LogInRepository.LoginResult.NetworkError -> {
@@ -70,9 +77,9 @@ class LogInViewModel(
 }
 
 sealed class LogInState {
-    data object Idle: LogInState()
-    data object Loading: LogInState()
-    data class Success(val token: Any): LogInState()
-    data class Error(val message: String): LogInState()
+    data object Idle : LogInState()
+    data object Loading : LogInState()
+    data class Success(val token: Any) : LogInState()
+    data class Error(val message: String) : LogInState()
 }
 

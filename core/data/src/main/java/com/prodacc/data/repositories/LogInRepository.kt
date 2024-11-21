@@ -2,12 +2,13 @@ package com.prodacc.data.repositories
 
 import com.google.gson.Gson
 import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.TokenManager
 import com.prodacc.data.remote.dao.Token
 import com.prodacc.data.remote.dao.UserLogInDetails
 import java.io.IOException
 
 class LogInRepository {
-    private val loginService = ApiInstance.logInService
+    private var loginService = ApiInstance.logInService
     private val gson = Gson()
 
     sealed class LoginResult {
@@ -20,12 +21,16 @@ class LogInRepository {
     suspend fun login(username: String, password: String): LoginResult {
         return try {
             val loginDetails = UserLogInDetails(username, password)
-            println(username)
-            println(password)
+
+            if (username.isBlank() || password.isBlank()) {
+                return LoginResult.ErrorSingleMessage("Username or password cannot be empty")
+            }
+
             val response = loginService.logIn(loginDetails)
 
             if (response.isSuccessful) {
                 response.body()?.let { token ->
+                    TokenManager.saveToken(token)
                     LoginResult.Success(token)
                 } ?: LoginResult.ErrorSingleMessage("Empty response body")
             } else {
@@ -37,6 +42,10 @@ class LogInRepository {
                 else -> LoginResult.ErrorSingleMessage(e.message ?: "Unknown error occurred")
             }
         }
+    }
+
+    fun reinitializeService(){
+        loginService = ApiInstance.logInService
     }
 }
 
