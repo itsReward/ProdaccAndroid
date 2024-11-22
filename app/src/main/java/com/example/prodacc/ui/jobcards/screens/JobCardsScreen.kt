@@ -5,9 +5,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,9 +23,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -53,10 +58,13 @@ import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.SectionHeading
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.designComponents.VehiclesDropDown
+import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.vehicleIcon
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.jobcards.viewModels.JobCardLoadState
 import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
+import java.time.LocalDateTime
 
 @Composable
 fun JobCardsScreen(
@@ -180,81 +188,147 @@ fun JobCardsScreen(
 
 
 
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .verticalScroll(scroll)
-        ) {
-            SectionHeading(
-                text = "Today's Jobs",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 25.dp, top = 10.dp),
-                textAlign = TextAlign.Start
-            )
-
-            JobStatusFilters()
-
-            Button(onClick = { viewModel.updateJobCardsScreen() }) {
-                Text(text = "Update")
-            }
-
-
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .sizeIn(maxHeight = 2000.dp)
-                    .padding(horizontal = 20.dp)
-            ) {
-
-                items(jobCards.value) { jobCard ->
-                    LargeJobCard(
-                        jobCardName = jobCard.jobCardName.substringAfter(" ", " "),
-                        onClick = {
-                            navController.navigate(
-                                Route.JobCardDetails.path.replace(
-                                    "{jobCardId}",
-                                    jobCard.id.toString()
-                                )
-                            )
-                        },
-                        jobCardDeadline = jobCard.jobCardDeadline
-                    )
+        viewModel.jobCardLoadState.collectAsState().value.let { state ->
+            when (state) {
+                is JobCardLoadState.Idle -> {
+                    Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            Text(text = "Weak Signal, Refresh")
+                            Button(onClick = { viewModel.updateJobCardsScreen() }) {
+                                Text(text = "Refresh")
+                            }
+                        }
+                    }
                 }
-
-
-            }
-
-
-            HistorySection(
-                heading = "History",
-                buttonOnClick = {}
-            )
-
-            LazyColumn(
-                //verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .sizeIn(maxHeight = 2000.dp)
-                    .padding(horizontal = 20.dp)
-            ) {
-                items(viewModel.pastJobCards.value) {
-                    AllJobCardListItem(
-                        jobCardName = it.jobCardName,
-                        closedDate = it.dateAndTimeClosed,
-                        onClick = {
-                            navController.navigate(
-                                Route.JobCardDetails.path.replace(
-                                    "{jobCardId}",
-                                    it.id.toString()
-                                )
+                is JobCardLoadState.Loading -> {
+                    Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                color = BlueA700,
+                                trackColor = Color.Transparent
                             )
-                        },
-                    )
+                            Text(text = "Loading JobCards...")
+                        }
+                    }
+                }
+                is JobCardLoadState.Success -> {
+                    Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .verticalScroll(scroll)
+                    ) {
+                        SectionHeading(
+                            text = "Today's Jobs",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 25.dp, top = 10.dp),
+                            textAlign = TextAlign.Start
+                        )
+
+                        JobStatusFilters()
+
+
+
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .sizeIn(maxHeight = 2000.dp)
+                                .padding(horizontal = 20.dp)
+                        ) {
+
+                            items(jobCards.value) { jobCard ->
+                                LargeJobCard(
+                                    jobCardName = jobCard.jobCardName.substringAfter(" ", " "),
+                                    onClick = {
+                                        navController.navigate(
+                                            Route.JobCardDetails.path.replace(
+                                                "{jobCardId}",
+                                                jobCard.id.toString()
+                                            )
+                                        )
+                                    },
+                                    jobCardDeadline = jobCard.jobCardDeadline ?: LocalDateTime.now(),
+                                )
+                            }
+
+
+                        }
+
+
+                        HistorySection(
+                            heading = "History",
+                            buttonOnClick = {}
+                        )
+
+                        LazyColumn(
+                            //verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .sizeIn(maxHeight = 2000.dp)
+                                .padding(horizontal = 20.dp)
+                        ) {
+                            items(pastJobCards.value) {
+                                AllJobCardListItem(
+                                    jobCardName = it.jobCardName,
+                                    closedDate = it.dateAndTimeClosed,
+                                    onClick = {
+                                        navController.navigate(
+                                            Route.JobCardDetails.path.replace(
+                                                "{jobCardId}",
+                                                it.id.toString()
+                                            )
+                                        )
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+                is JobCardLoadState.Error -> {
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color.White)
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        Text(text = state.message)
+                    }
+
                 }
             }
         }
+
+
+
     }
 }
 

@@ -40,7 +40,7 @@ class SearchViewModel(
             employees.value = employeeRepository.getEmployees()
             clients.value = clientRepository.getClientsList()
             vehicles.value = vehicleRepository.getVehicles()
-            jobCards.value = jobCardRepository.getJobCards()
+            //jobCards.value = jobCardRepository.getJobCards()
         }
     }
 

@@ -57,8 +57,12 @@ class LogInViewModel(
                     }
 
                     is LogInRepository.LoginResult.Error -> {
-                        _loginState.value = result.message?.let { LogInState.Error(it.message) }
-                            ?: LogInState.Error("Unknown Error")
+                        _loginState.value = result.message?.let { LogInState.Error(it.message?:"Unknown Error gegege") }
+                            ?: LogInState.Error("Unknown Error hahha")
+                    }
+
+                    is LogInRepository.LoginResult.ErrorSingleMessage -> {
+                        _loginState.value = LogInState.Error(result.message)
                     }
 
                     is LogInRepository.LoginResult.NetworkError -> {
@@ -80,6 +84,6 @@ sealed class LogInState {
     data object Idle : LogInState()
     data object Loading : LogInState()
     data class Success(val token: Any) : LogInState()
-    data class Error(val message: String) : LogInState()
+    data class Error(val message: String = "Unknown Error") : LogInState()
 }
 

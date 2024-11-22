@@ -1,6 +1,7 @@
 package com.prodacc.data.repositories
 
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.TokenManager
 import com.prodacc.data.remote.dao.Token
@@ -25,8 +26,8 @@ class LogInRepository {
             if (username.isBlank() || password.isBlank()) {
                 return LoginResult.ErrorSingleMessage("Username or password cannot be empty")
             }
-
             val response = loginService.logIn(loginDetails)
+
 
             if (response.isSuccessful) {
                 response.body()?.let { token ->
@@ -34,6 +35,9 @@ class LogInRepository {
                     LoginResult.Success(token)
                 } ?: LoginResult.ErrorSingleMessage("Empty response body")
             } else {
+                println("####Error####")
+                println(response.errorBody()?.string())
+
                 LoginResult.Error(gson.fromJson(response.errorBody()?.string(), ErrorMessage::class.java))
             }
         } catch (e: Exception) {
@@ -50,7 +54,10 @@ class LogInRepository {
 }
 
 data class ErrorMessage(
+    @SerializedName("timestamp")
     val timestamp: String,
+    @SerializedName("message")
     val message: String,
+    @SerializedName("detail")
     val detail : String
 )

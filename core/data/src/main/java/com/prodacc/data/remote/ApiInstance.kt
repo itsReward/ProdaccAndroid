@@ -1,10 +1,16 @@
 package com.prodacc.data.remote
 
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializer
 import com.prodacc.data.remote.services.JobCardService
 import com.prodacc.data.remote.services.LogInService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+
 /*
 object ApiInstance {
     var BASE_URL = "http://192.168.0.123:5000"
@@ -49,6 +55,18 @@ object ApiInstance {
             _jobCardService = _retrofitBuilder.create(JobCardService::class.java)
         }
 
+
+    val gson = GsonBuilder()
+        .registerTypeAdapter(LocalDateTime::class.java, JsonDeserializer { json, _, _ ->
+            // Adjust the parsing format to match your actual JSON
+            val dateString = json.asString
+            LocalDateTime.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            // Or use a custom formatter if the date format is different
+            // LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        })
+        .create()
+
+
     // Use a private backing field for retrofitBuilder
     private var _retrofitBuilder: Retrofit = createRetrofitBuilder()
 
@@ -75,17 +93,21 @@ object ApiInstance {
 
                 // Add Authorization header if token is available
                 TokenManager.getToken()?.let { token ->
-                    requestBuilder.addHeader("Authorization", "Bearer ${token.token}")
+                    println("Authorization Bearer ${token.accessToken}")
+                    requestBuilder.addHeader("Authorization", "Bearer ${token.accessToken}")
                 }
 
                 chain.proceed(requestBuilder.build())
             }
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .build()
 
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
-            // Add OkHttpClient to the builder.client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 }

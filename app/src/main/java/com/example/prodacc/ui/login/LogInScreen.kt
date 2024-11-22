@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
@@ -62,7 +63,6 @@ fun LogInScreen(
     navController: NavController,
     viewModel: LogInViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -116,8 +116,7 @@ fun LogInScreen(
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
                 ),
-                singleLine = true,
-                isError = if (viewModel.loginState.collectAsState().value is LogInState.Error) true else false
+                singleLine = true
             )
             
 
@@ -168,16 +167,19 @@ fun LogInScreen(
                 label = { Text("API Address") },
                 colors = TextFieldDefaults.colors(
                     unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
                 ),
                 singleLine = true,
                 trailingIcon = {
-                    IconButton(onClick = { viewModel.saveAPIAddress() }) {
+                    IconButton(
+                        onClick = { viewModel.saveAPIAddress() }
+                    ){
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = "save"
                         )
                     }
-                }
+                },
             )
             Text(
                 textAlign = TextAlign.Center,
@@ -198,7 +200,7 @@ fun LogInScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(5.dp))
                             .background(Color.White)
-                            .padding(20.dp),
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
@@ -229,7 +231,7 @@ fun LogInScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            Icon(imageVector = errorIcon, contentDescription = "error")
+                            Icon(imageVector = errorIcon, contentDescription = "error", tint = Color.Red)
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(text = state.message)
                         }

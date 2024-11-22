@@ -1,10 +1,13 @@
 package com.prodacc.data.remote.dao
 
+import com.google.gson.annotations.SerializedName
+
 data class UserLogInDetails(
     val username: String,
     val password: String
 )
 
 data class Token(
-    val token: String
+    @SerializedName("accessToken")
+    val accessToken: String
 )

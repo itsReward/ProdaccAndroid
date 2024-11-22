@@ -13,7 +13,7 @@ import java.util.UUID
 
 interface JobCardService {
     @GET("/jobCards/all")
-    suspend fun getJobCards(): Response<List<JSONObject>>
+    suspend fun getJobCards(): Response<List<JobCard>>
 
     @GET("/jobCards/get/{id}")
     suspend fun getJobCard(@Path("id") id: UUID): Response<JSONObject>

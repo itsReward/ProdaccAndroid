@@ -22,7 +22,7 @@ class VehicleDetailsViewModel(
 
     init {
         viewModelScope.launch {
-            vehicleJobCards = jobCardRepository.getJobCards()
+            //vehicleJobCards = jobCardRepository.getJobCards()
         }
     }
 
