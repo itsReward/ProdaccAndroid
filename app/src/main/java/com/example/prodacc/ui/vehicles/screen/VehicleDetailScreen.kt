@@ -1,4 +1,4 @@
-package com.example.prodacc.ui.vehicles
+package com.example.prodacc.ui.vehicles.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

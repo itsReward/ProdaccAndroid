@@ -15,32 +15,52 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.CategorisedList
 import com.example.designsystem.designComponents.ListCategory
-import com.example.prodacc.navigation.NavigationBar
 import com.example.designsystem.designComponents.TopBar
+import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.clients.viewModels.ClientsViewModel
+import com.prodacc.data.remote.TokenManager
 
 
 @Composable
-fun ClientsScreen( navController : NavController){
+fun ClientsScreen(navController: NavController) {
 
     val viewModel = ClientsViewModel()
     val clients = viewModel.clients.map { ListCategory(name = it.key.toString(), items = it.value) }
 
     Scaffold(
-        topBar = { TopBar("Clients"){navController.navigate(Route.Search.path.replace("{title}", "Clients"))} },
+        topBar = {
+            TopBar(
+                title = "Clients",
+                onSearchClick = {
+                    navController.navigate(
+                        Route.Search.path.replace(
+                            "{title}",
+                            "Clients"
+                        )
+                    )
+                },
+                logOut = {
+                    TokenManager.saveToken(null)
+                    navController.navigate(Route.LogIn.path)
+                }
+            )
+        },
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(Route.NewClient.path) },
                 shape = CircleShape,
-                containerColor = Color.White) {
+                containerColor = Color.White
+            ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
             }
         }
-    ) {innerPadding ->
+    ) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding).padding(horizontal = 10.dp)
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(horizontal = 10.dp)
         ) {
             CategorisedList(categories = clients, navController = navController)
         }

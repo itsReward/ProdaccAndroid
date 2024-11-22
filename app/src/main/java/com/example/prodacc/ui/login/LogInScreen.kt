@@ -200,9 +200,10 @@ fun LogInScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(5.dp))
                             .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                            .padding(horizontal = 20.dp, vertical = 20.dp)
+                            .width(240.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         CircularProgressIndicator(
                             color = BlueA700,

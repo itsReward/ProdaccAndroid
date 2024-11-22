@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.prodacc.data.remote.services.JobCardService
 import com.prodacc.data.remote.services.LogInService
+import com.prodacc.data.remote.services.VehicleService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -53,6 +54,7 @@ object ApiInstance {
             // Recreate services
             _logInService = _retrofitBuilder.create(LogInService::class.java)
             _jobCardService = _retrofitBuilder.create(JobCardService::class.java)
+            _vehicleService = _retrofitBuilder.create(VehicleService::class.java)
         }
 
 
@@ -73,6 +75,7 @@ object ApiInstance {
     // Use a private backing field for services
     private var _logInService: LogInService = _retrofitBuilder.create(LogInService::class.java)
     private var _jobCardService: JobCardService = _retrofitBuilder.create(JobCardService::class.java)
+    private var _vehicleService: VehicleService = _retrofitBuilder.create(VehicleService::class.java)
 
     // Getter for retrofitBuilder that returns the current instance
     val retrofitBuilder: Retrofit
@@ -84,6 +87,10 @@ object ApiInstance {
 
     val jobCardService: JobCardService
         get() = _jobCardService
+
+    val vehicleService: VehicleService
+        get() = _vehicleService
+
 
     // Separate method to create Retrofit builder
     private fun createRetrofitBuilder(): Retrofit {

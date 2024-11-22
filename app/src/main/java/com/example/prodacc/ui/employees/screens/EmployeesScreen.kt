@@ -18,45 +18,71 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.EmployeeCategoryHeader
 import com.example.designsystem.designComponents.EmployeeListCard
-import com.example.prodacc.navigation.NavigationBar
 import com.example.designsystem.designComponents.TopBar
+import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
+import com.prodacc.data.remote.TokenManager
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EmployeesScreen(navController : NavController){
+fun EmployeesScreen(navController: NavController) {
     val viewModel = EmployeesViewModel()
 
     Scaffold(
-        topBar = { TopBar("Employees"){navController.navigate(Route.Search.path.replace("{title}", "Employees"))} },
+        topBar = {
+            TopBar(
+                title = "Employees",
+                onSearchClick = {
+                    navController.navigate(
+                        Route.Search.path.replace(
+                            "{title}",
+                            "Employees"
+                        )
+                    )
+                },
+                logOut = {
+                    TokenManager.saveToken(null)
+                    navController.navigate(Route.LogIn.path)
+                }
+            )
+        },
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(Route.NewEmployee.path) },
                 shape = CircleShape,
-                containerColor = Color.White) {
+                containerColor = Color.White
+            ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
             }
         }
-    ){innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).padding(horizontal = 10.dp)) {
-            LazyColumn (
-            ){
-                viewModel.employees.forEach{ category ->
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(horizontal = 10.dp)
+        ) {
+            LazyColumn(
+            ) {
+                viewModel.employees.forEach { category ->
                     stickyHeader {
                         EmployeeCategoryHeader(text = category.name)
                     }
-                    items(category.items){ employee ->
+                    items(category.items) { employee ->
                         EmployeeListCard(employee = employee, onClick = {
-                            navController.navigate(Route.EmployeeDetails.path.replace("{employeeId}", employee.id.toString()))
+                            navController.navigate(
+                                Route.EmployeeDetails.path.replace(
+                                    "{employeeId}",
+                                    employee.id.toString()
+                                )
+                            )
                         })
                     }
                 }
             }
         }
-
 
 
     }

@@ -1,6 +1,5 @@
-package com.example.prodacc.ui.vehicles
+package com.example.prodacc.ui.vehicles.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,13 +34,15 @@ import androidx.navigation.NavController
 import com.example.designsystem.designComponents.ClientsDropDown
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.theme.DarkGrey
-import com.example.prodacc.ui.vehicles.viewModels.NewVehicleViewModel
+import com.example.prodacc.ui.vehicles.viewModels.EditVehicleDetailsViewModel
+import java.util.UUID
 
 @Composable
-fun NewVehicleScreen(
-    navController: NavController
-){
-    val viewModel = NewVehicleViewModel()
+fun EditVehicleDetailsScreen(
+    navController: NavController,
+    vehicleId: String
+) {
+    val viewModel = EditVehicleDetailsViewModel(vehicleId = UUID.fromString(vehicleId))
 
     var clientExpanded by remember {
         mutableStateOf(false   )
@@ -57,9 +58,7 @@ fun NewVehicleScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
-            .background(Color.White)
             .fillMaxSize()
-
 
     ) {
         Row(
@@ -85,7 +84,7 @@ fun NewVehicleScreen(
                     color = DarkGrey
                 )
                 LargeTitleText(
-                    name = "New Vehicle",
+                    name = "Edit Vehicle",
                     color = DarkGrey
                 )
             }
@@ -105,6 +104,11 @@ fun NewVehicleScreen(
                     Text(text = "Save", color = Color.White)
                 }
 
+                com.example.designsystem.designComponents.IconButton(
+                    onClick = { },
+                    icon = Icons.Filled.Delete,
+                    color = DarkGrey
+                )
             }
         }
 
@@ -120,7 +124,7 @@ fun NewVehicleScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-
+                
                 LargeTitleText(name = "${viewModel.uiState.value.clientSurname}'s ${viewModel.uiState.value.color} ${viewModel.uiState.value.model}")
             }
 
@@ -140,9 +144,9 @@ fun NewVehicleScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         OutlinedTextField(
-                            value = viewModel.uiState.value.make?: "Enter Make",
+                            value = viewModel.uiState.value.make,
                             onValueChange = viewModel::updateMake,
-                            label = { Text(text = "Make") },
+                            label = { Text(text = "Make")},
                             trailingIcon = {
                                 IconButton(onClick = {makeExpanded = !makeExpanded}) {
                                     Icon(
@@ -178,9 +182,9 @@ fun NewVehicleScreen(
                     }
                     Row {
                         OutlinedTextField(
-                            value = viewModel.uiState.value.model?: "Enter Model",
+                            value = viewModel.uiState.value.model,
                             onValueChange = viewModel::updateModel,
-                            label = { Text(text = "Model") },
+                            label = { Text(text = "Model")},
                             trailingIcon = {
                                 IconButton(onClick = {modelExpanded = !modelExpanded}) {
                                     Icon(
@@ -204,10 +208,10 @@ fun NewVehicleScreen(
                                 viewModel.vehicleModels.forEach { model ->
                                     DropdownMenuItem(
                                         text = {
-                                            Text(
-                                                text = model,
-                                                color = DarkGrey
-                                            )
+                                        Text(
+                                            text = model,
+                                            color = DarkGrey
+                                        )
                                         },
                                         onClick = {
                                             viewModel.updateMake(model)
@@ -221,28 +225,28 @@ fun NewVehicleScreen(
                     }
 
                     OutlinedTextField(
-                        value = viewModel.uiState.value.color?: "Enter color",
+                        value = viewModel.uiState.value.color,
                         onValueChange = viewModel::updateColor,
-                        label = { Text(text = "Color") },
+                        label = { Text(text = "Color")},
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = viewModel.uiState.value.regNumber?: "Enter Reg Number",
+                        value = viewModel.uiState.value.regNumber,
                         onValueChange = viewModel::updateRegNumber,
-                        label = { Text(text = "Reg No.") },
+                        label = { Text(text = "Reg No.")},
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = viewModel.uiState.value.chassisNumber?: "Enter chassis number",
+                        value = viewModel.uiState.value.chassisNumber,
                         onValueChange = viewModel::updateChassisNumber,
-                        label = { Text(text = "Chassis No.") },
+                        label = { Text(text = "Chassis No.")},
                         modifier = Modifier.fillMaxWidth()
                     )
                     Row {
                         OutlinedTextField(
                             value = "${viewModel.uiState.value.clientName} ${viewModel.uiState.value.clientSurname}",
                             onValueChange = {},
-                            label = { Text(text = "Client") },
+                            label = { Text(text = "Client")},
                             readOnly = true,
                             trailingIcon = {
                                 IconButton(onClick = {clientExpanded = !clientExpanded}) {

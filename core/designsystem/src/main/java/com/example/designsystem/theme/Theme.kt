@@ -2,13 +2,16 @@ package com.example.designsystem.theme
 
 import android.app.Activity
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.Contacts
@@ -92,3 +95,5 @@ val vehicleIcon = Icons.Outlined.DirectionsCarFilled
 val person = Icons.Default.Person
 val checklistIcon = Icons.Default.Checklist
 val errorIcon = Icons.Default.Error
+val logOutIcon = Icons.AutoMirrored.Filled.Logout
+val refreshIcon = Icons.Default.Refresh

@@ -1,4 +1,4 @@
-package com.example.prodacc.ui.vehicles
+package com.example.prodacc.ui.vehicles.screen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,12 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.prodacc.navigation.NavigationBar
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.designComponents.VehicleStatusFilters
 import com.example.designsystem.designComponents.VehiclesList
 import com.example.designsystem.theme.LightGrey
+import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.vehicles.VehiclesViewModel
+import com.prodacc.data.remote.TokenManager
 
 @Composable
 fun VehiclesScreen(
@@ -32,7 +34,22 @@ fun VehiclesScreen(
 
     Scaffold(
 
-        topBar = { TopBar("Vehicles"){navController.navigate(Route.Search.path.replace("{title}", "Vehicles"))} },
+        topBar = {
+            TopBar(title = "Vehicles",
+                onSearchClick = {
+                    navController.navigate(
+                        Route.Search.path.replace(
+                            "{title}",
+                            "Vehicles"
+                        )
+                    )
+                },
+                logOut = {
+                    TokenManager.saveToken(null)
+                    navController.navigate(Route.LogIn.path)
+                }
+            )
+        },
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
@@ -51,7 +68,7 @@ fun VehiclesScreen(
                 .padding(horizontal = 10.dp)
         ) {
             //Vehicles Screen Content
-            Row  {
+            Row {
                 VehicleStatusFilters(
                     viewModel.allVehicles.value,
                     viewModel.workshopVehicles.value,
@@ -64,7 +81,7 @@ fun VehiclesScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 items(
-                    if (viewModel.workshopVehicles.value){
+                    if (viewModel.workshopVehicles.value) {
                         viewModel.activeVehicles
                     } else {
                         viewModel.vehiclesList
@@ -76,7 +93,12 @@ fun VehiclesScreen(
                         clientName = "${vehicle.clientName} ${vehicle.clientSurname}",
                         borderColor = if (vehicle != viewModel.activeVehicles.last()) LightGrey else Color.Transparent,
                         onClick = {
-                            navController.navigate(Route.VehicleDetails.path.replace("{vehicleId}", vehicle.id.toString()))
+                            navController.navigate(
+                                Route.VehicleDetails.path.replace(
+                                    "{vehicleId}",
+                                    vehicle.id.toString()
+                                )
+                            )
                         }
                     )
                 }

@@ -54,7 +54,7 @@ class JobCardRepository {
     suspend fun getJobCard(id: UUID): JobCard? {
         val jobCard =  jobCardService.getJobCard(id)
         return if (jobCard.isSuccessful){
-            gson.fromJson(jobCard.toString(), JobCard::class.java)
+           return jobCard.body()
         } else {
             null
         }

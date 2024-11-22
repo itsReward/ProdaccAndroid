@@ -5,12 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,20 +18,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -54,7 +48,6 @@ import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.JobStatusFilters
 import com.example.designsystem.designComponents.LargeJobCard
 import com.example.designsystem.designComponents.LargeTitleText
-import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.SectionHeading
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.designComponents.VehiclesDropDown
@@ -64,6 +57,7 @@ import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.jobcards.viewModels.JobCardLoadState
 import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
+import com.prodacc.data.remote.TokenManager
 import java.time.LocalDateTime
 
 @Composable
@@ -78,7 +72,23 @@ fun JobCardsScreen(
     val pastJobCards = viewModel.pastJobCards.collectAsState()
 
     Scaffold(
-        topBar = { TopBar("Job Cards"){navController.navigate(Route.Search.path.replace("{title}", "Job Cards"))} },
+        topBar = {
+            TopBar(
+                title = "Job Cards",
+                onSearchClick = {
+                    navController.navigate(
+                        Route.Search.path.replace(
+                            "{title}",
+                            "Job Cards"
+                        )
+                    )
+                },
+                logOut = {
+                    TokenManager.saveToken(null)
+                    navController.navigate(Route.LogIn.path)
+                }
+            )
+        },
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
@@ -89,7 +99,7 @@ fun JobCardsScreen(
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
             }
         }
-    ){ innerPadding ->
+    ) { innerPadding ->
 
         AnimatedVisibility(visible = newJobCardDialog) {
             Dialog(onDismissRequest = { newJobCardDialog = !newJobCardDialog }) {
@@ -107,13 +117,13 @@ fun JobCardsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row (
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 10.dp, top = 20.dp, start = 10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
-                        ){
+                        ) {
                             LargeTitleText(name = "New Job Card")
                         }
 
@@ -121,7 +131,7 @@ fun JobCardsScreen(
                     TextField(
                         value = "${viewModel.vehicleState?.color} ${viewModel.vehicleState?.model} ${viewModel.vehicleState?.regNumber}",
                         onValueChange = {},
-                        placeholder = {Text(text = "Vehicle")},
+                        placeholder = { Text(text = "Vehicle") },
                         label = { Text(text = "Vehicle") },
                         readOnly = true,
                         leadingIcon = {
@@ -163,7 +173,7 @@ fun JobCardsScreen(
                             onClick = {
                                 newJobCardDialog = !newJobCardDialog
                             }
-                        ){
+                        ) {
                             Text(text = "Cancel")
 
                         }
@@ -213,6 +223,7 @@ fun JobCardsScreen(
                         }
                     }
                 }
+
                 is JobCardLoadState.Loading -> {
                     Column(
                         modifier = Modifier
@@ -237,6 +248,7 @@ fun JobCardsScreen(
                         }
                     }
                 }
+
                 is JobCardLoadState.Success -> {
                     Column(
                         modifier = Modifier
@@ -274,7 +286,8 @@ fun JobCardsScreen(
                                             )
                                         )
                                     },
-                                    jobCardDeadline = jobCard.jobCardDeadline ?: LocalDateTime.now(),
+                                    jobCardDeadline = jobCard.jobCardDeadline
+                                        ?: LocalDateTime.now(),
                                 )
                             }
 
@@ -311,6 +324,7 @@ fun JobCardsScreen(
                         }
                     }
                 }
+
                 is JobCardLoadState.Error -> {
                     Column(
                         modifier = Modifier
@@ -320,13 +334,15 @@ fun JobCardsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        Text(text = state.message)
+                        Text(text = "NetWork Error")
+                        Button(onClick = { viewModel.updateJobCardsScreen() }) {
+                            Text(text = "Refresh")
+                        }
                     }
 
                 }
             }
         }
-
 
 
     }

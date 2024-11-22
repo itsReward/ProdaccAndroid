@@ -23,10 +23,10 @@ import com.example.prodacc.ui.employees.screens.NewEmployeeScreen
 import com.example.prodacc.ui.jobcards.screens.JobCardDetailScreen
 import com.example.prodacc.ui.jobcards.screens.NewJobCardScreen
 import com.example.prodacc.ui.search.screen.SearchScreen
-import com.example.prodacc.ui.vehicles.EditVehicleDetailsScreen
-import com.example.prodacc.ui.vehicles.NewVehicleScreen
-import com.example.prodacc.ui.vehicles.VehicleDetailsScreen
-import com.example.prodacc.ui.vehicles.VehiclesScreen
+import com.example.prodacc.ui.vehicles.screen.EditVehicleDetailsScreen
+import com.example.prodacc.ui.vehicles.screen.NewVehicleScreen
+import com.example.prodacc.ui.vehicles.screen.VehicleDetailsScreen
+import com.example.prodacc.ui.vehicles.screen.VehiclesScreen
 
 
 @Composable

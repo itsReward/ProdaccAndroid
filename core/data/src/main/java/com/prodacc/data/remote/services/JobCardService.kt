@@ -16,13 +16,13 @@ interface JobCardService {
     suspend fun getJobCards(): Response<List<JobCard>>
 
     @GET("/jobCards/get/{id}")
-    suspend fun getJobCard(@Path("id") id: UUID): Response<JSONObject>
+    suspend fun getJobCard(@Path("id") id: UUID): Response<JobCard>
 
     @POST("/jobCards/new")
-    suspend fun createJobCard(@Body jobCard: JobCard): Response<JSONObject>
+    suspend fun createJobCard(@Body jobCard: JobCard): Response<JobCard>
 
     @PUT("/jobCards/update/{id}")
-    suspend fun updateJobCard(@Path("id") id: UUID, @Body jobCard: JobCard): Response<JSONObject>
+    suspend fun updateJobCard(@Path("id") id: UUID, @Body jobCard: JobCard): Response<JobCard>
 
     @DELETE("/jobCards/delete/{id}")
     suspend fun deleteJobCard(@Path("id") id: UUID): Response<String>
