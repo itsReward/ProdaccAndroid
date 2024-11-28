@@ -17,7 +17,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,8 +32,10 @@ import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.Details
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.MediumTitleText
+import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.vehicles.VehiclesViewModel
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModel
 
 @Composable
@@ -38,6 +44,8 @@ fun VehicleDetailsScreen(
     vehicleId: String
 ) {
     val viewModel = VehicleDetailsViewModel(vehicleId = vehicleId)
+    val vehicle  = viewModel.vehicle.collectAsState().value
+    val loadState = viewModel.loadState.collectAsState()
 
 
     Column(
@@ -72,7 +80,7 @@ fun VehicleDetailsScreen(
                     color = Color.White
                 )
                 LargeTitleText(
-                    name = "${viewModel.vehicle.clientSurname}'s ${viewModel.vehicle.model}",
+                    name = if (vehicle == null)"Loading ..." else "${vehicle.clientSurname}'s ${vehicle.model}",
                     color = Color.White
                 )
             }
@@ -111,58 +119,134 @@ fun VehicleDetailsScreen(
 
 
         //Main Content
-        Column(
-            modifier = Modifier.padding(10.dp)
-        ) {
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                MediumTitleText(name = "Details")
-            }
-
-            Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .wrapContentSize()
-                    .fillMaxWidth()
-                    .background(CardGrey)
-                    .padding(horizontal = 10.dp, vertical = 10.dp)
-            ) {
-
-                Details(
-                    vehicle = viewModel.vehicle
-                )
-
-
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                MediumTitleText(name = "JobCards")
-            }
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                items(viewModel.vehicleJobCards) {
-                    AllJobCardListItem(
-                        jobCardName = it.jobCardName,
-                        closedDate = it.dateAndTimeClosed,
-                        onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", it.id.toString())) },
-                    )
+        when(loadState.value){
+            is VehicleDetailsViewModel.VehicleLoadState.Idle -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color.White)
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        Text(text = "Weak Signal, Refresh")
+                        Button(onClick = { viewModel.refreshVehicle()}) {
+                            Text(text = "Refresh")
+                        }
+                    }
                 }
             }
 
+            is VehicleDetailsViewModel.VehicleLoadState.Error -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color.White)
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        Text(text = (loadState.value as VehicleDetailsViewModel.VehicleLoadState.Error).message)
+                        Button(onClick = { viewModel.refreshVehicle()}) {
+                            Text(text = "Refresh")
+                        }
+                    }
+                }
+            }
+            is VehicleDetailsViewModel.VehicleLoadState.Loading -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color.White)
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            color = BlueA700,
+                            trackColor = Color.Transparent
+                        )
+                        Text(text = "Loading Vehicle...")
+                    }
+                }
+            }
+            is VehicleDetailsViewModel.VehicleLoadState.Success -> {
 
+                Column(
+                    modifier = Modifier.padding(10.dp)
+                ) {
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        MediumTitleText(name = "Details")
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .wrapContentSize()
+                            .fillMaxWidth()
+                            .background(CardGrey)
+                            .padding(horizontal = 10.dp, vertical = 10.dp)
+                    ) {
+
+                        Details(
+                            vehicle = vehicle!!
+                        )
+
+
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        MediumTitleText(name = "JobCards")
+                    }
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        items(viewModel.vehicleJobCards) {
+                            AllJobCardListItem(
+                                jobCardName = it.jobCardName,
+                                closedDate = it.dateAndTimeClosed,
+                                onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", it.id.toString())) },
+                            )
+                        }
+                    }
+
+
+                }
+
+            }
         }
+
+
     }
 }

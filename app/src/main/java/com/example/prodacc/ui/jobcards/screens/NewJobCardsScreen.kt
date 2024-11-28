@@ -45,6 +45,7 @@ fun NewJobCardScreen(
     navController: NavController,
     vehicleId: String
 ) {
+
     val viewModel = NewJobCardViewModel(vehicleId = vehicleId)
     var vehicleExpanded by remember { mutableStateOf(false) }
     var serviceAdvisorExpanded by remember { mutableStateOf(false) }
@@ -108,13 +109,14 @@ fun NewJobCardScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    VehiclesDropDown(
+                    /*VehiclesDropDown(
                         expanded = vehicleExpanded,
                         onDismissRequest = { vehicleExpanded = !vehicleExpanded },
                         vehicles = viewModel.vehicles,
                         onVehicleSelected = viewModel::updateVehicle,
                         newVehicle = { navController.navigate(route = Route.NewVehicle.path) }
-                    )
+                    )*/
+
                     OutlinedTextField(
                         value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",
                         onValueChange = {},
@@ -212,4 +214,5 @@ fun NewJobCardScreen(
 
         }
     }
+
 }

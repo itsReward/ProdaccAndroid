@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.VehicleRepository
+import java.io.IOException
 import java.util.UUID
 
 class EditVehicleDetailsViewModel(
@@ -12,21 +13,47 @@ class EditVehicleDetailsViewModel(
     private val clientRepository: ClientRepository = ClientRepository(),
     private val vehicleId: UUID
 ) {
-    private val _uiState = mutableStateOf(vehicleRepository.getVehicleById(vehicleId))
-    val uiState : State<Vehicle> = _uiState
+    private val _uiState = mutableStateOf<Vehicle?>(null)
+    val uiState : State<Vehicle?> = _uiState
 
     val clients = clientRepository.getClientsList()
-    val vehicleModels = vehicleRepository.mercedesModels
+    val vehicleModels = mapOf(
+        "Jeep" to vehicleRepository.jeepModels,
+        "Mercedes-Benz" to vehicleRepository.mercedesBenzModels
+    )
     val make = listOf("Mercedes-Benz", "Jeep")
 
 
     private fun updateUiState(update: Vehicle.() -> Vehicle) {
-        _uiState.value = _uiState.value.update()
+        _uiState.value = _uiState.value?.update()
     }
 
     val vehicleMakeDropdown = mutableStateOf(false)
     val vehicleModelDropdown = mutableStateOf(false)
     val vehicleClientDropdown = mutableStateOf(false)
+
+
+    suspend fun getVehicleEntity(id: String){
+        try {
+            val vehicle = vehicleRepository.getVehicleById(UUID.fromString(id))
+            when (vehicle) {
+                is VehicleRepository.LoadingResult.SingleEntity -> {
+                    _uiState.value = vehicle.vehicle
+                }
+                is VehicleRepository.LoadingResult.Error -> TODO()
+                is VehicleRepository.LoadingResult.ErrorSingleMessage -> TODO()
+                VehicleRepository.LoadingResult.NetworkError -> TODO()
+                is VehicleRepository.LoadingResult.Success -> TODO()
+                null -> TODO()
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> TODO()
+                else -> TODO()
+            }
+        }
+    }
+
 
     fun onVehicleMakeToggle() {
         vehicleMakeDropdown.value = !vehicleMakeDropdown.value

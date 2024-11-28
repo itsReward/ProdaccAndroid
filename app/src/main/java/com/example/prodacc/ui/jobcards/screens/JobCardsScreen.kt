@@ -57,16 +57,21 @@ import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.jobcards.viewModels.JobCardLoadState
 import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
+import com.example.prodacc.ui.vehicles.VehiclesViewModel
 import com.prodacc.data.remote.TokenManager
 import java.time.LocalDateTime
 
 @Composable
 fun JobCardsScreen(
     navController: NavController,
-    viewModel: JobCardViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: JobCardViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    vehiclesViewModel: VehiclesViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val scroll = rememberScrollState()
     var newJobCardDialog by remember { mutableStateOf(false) }
+
+    var vehicleState = vehiclesViewModel.vehicleState.collectAsState()
+    val vehicles = vehiclesViewModel.vehicles.collectAsState()
 
     val jobCards = viewModel.jobCards.collectAsState()
     val pastJobCards = viewModel.pastJobCards.collectAsState()
@@ -103,6 +108,10 @@ fun JobCardsScreen(
 
         AnimatedVisibility(visible = newJobCardDialog) {
             Dialog(onDismissRequest = { newJobCardDialog = !newJobCardDialog }) {
+                var errorText by remember {
+                    mutableStateOf(false)
+                }
+
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
@@ -129,7 +138,7 @@ fun JobCardsScreen(
 
                     }
                     TextField(
-                        value = "${viewModel.vehicleState?.color} ${viewModel.vehicleState?.model} ${viewModel.vehicleState?.regNumber}",
+                        value =  if (vehicleState.value == null) "Select Vehicle" else "${vehicleState.value!!.color} ${vehicleState.value!!.model} ${vehicleState.value!!.regNumber}",
                         onValueChange = {},
                         placeholder = { Text(text = "Vehicle") },
                         label = { Text(text = "Vehicle") },
@@ -157,10 +166,13 @@ fun JobCardsScreen(
                     VehiclesDropDown(
                         expanded = vehicleExpanded,
                         onDismissRequest = { vehicleExpanded = !vehicleExpanded },
-                        vehicles = viewModel.vehicles,
-                        onVehicleSelected = viewModel::updateVehicle,
+                        vehicles = vehicles.value,
+                        onVehicleSelected = vehiclesViewModel::updateVehicle,
                         newVehicle = { navController.navigate(Route.NewVehicle.path) }
                     )
+                    if (errorText){
+                        Text(text = "Please select a vehicle", color = Color.Red)
+                    }
 
                     Row(
                         modifier = Modifier
@@ -178,14 +190,21 @@ fun JobCardsScreen(
 
                         }
 
-                        Button(onClick = {
-                            navController.navigate(
-                                Route.NewJobCard.path.replace(
-                                    "vehicleId",
-                                    viewModel.vehicleState?.id.toString()
-                                )
-                            )
-                        }) {
+                        Button(
+                            onClick = {
+                                if (vehicleState.value != null) {
+                                    navController.navigate(
+                                        Route.NewJobCard.path.replace(
+                                            "vehicleId",
+                                            vehicleState.value!!.id.toString()
+                                        )
+                                    )
+                                } else {
+                                    errorText = true
+                                }
+
+                            }
+                        ) {
                             Text(text = "Proceed")
                         }
                     }
@@ -217,7 +236,7 @@ fun JobCardsScreen(
                             verticalArrangement = Arrangement.spacedBy(20.dp)
                         ) {
                             Text(text = "Weak Signal, Refresh")
-                            Button(onClick = { viewModel.updateJobCardsScreen() }) {
+                            Button(onClick = { viewModel.refreshJobCards() }) {
                                 Text(text = "Refresh")
                             }
                         }
@@ -335,7 +354,7 @@ fun JobCardsScreen(
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         Text(text = "NetWork Error")
-                        Button(onClick = { viewModel.updateJobCardsScreen() }) {
+                        Button(onClick = { viewModel.refreshJobCards() }) {
                             Text(text = "Refresh")
                         }
                     }

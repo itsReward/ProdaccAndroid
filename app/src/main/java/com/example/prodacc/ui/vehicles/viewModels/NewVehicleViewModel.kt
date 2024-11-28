@@ -2,20 +2,29 @@ package com.example.prodacc.ui.vehicles.viewModels
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.prodacc.ui.vehicles.stateClasses.NewVehicleStateClass
+import com.google.android.libraries.mapsplatform.transportation.consumer.model.Vehicle
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.VehicleRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 class NewVehicleViewModel(
     private val vehicleRepository: VehicleRepository = VehicleRepository(),
     private val clientRepository: ClientRepository = ClientRepository()
-) {
-    private val _uiState = mutableStateOf(NewVehicleStateClass())
-    val uiState : State<NewVehicleStateClass> = _uiState
+): ViewModel() {
+    private val _uiState = MutableStateFlow(NewVehicleStateClass())
+    val uiState  = _uiState.asStateFlow()
+
+    private val _saveState = MutableStateFlow<SaveState>(SaveState.Idle)
+    val saveState = _saveState.asStateFlow()
 
     val clients = clientRepository.getClientsList()
-    val vehicleModels = vehicleRepository.mercedesModels
+    val vehicleModels = mapOf( "Mercedes-Benz" to vehicleRepository.mercedesBenzModels,"Jeep" to  vehicleRepository.jeepModels)
     val make = listOf("Mercedes-Benz", "Jeep")
 
 
@@ -63,7 +72,67 @@ class NewVehicleViewModel(
         updateUiState { copy(clientName = client.clientName, clientSurname = client.clientSurname) }
     }
 
-    fun saveVehicle() {
+    fun resetSaveState(){
+        _saveState.value = SaveState.Idle
+    }
+
+    fun saveVehicle(){
+        if (_uiState.value.model == null || _uiState.value.regNumber == null || _uiState.value.make == null || _uiState.value.color == null || _uiState.value.chassisNumber == null || _uiState.value.clientId == null) {
+            _saveState.value = SaveState.Error("Fill all details")
+        } else {
+
+            viewModelScope.launch {
+                try {
+                    _saveState.value = SaveState.Loading
+                    val vehicle = vehicleRepository.createVehicle(
+                        _uiState.value.toNewVehicle()
+                    )
+                    when (vehicle) {
+                        is VehicleRepository.LoadingResult.Error -> {
+                            SaveState.Error(vehicle.message ?: "Error")
+                        }
+                        is VehicleRepository.LoadingResult.ErrorSingleMessage -> {
+                            SaveState.Error(vehicle.message)
+                        }
+                        VehicleRepository.LoadingResult.NetworkError -> {
+                            SaveState.Error("Network Error")
+                        }
+                        is VehicleRepository.LoadingResult.SingleEntity -> {
+                            _saveState.value = SaveState.Success(vehicle.vehicle!!)
+                        }
+                        is VehicleRepository.LoadingResult.Success -> {
+                            //will never happen
+                        }
+                    }
+                } catch (e: Exception){
+                    _saveState.value = SaveState.Error(e.message ?: "Error saving vehicle")
+
+                }
+
+            }
+        }
+
 
     }
+
+    private fun NewVehicleStateClass.toNewVehicle(): com.prodacc.data.remote.dao.NewVehicle{
+        return com.prodacc.data.remote.dao.NewVehicle(
+            model = this.model!!,
+            regNumber = regNumber!!,
+            make = make!!,
+            color = color!!,
+            chassisNumber = chassisNumber!!,
+            clientId = clientId!!,
+            clientName = clientName!!,
+            clientSurname = clientSurname!!
+        )
+    }
+
+    sealed class SaveState{
+        data class Success(val vehicle: com.prodacc.data.remote.dao.Vehicle) : SaveState()
+        data class Error(val message: String) : SaveState()
+        data object Idle: SaveState()
+        data object Loading: SaveState()
+    }
+
 }

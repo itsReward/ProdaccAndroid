@@ -112,166 +112,190 @@ fun EditVehicleDetailsScreen(
             }
         }
 
-
-        //Main Content
-        Column(
-            modifier = Modifier.padding(10.dp)
-        ) {
+        if (viewModel.uiState.value != null){
+            //Main Content
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 50.dp, bottom = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                
-                LargeTitleText(name = "${viewModel.uiState.value.clientSurname}'s ${viewModel.uiState.value.color} ${viewModel.uiState.value.model}")
-            }
-
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp),
-                verticalAlignment = Alignment.Top
+                modifier = Modifier.padding(10.dp)
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 50.dp, bottom = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
+                    LargeTitleText(name = "${viewModel.uiState.value!!.clientSurname}'s ${viewModel.uiState.value!!.color} ${viewModel.uiState.value!!.model}")
+                }
+
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        OutlinedTextField(
-                            value = viewModel.uiState.value.make,
-                            onValueChange = viewModel::updateMake,
-                            label = { Text(text = "Make")},
-                            trailingIcon = {
-                                IconButton(onClick = {makeExpanded = !makeExpanded}) {
-                                    Icon(
-                                        imageVector = Icons.Filled.KeyboardArrowDown,
-                                        contentDescription = "Drop down"
-                                    )
-                                }
-                            },
-                            readOnly = true,
+
+                        Row(
                             modifier = Modifier.fillMaxWidth()
-                        )
-
-                        DropdownMenu(
-                            expanded = makeExpanded,
-                            onDismissRequest = {makeExpanded = !makeExpanded}
                         ) {
-                            Row {
-                                Text(text = "Vehicle Make", color = DarkGrey)
-                            }
-                            Column {
-                                viewModel.make.forEach{ make ->
-                                    DropdownMenuItem(
-                                        text = { Text(text = make, color = DarkGrey) },
-                                        onClick = {
-                                            viewModel.updateMake(make)
-                                            makeExpanded = !makeExpanded
-                                        }
-                                    )
-                                }
-                            }
-
-                        }
-                    }
-                    Row {
-                        OutlinedTextField(
-                            value = viewModel.uiState.value.model,
-                            onValueChange = viewModel::updateModel,
-                            label = { Text(text = "Model")},
-                            trailingIcon = {
-                                IconButton(onClick = {modelExpanded = !modelExpanded}) {
-                                    Icon(
-                                        imageVector = Icons.Filled.KeyboardArrowDown,
-                                        contentDescription = "Drop down"
-                                    )
-                                }
-                            },
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        DropdownMenu(
-                            expanded = modelExpanded,
-                            onDismissRequest = {modelExpanded = !modelExpanded}
-                        ) {
-                            Row {
-                                Text(text = "Vehicle Model", color = DarkGrey)
-                            }
-                            Column {
-                                viewModel.vehicleModels.forEach { model ->
-                                    DropdownMenuItem(
-                                        text = {
-                                        Text(
-                                            text = model,
-                                            color = DarkGrey
+                            OutlinedTextField(
+                                value = viewModel.uiState.value!!.make,
+                                onValueChange = viewModel::updateMake,
+                                label = { Text(text = "Make")},
+                                trailingIcon = {
+                                    IconButton(onClick = {makeExpanded = !makeExpanded}) {
+                                        Icon(
+                                            imageVector = Icons.Filled.KeyboardArrowDown,
+                                            contentDescription = "Drop down"
                                         )
-                                        },
-                                        onClick = {
-                                            viewModel.updateMake(model)
-                                            modelExpanded = !modelExpanded
-                                        }
-                                    )
+                                    }
+                                },
+                                readOnly = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            DropdownMenu(
+                                expanded = makeExpanded,
+                                onDismissRequest = {makeExpanded = !makeExpanded}
+                            ) {
+                                Row {
+                                    Text(text = "Vehicle Make", color = DarkGrey)
                                 }
+                                Column {
+                                    viewModel.make.forEach{ make ->
+                                        DropdownMenuItem(
+                                            text = { Text(text = make, color = DarkGrey) },
+                                            onClick = {
+                                                viewModel.updateMake(make)
+                                                makeExpanded = !makeExpanded
+                                            }
+                                        )
+                                    }
+                                }
+
                             }
-
                         }
-                    }
+                        Row {
+                            OutlinedTextField(
+                                value = viewModel.uiState.value!!.model,
+                                onValueChange = viewModel::updateModel,
+                                label = { Text(text = "Model")},
+                                trailingIcon = {
+                                    IconButton(onClick = {modelExpanded = !modelExpanded}) {
+                                        Icon(
+                                            imageVector = Icons.Filled.KeyboardArrowDown,
+                                            contentDescription = "Drop down"
+                                        )
+                                    }
+                                },
+                                readOnly = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
 
-                    OutlinedTextField(
-                        value = viewModel.uiState.value.color,
-                        onValueChange = viewModel::updateColor,
-                        label = { Text(text = "Color")},
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = viewModel.uiState.value.regNumber,
-                        onValueChange = viewModel::updateRegNumber,
-                        label = { Text(text = "Reg No.")},
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = viewModel.uiState.value.chassisNumber,
-                        onValueChange = viewModel::updateChassisNumber,
-                        label = { Text(text = "Chassis No.")},
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Row {
-                        OutlinedTextField(
-                            value = "${viewModel.uiState.value.clientName} ${viewModel.uiState.value.clientSurname}",
-                            onValueChange = {},
-                            label = { Text(text = "Client")},
-                            readOnly = true,
-                            trailingIcon = {
-                                IconButton(onClick = {clientExpanded = !clientExpanded}) {
-                                    Icon(
-                                        imageVector = Icons.Filled.KeyboardArrowDown,
-                                        contentDescription = "Drop down"
-                                    )
+                            DropdownMenu(
+                                expanded = modelExpanded,
+                                onDismissRequest = {modelExpanded = !modelExpanded}
+                            ) {
+
+                                Row {
+                                    Text(text = "Vehicle Model", color = DarkGrey)
                                 }
-                            },
+                                Column {
+                                    if (viewModel.uiState.value?.make == "Mercedes Benz"){
+                                        viewModel.vehicleModels["Mercedes-Benz"]?.forEach{ model ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = model,
+                                                        color = DarkGrey
+                                                    )
+                                                },
+                                                onClick = {
+                                                    viewModel.updateMake(model)
+                                                    modelExpanded = !modelExpanded
+                                                }
+                                            )
+                                        }
+                                    } else if (viewModel.uiState.value?.make == "Jeep"){
+                                        viewModel.vehicleModels["Jeep"]?.forEach{ model ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = model,
+                                                        color = DarkGrey
+                                                    )
+                                                },
+                                                onClick = {
+                                                    viewModel.updateMake(model)
+                                                    modelExpanded = !modelExpanded
+                                                }
+                                            )
+                                        }
+                                    }
+
+                                }
+
+                            }
+                        }
+
+                        OutlinedTextField(
+                            value = viewModel.uiState.value!!.color,
+                            onValueChange = viewModel::updateColor,
+                            label = { Text(text = "Color")},
                             modifier = Modifier.fillMaxWidth()
                         )
-
-                        ClientsDropDown(
-                            expanded = clientExpanded,
-                            onDismissRequest = { clientExpanded = !clientExpanded },
-                            clients = viewModel.clients,
-                            onClientSelected = viewModel::updateClientId
+                        OutlinedTextField(
+                            value = viewModel.uiState.value!!.regNumber,
+                            onValueChange = viewModel::updateRegNumber,
+                            label = { Text(text = "Reg No.")},
+                            modifier = Modifier.fillMaxWidth()
                         )
+                        OutlinedTextField(
+                            value = viewModel.uiState.value!!.chassisNumber,
+                            onValueChange = viewModel::updateChassisNumber,
+                            label = { Text(text = "Chassis No.")},
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Row {
+                            OutlinedTextField(
+                                value = "${viewModel.uiState.value!!.clientName} ${viewModel.uiState.value!!.clientSurname}",
+                                onValueChange = {},
+                                label = { Text(text = "Client")},
+                                readOnly = true,
+                                trailingIcon = {
+                                    IconButton(onClick = {clientExpanded = !clientExpanded}) {
+                                        Icon(
+                                            imageVector = Icons.Filled.KeyboardArrowDown,
+                                            contentDescription = "Drop down"
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            ClientsDropDown(
+                                expanded = clientExpanded,
+                                onDismissRequest = { clientExpanded = !clientExpanded },
+                                clients = viewModel.clients,
+                                onClientSelected = viewModel::updateClientId
+                            )
 
 
+                        }
                     }
                 }
+
+
             }
-
-
+        } else {
+            Text(text = "Loading...")
         }
+
+
     }
 }

@@ -1,5 +1,6 @@
 package com.prodacc.data.remote.services
 
+import com.prodacc.data.remote.dao.NewVehicle
 import com.prodacc.data.remote.dao.Vehicle
 import retrofit2.Response
 import retrofit2.http.Body
@@ -18,7 +19,7 @@ interface VehicleService {
     suspend fun getVehicle(@Path("id") id: UUID): Response<Vehicle>
 
     @POST("/vehicles/new")
-    suspend fun createVehicle(@Body vehicle: Vehicle): Response<Vehicle>
+    suspend fun createVehicle(@Body vehicle: NewVehicle): Response<Vehicle>
 
     @PUT("/vehicles/update/{id}")
     suspend fun updateVehicle(@Path("id") id: UUID, @Body vehicle: Vehicle): Response<Vehicle>

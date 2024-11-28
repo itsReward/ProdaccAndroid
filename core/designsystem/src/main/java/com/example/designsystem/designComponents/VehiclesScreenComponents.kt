@@ -241,7 +241,7 @@ fun VehiclesDropDown(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     vehicles: List<Vehicle>,
-    onVehicleSelected: KFunction1<UUID, Unit>,
+    onVehicleSelected: KFunction1<Vehicle, Unit>,
     newVehicle: () -> Unit = {}
 ){
     DropdownMenu(
@@ -291,7 +291,7 @@ fun VehiclesDropDown(
                         )
                     },
                     onClick = {
-                        onVehicleSelected(vehicle.id)
+                        onVehicleSelected(vehicle)
                         run(onDismissRequest)
                     },
                     modifier = Modifier.fillMaxWidth()

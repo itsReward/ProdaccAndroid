@@ -1,5 +1,6 @@
 package com.example.prodacc.ui.search.screen
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -29,7 +30,7 @@ class SearchViewModel(
     private val clients = mutableStateOf(clientRepository.getClientsList())
     val clientsList: State<List<Client>> = clients
 
-    private val vehicles = mutableStateOf(vehicleRepository.getVehicles())
+    private val vehicles: MutableState<List<Vehicle>> = mutableStateOf(emptyList())
     val vehiclesList: State<List<Vehicle>> = vehicles
 
     private val jobCards = mutableStateOf(emptyList<JobCard>())
@@ -39,7 +40,7 @@ class SearchViewModel(
         viewModelScope.launch {
             employees.value = employeeRepository.getEmployees()
             clients.value = clientRepository.getClientsList()
-            vehicles.value = vehicleRepository.getVehicles()
+            //vehicles.value = vehicleRepository.getVehicles()
             //jobCards.value = jobCardRepository.getJobCards()
         }
     }
