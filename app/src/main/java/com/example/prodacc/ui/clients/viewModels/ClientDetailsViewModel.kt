@@ -1,16 +1,90 @@
 package com.example.prodacc.ui.clients.viewModels
 
-import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.io.IOException
 import java.util.UUID
 
 class ClientDetailsViewModel(
     private val clientRepository: ClientRepository = ClientRepository(),
-    private val clientId: UUID
-) {
-    private val _client = mutableStateOf(clientRepository.getClient(clientId))
-    val client = _client.value
+    private val clientId: String
+): ViewModel() {
+    private val _client = MutableStateFlow<Client?>(null)
+    val client = _client.asStateFlow()
+
+    private val _loadState = MutableStateFlow<LoadState>(LoadState.Idle)
+    val loadState = _loadState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            fetchClient()
+        }
+    }
+
+    fun refreshClient(){
+        viewModelScope.launch {
+            fetchClient()
+        }
+    }
 
 
+    suspend fun fetchClient(){
+        try {
+            _loadState.value = LoadState.Loading
+            val id = UUID.fromString(clientId)
+            if (id is UUID){
+                val response = clientRepository.getClientsById(id)
+                when (response){
+                    is ClientRepository.LoadingResult.SingleEntity -> {
+                        if (response.client != null){
+                            _client.value = response.client
+                            _loadState.value = LoadState.Success
+                        } else {
+                            _loadState.value = LoadState.Error(response.error?: "Unknown Error")
+                        }
+                    }
 
+                    is ClientRepository.LoadingResult.Error -> {
+                        _loadState.value = LoadState.Error(response.message?:"Unknown Error")
+                    }
+                    is ClientRepository.LoadingResult.ErrorSingleMessage -> {
+                        _loadState.value = LoadState.Error(response.message)
+                    }
+                    ClientRepository.LoadingResult.NetworkError -> {
+                        _loadState.value = LoadState.Error("Network Error")
+                    }
+                    is ClientRepository.LoadingResult.Success -> {
+                        //will never happen
+                        _loadState.value = LoadState.Error("Returned List instead of Client")
+                    }
+                }
+
+            } else {
+                _loadState.value = LoadState.Error("Invalid String Id Argument")
+            }
+        }catch (e:Exception){
+            when (e){
+                is IOException -> {
+                    _loadState.value = LoadState.Error("Network Error")
+                }
+                else -> {
+                    _loadState.value = LoadState.Error(e.message?:"Unknown Error")
+                }
+            }
+        }
+    }
+
+
+    sealed class LoadState{
+        data object Idle: LoadState()
+        data object Loading: LoadState()
+        data object Success: LoadState()
+        data class Error(val message: String): LoadState()
+    }
 }

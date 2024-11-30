@@ -2,6 +2,7 @@ package com.example.prodacc.ui.vehicles.viewModels
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.VehicleRepository
@@ -85,9 +86,8 @@ class EditVehicleDetailsViewModel(
         updateUiState { copy(chassisNumber = chassisNumber) }
     }
 
-    fun updateClientId(id : UUID) {
-        updateUiState { copy(id = id) }
-        val client = clientRepository.getClient(id)
+    fun updateClientId(client : Client) {
+        updateUiState { copy(id = client.id) }
         updateUiState { copy(clientName = client.clientName, clientSurname = client.clientSurname) }
     }
 }

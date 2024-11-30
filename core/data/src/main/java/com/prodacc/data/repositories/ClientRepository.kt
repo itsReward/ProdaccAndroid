@@ -1,10 +1,14 @@
 package com.prodacc.data.repositories
 
+import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.ClientVehicle
+import java.io.IOException
 import java.util.UUID
 
 class ClientRepository {
+    val service = ApiInstance.clientService
+
     val firstNames = listOf(
         "Tendai",
         "Nyasha",
@@ -212,10 +216,11 @@ class ClientRepository {
                 phone = phoneNumbers.random(),
                 email = emailAddresses.random(),
                 address = homeAddresses.random(),
-                vehicle = generateVehiclesForClient(5)
+                vehicles = generateVehiclesForClient(5)
             )
         }
     }
+
     private fun generateVehiclesForClient(size: Int = 2):List<ClientVehicle>{
         return List(size){
             ClientVehicle(
@@ -224,5 +229,49 @@ class ClientRepository {
                 make = "Mercedes Benz"
             )
         }
+    }
+
+    suspend fun getClientsById(id: UUID): LoadingResult {
+        return try {
+            val response = service.getClient(id)
+            if (response.isSuccessful) {
+                if (response.body() == null) {
+                    return LoadingResult.SingleEntity(null, "Client not found")
+                } else {
+                    return LoadingResult.SingleEntity(response.body(), null)
+                }
+            } else{
+                return LoadingResult.Error(response.raw().message())
+            }
+        } catch (e : Exception){
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.ErrorSingleMessage(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    suspend fun getClients(): LoadingResult {
+        return try {
+            val response = service.getClients()
+            if (response.isSuccessful) {
+                LoadingResult.Success(response.body() ?: emptyList())
+            } else {
+                LoadingResult.Error(response.raw().message())
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.ErrorSingleMessage(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    sealed class LoadingResult {
+        data class Success(val clients: List<Client>) : LoadingResult()
+        data class Error(val message: String?) : LoadingResult()
+        data class ErrorSingleMessage(val message: String): LoadingResult()
+        data object NetworkError : LoadingResult()
+        data class SingleEntity(val client: Client?, val error: String?) : LoadingResult()
     }
 }

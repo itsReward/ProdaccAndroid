@@ -43,12 +43,12 @@ import com.example.prodacc.ui.vehicles.viewModels.NewVehicleViewModel
 fun NewVehicleScreen(
     navController: NavController,
     viewModel: NewVehicleViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-){
+) {
     val uiState = viewModel.uiState.collectAsState().value
     val saveState = viewModel.saveState.collectAsState().value
 
     var clientExpanded by remember { mutableStateOf(false) }
-    var makeExpanded by remember { mutableStateOf(false)}
+    var makeExpanded by remember { mutableStateOf(false) }
     var modelExpanded by remember { mutableStateOf(false) }
 
     Column(
@@ -109,7 +109,7 @@ fun NewVehicleScreen(
         }
 
 
-        when(saveState){
+        when (saveState) {
             is NewVehicleViewModel.SaveState.Error -> {
                 Column(
                     modifier = Modifier
@@ -125,7 +125,7 @@ fun NewVehicleScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        Text(text = (viewModel.saveState.collectAsState().value as NewVehicleViewModel.SaveState.Error).message )
+                        Text(text = (viewModel.saveState.collectAsState().value as NewVehicleViewModel.SaveState.Error).message)
                         Button(onClick = { viewModel.resetSaveState() }) {
                             Text(text = "Try Again")
                         }
@@ -133,6 +133,7 @@ fun NewVehicleScreen(
                 }
 
             }
+
             NewVehicleViewModel.SaveState.Idle -> {
                 //Main Content
                 Column(
@@ -165,11 +166,11 @@ fun NewVehicleScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 OutlinedTextField(
-                                    value = viewModel.uiState.value.make?: "Enter Make",
+                                    value = viewModel.uiState.value.make ?: "Enter Make",
                                     onValueChange = viewModel::updateMake,
                                     label = { Text(text = "Make") },
                                     trailingIcon = {
-                                        IconButton(onClick = {makeExpanded = !makeExpanded}) {
+                                        IconButton(onClick = { makeExpanded = !makeExpanded }) {
                                             Icon(
                                                 imageVector = Icons.Filled.KeyboardArrowDown,
                                                 contentDescription = "Drop down"
@@ -182,13 +183,17 @@ fun NewVehicleScreen(
 
                                 DropdownMenu(
                                     expanded = makeExpanded,
-                                    onDismissRequest = {makeExpanded = !makeExpanded}
+                                    onDismissRequest = { makeExpanded = !makeExpanded }
                                 ) {
                                     Row {
-                                        Text(text = "Vehicle Make", color = DarkGrey)
+                                        Text(
+                                            text = "Vehicle Make",
+                                            color = DarkGrey,
+                                            modifier = Modifier.padding(horizontal = 20.dp)
+                                        )
                                     }
                                     Column {
-                                        viewModel.make.forEach{ make ->
+                                        viewModel.make.forEach { make ->
                                             DropdownMenuItem(
                                                 text = { Text(text = make, color = DarkGrey) },
                                                 onClick = {
@@ -203,11 +208,11 @@ fun NewVehicleScreen(
                             }
                             Row {
                                 OutlinedTextField(
-                                    value = viewModel.uiState.value.model?: "Enter Model",
+                                    value = viewModel.uiState.value.model ?: "Enter Model",
                                     onValueChange = viewModel::updateModel,
                                     label = { Text(text = "Model") },
                                     trailingIcon = {
-                                        IconButton(onClick = {modelExpanded = !modelExpanded}) {
+                                        IconButton(onClick = { modelExpanded = !modelExpanded }) {
                                             Icon(
                                                 imageVector = Icons.Filled.KeyboardArrowDown,
                                                 contentDescription = "Drop down"
@@ -220,13 +225,17 @@ fun NewVehicleScreen(
 
                                 DropdownMenu(
                                     expanded = modelExpanded,
-                                    onDismissRequest = {modelExpanded = !modelExpanded}
+                                    onDismissRequest = { modelExpanded = !modelExpanded }
                                 ) {
                                     Row {
-                                        Text(text = "Vehicle Model", color = DarkGrey)
+                                        Text(
+                                            text = "Vehicle Model",
+                                            color = DarkGrey,
+                                            modifier = Modifier.padding(horizontal = 20.dp)
+                                        )
                                     }
                                     Column {
-                                        if (uiState.make == "Mercedes-Benz"){
+                                        if (uiState.make == "Mercedes-Benz") {
                                             viewModel.vehicleModels["Mercedes-Benz"]?.forEach { model ->
                                                 DropdownMenuItem(
                                                     text = {
@@ -241,7 +250,7 @@ fun NewVehicleScreen(
                                                     }
                                                 )
                                             }
-                                        } else if (uiState.make == "Jeep"){
+                                        } else if (uiState.make == "Jeep") {
                                             viewModel.vehicleModels["Jeep"]?.forEach { model ->
                                                 DropdownMenuItem(
                                                     text = {
@@ -251,7 +260,7 @@ fun NewVehicleScreen(
                                                         )
                                                     },
                                                     onClick = {
-                                                        viewModel.updateMake(model)
+                                                        viewModel.updateModel(model)
                                                         modelExpanded = !modelExpanded
                                                     }
                                                 )
@@ -276,25 +285,25 @@ fun NewVehicleScreen(
                             }
 
                             OutlinedTextField(
-                                value = viewModel.uiState.value.color?: "",
+                                value = viewModel.uiState.value.color ?: "",
                                 onValueChange = viewModel::updateColor,
                                 label = { Text(text = "Color") },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = {Text("Color")}
+                                placeholder = { Text("Color") }
                             )
                             OutlinedTextField(
-                                value = viewModel.uiState.value.regNumber?: "",
+                                value = viewModel.uiState.value.regNumber ?: "",
                                 onValueChange = viewModel::updateRegNumber,
                                 label = { Text(text = "Reg No.") },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = {Text("Enter Reg Number")}
+                                placeholder = { Text("Enter Reg Number") }
                             )
                             OutlinedTextField(
-                                value = viewModel.uiState.value.chassisNumber?: "",
+                                value = viewModel.uiState.value.chassisNumber ?: "",
                                 onValueChange = viewModel::updateChassisNumber,
                                 label = { Text(text = "Chassis No.") },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = {Text("Enter Chassis Number")}
+                                placeholder = { Text("Enter Chassis Number") }
                             )
                             Row {
                                 OutlinedTextField(
@@ -303,7 +312,7 @@ fun NewVehicleScreen(
                                     label = { Text(text = "Client") },
                                     readOnly = true,
                                     trailingIcon = {
-                                        IconButton(onClick = {clientExpanded = !clientExpanded}) {
+                                        IconButton(onClick = { clientExpanded = !clientExpanded }) {
                                             Icon(
                                                 imageVector = Icons.Filled.KeyboardArrowDown,
                                                 contentDescription = "Drop down"
@@ -313,12 +322,14 @@ fun NewVehicleScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
-                                ClientsDropDown(
-                                    expanded = clientExpanded,
-                                    onDismissRequest = { clientExpanded = !clientExpanded },
-                                    clients = viewModel.clients,
-                                    onClientSelected = viewModel::updateClientId
-                                )
+                                viewModel.clients.collectAsState().value.clients?.let {
+                                    ClientsDropDown(
+                                        expanded = clientExpanded,
+                                        onDismissRequest = { clientExpanded = !clientExpanded },
+                                        clients = it,
+                                        onClientSelected = viewModel::updateClientId
+                                    )
+                                }
 
 
                             }
@@ -328,6 +339,7 @@ fun NewVehicleScreen(
 
                 }
             }
+
             is NewVehicleViewModel.SaveState.Success -> {
                 Column(
                     modifier = Modifier
@@ -343,7 +355,7 @@ fun NewVehicleScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        Text(text = "Vehicle Saved" )
+                        Text(text = "Vehicle Saved")
                         Button(onClick = { navController.navigateUp() }) {
                             Text(text = "Close")
                         }

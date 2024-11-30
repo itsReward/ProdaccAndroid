@@ -4,8 +4,10 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.prodacc.ui.vehicles.stateClasses.NewVehicleStateClass
 import com.google.android.libraries.mapsplatform.transportation.consumer.model.Vehicle
+import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.VehicleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +25,15 @@ class NewVehicleViewModel(
     private val _saveState = MutableStateFlow<SaveState>(SaveState.Idle)
     val saveState = _saveState.asStateFlow()
 
-    val clients = clientRepository.getClientsList()
+    private val _clients = MutableStateFlow<LoadEntities>(LoadEntities(null, null))
+    val clients = _clients.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            fetchClients()
+        }
+    }
+
     val vehicleModels = mapOf( "Mercedes-Benz" to vehicleRepository.mercedesBenzModels,"Jeep" to  vehicleRepository.jeepModels)
     val make = listOf("Mercedes-Benz", "Jeep")
 
@@ -46,6 +56,7 @@ class NewVehicleViewModel(
         vehicleClientDropdown.value = !vehicleClientDropdown.value
     }
 
+
     fun updateModel(model : String){
         updateUiState { copy(model = model) }
     }
@@ -66,9 +77,8 @@ class NewVehicleViewModel(
         updateUiState { copy(chassisNumber = chassisNumber) }
     }
 
-    fun updateClientId(id : UUID) {
-        updateUiState { copy(clientId = id) }
-        val client = clientRepository.getClient(id)
+    fun updateClientId(client : Client) {
+        updateUiState { copy(clientId = client.id) }
         updateUiState { copy(clientName = client.clientName, clientSurname = client.clientSurname) }
     }
 
@@ -127,6 +137,36 @@ class NewVehicleViewModel(
             clientSurname = clientSurname!!
         )
     }
+
+    private suspend fun fetchClients(){
+        try {
+            when (val response = clientRepository.getClients()){
+                is ClientRepository.LoadingResult.Error -> {
+                    _clients.value = LoadEntities(null, response.message)
+                }
+                is ClientRepository.LoadingResult.ErrorSingleMessage -> {
+                    _clients.value = LoadEntities(null, response.message)
+                }
+                is ClientRepository.LoadingResult.NetworkError -> {
+                    _clients.value = LoadEntities(null, "Network Error")
+                }
+                is ClientRepository.LoadingResult.SingleEntity -> {
+                    _clients.value = LoadEntities(null, "Recieved Single Entity instead of list")
+                }
+                is ClientRepository.LoadingResult.Success -> {
+                    _clients.value = LoadEntities(response.clients, null)
+                }
+            }
+        } catch (e: Exception){
+            _clients.value = LoadEntities(null, e.message)
+        }
+
+    }
+
+    data class LoadEntities(
+        val clients : List<Client>?,
+        val error : String?
+    )
 
     sealed class SaveState{
         data class Success(val vehicle: com.prodacc.data.remote.dao.Vehicle) : SaveState()

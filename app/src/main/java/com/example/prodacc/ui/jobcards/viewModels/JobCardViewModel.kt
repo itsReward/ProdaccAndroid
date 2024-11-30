@@ -41,7 +41,7 @@ class JobCardViewModel(
                 }
 
                 is JobCardRepository.LoadingResult.Error -> {
-                    _jobCardLoadState.value = JobCardLoadState.Error("error loading job cards")
+                    _jobCardLoadState.value = JobCardLoadState.Error(loadingResult.message)
                     //println(loadingResult.message)
                 }
 

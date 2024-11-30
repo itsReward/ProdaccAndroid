@@ -25,7 +25,7 @@ class JobCardRepository {
 
     sealed class LoadingResult {
         data class Success(val jobCards: List<JobCard>) : LoadingResult()
-        data class Error(val message: ResponseBody?) : LoadingResult()
+        data class Error(val message: String) : LoadingResult()
         data class ErrorSingleMessage(val message: String): LoadingResult()
         data object NetworkError : LoadingResult()
     }
@@ -39,7 +39,7 @@ class JobCardRepository {
                 LoadingResult.Success(jobCards.body()?: emptyList())
             } else {
                 println(jobCards.errorBody())
-                return LoadingResult.Error(jobCards.errorBody())
+                return LoadingResult.Error(jobCards.message())
             }
         } catch (e: Exception) {
             when (e) {

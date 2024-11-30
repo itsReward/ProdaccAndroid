@@ -35,7 +35,6 @@ import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.prodacc.navigation.Route
-import com.example.prodacc.ui.vehicles.VehiclesViewModel
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModel
 
 @Composable
@@ -44,8 +43,9 @@ fun VehicleDetailsScreen(
     vehicleId: String
 ) {
     val viewModel = VehicleDetailsViewModel(vehicleId = vehicleId)
-    val vehicle  = viewModel.vehicle.collectAsState().value
+    val vehicle = viewModel.vehicle.collectAsState().value
     val loadState = viewModel.loadState.collectAsState()
+    val jobCardsLoadState = viewModel.vehicleJobCards.collectAsState()
 
 
     Column(
@@ -80,7 +80,7 @@ fun VehicleDetailsScreen(
                     color = Color.White
                 )
                 LargeTitleText(
-                    name = if (vehicle == null)"Loading ..." else "${vehicle.clientSurname}'s ${vehicle.model}",
+                    name = if (vehicle == null) "Loading ..." else "${vehicle.clientSurname}'s ${vehicle.model}",
                     color = Color.White
                 )
             }
@@ -100,7 +100,14 @@ fun VehicleDetailsScreen(
                     )
                 } else {
                     com.example.designsystem.designComponents.IconButton(
-                        onClick = {navController.navigate(Route.EditVehicle.path.replace("{vehicleId}", vehicleId))},
+                        onClick = {
+                            navController.navigate(
+                                Route.EditVehicle.path.replace(
+                                    "{vehicleId}",
+                                    vehicleId
+                                )
+                            )
+                        },
                         icon = Icons.Filled.Edit,
                         color = Color.White
                     )
@@ -119,7 +126,7 @@ fun VehicleDetailsScreen(
 
 
         //Main Content
-        when(loadState.value){
+        when (loadState.value) {
             is VehicleDetailsViewModel.VehicleLoadState.Idle -> {
                 Column(
                     modifier = Modifier
@@ -136,7 +143,7 @@ fun VehicleDetailsScreen(
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         Text(text = "Weak Signal, Refresh")
-                        Button(onClick = { viewModel.refreshVehicle()}) {
+                        Button(onClick = { viewModel.refreshVehicle() }) {
                             Text(text = "Refresh")
                         }
                     }
@@ -159,12 +166,13 @@ fun VehicleDetailsScreen(
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         Text(text = (loadState.value as VehicleDetailsViewModel.VehicleLoadState.Error).message)
-                        Button(onClick = { viewModel.refreshVehicle()}) {
+                        Button(onClick = { viewModel.refreshVehicle() }) {
                             Text(text = "Refresh")
                         }
                     }
                 }
             }
+
             is VehicleDetailsViewModel.VehicleLoadState.Loading -> {
                 Column(
                     modifier = Modifier
@@ -188,6 +196,7 @@ fun VehicleDetailsScreen(
                     }
                 }
             }
+
             is VehicleDetailsViewModel.VehicleLoadState.Success -> {
 
                 Column(
@@ -232,13 +241,102 @@ fun VehicleDetailsScreen(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
-                        items(viewModel.vehicleJobCards) {
-                            AllJobCardListItem(
-                                jobCardName = it.jobCardName,
-                                closedDate = it.dateAndTimeClosed,
-                                onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", it.id.toString())) },
-                            )
+                        when (jobCardsLoadState.value) {
+                            is VehicleDetailsViewModel.JobCardsLoadState.Error -> {
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize(),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(5.dp))
+                                                .background(Color.White)
+                                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                                        ) {
+                                            Text(text = (jobCardsLoadState.value as VehicleDetailsViewModel.JobCardsLoadState.Error).message)
+                                            Button(onClick = { viewModel.refreshJobCards() }) {
+                                                Text(text = "Refresh")
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+
+                            is VehicleDetailsViewModel.JobCardsLoadState.Idle -> {
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize(),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(5.dp))
+                                                .background(Color.White)
+                                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                                        ) {
+                                            Text(text = "Load Vehicle JobCards")
+                                            Button(onClick = { viewModel.refreshJobCards() }) {
+                                                Text(text = "load")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            is VehicleDetailsViewModel.JobCardsLoadState.Loading -> {
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize(),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(5.dp))
+                                                .background(Color.White)
+                                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                                        ) {
+                                            CircularProgressIndicator(
+                                                color = BlueA700,
+                                                trackColor = Color.Transparent
+                                            )
+                                            Text(text = "Loading JobCards...")
+                                        }
+                                    }
+                                }
+                            }
+
+                            is VehicleDetailsViewModel.JobCardsLoadState.Success -> {
+                                items((jobCardsLoadState.value as VehicleDetailsViewModel.JobCardsLoadState.Success).jobCards) {
+                                    AllJobCardListItem(
+                                        jobCardName = it.jobCardName,
+                                        closedDate = it.dateAndTimeClosed,
+                                        onClick = {
+                                            navController.navigate(
+                                                Route.JobCardDetails.path.replace(
+                                                    "{jobCardId}",
+                                                    it.id.toString()
+                                                )
+                                            )
+                                        },
+                                    )
+                                }
+                            }
                         }
+
                     }
 
 

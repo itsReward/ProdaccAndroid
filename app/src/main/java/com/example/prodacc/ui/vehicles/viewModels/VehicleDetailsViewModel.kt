@@ -1,5 +1,6 @@
 package com.example.prodacc.ui.vehicles.viewModels
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +9,7 @@ import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.VehicleRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -22,8 +24,8 @@ class VehicleDetailsViewModel(
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
     val vehicle = _vehicle.asStateFlow()
 
-    var vehicleJobCards = emptyList<JobCard>()
-    val clientList = clientsRepository.getClientsList()
+    private val _vehicleJobCards = MutableStateFlow<JobCardsLoadState>(JobCardsLoadState.Idle)
+    val vehicleJobCards = _vehicleJobCards.asStateFlow()
 
     private val _loadState = MutableStateFlow<VehicleLoadState>(VehicleLoadState.Idle)
     val loadState = _loadState.asStateFlow()
@@ -31,6 +33,7 @@ class VehicleDetailsViewModel(
     init {
         viewModelScope.launch {
             fetchVehicle()
+            //fetchJobCards()
         }
     }
 
@@ -50,6 +53,12 @@ class VehicleDetailsViewModel(
     fun refreshVehicle() {
         viewModelScope.launch {
             fetchVehicle()
+            fetchJobCards()
+        }
+    }
+    fun refreshJobCards() {
+        viewModelScope.launch {
+            fetchJobCards()
         }
     }
 
@@ -85,6 +94,38 @@ class VehicleDetailsViewModel(
             }
         }
 
+    }
+
+    suspend fun fetchJobCards(){
+        try {
+            _vehicleJobCards.value = JobCardsLoadState.Loading
+            val response = jobCardRepository.getJobCards()
+            when (response){
+                is JobCardRepository.LoadingResult.Error -> {
+                    _vehicleJobCards.value = JobCardsLoadState.Error(response.message)
+                }
+                is JobCardRepository.LoadingResult.ErrorSingleMessage -> {
+                    _vehicleJobCards.value = JobCardsLoadState.Error(response.message)
+                }
+                JobCardRepository.LoadingResult.NetworkError -> {
+                    _vehicleJobCards.value = JobCardsLoadState.Error("Network Error")
+                }
+                is JobCardRepository.LoadingResult.Success -> {
+                    _vehicleJobCards.value = JobCardsLoadState.Success(response.jobCards.filter { it.vehicleId == UUID.fromString(vehicleId)  })
+                }
+            }
+
+        } catch (e: Exception){
+            _vehicleJobCards.value = JobCardsLoadState.Error(e.message?: "Unknown Error")
+        }
+    }
+
+
+    sealed class JobCardsLoadState{
+        data object Idle : JobCardsLoadState()
+        data object Loading : JobCardsLoadState()
+        data class Success(val jobCards: List<JobCard>) : JobCardsLoadState()
+        data class Error(val message: String) : JobCardsLoadState()
     }
 
     sealed class VehicleLoadState {

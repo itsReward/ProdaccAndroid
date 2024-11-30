@@ -175,7 +175,7 @@ fun ClientsDropDown(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     clients: List<Client>,
-    onClientSelected: KFunction1<UUID, Unit>
+    onClientSelected: KFunction1<Client, Unit>
 ){
     DropdownMenu(
         expanded = expanded,
@@ -212,7 +212,7 @@ fun ClientsDropDown(
                         )
                     },
                     onClick = {
-                        onClientSelected(client.id)
+                        onClientSelected(client)
                         run(onDismissRequest)
                     },
                     modifier = Modifier.width( 250.dp)

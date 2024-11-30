@@ -54,9 +54,16 @@ class VehiclesViewModel (
                     _vehicleLoadState.value = VehicleLoadState.Error(loadingResult.message?: "unknown error")
                 }
 
-                is VehicleRepository.LoadingResult.ErrorSingleMessage -> TODO()
-                VehicleRepository.LoadingResult.NetworkError -> TODO()
-                is VehicleRepository.LoadingResult.SingleEntity -> TODO()
+                is VehicleRepository.LoadingResult.ErrorSingleMessage ->{
+                    _vehicleLoadState.value = VehicleLoadState.Error(loadingResult.message)
+                }
+                VehicleRepository.LoadingResult.NetworkError -> {
+                    _vehicleLoadState.value = VehicleLoadState.Error("Network Error")
+                }
+                is VehicleRepository.LoadingResult.SingleEntity -> {
+                    //will never happen
+                }
+                else -> {}
             }
         }
     }

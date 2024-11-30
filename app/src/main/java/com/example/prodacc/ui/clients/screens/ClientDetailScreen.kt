@@ -8,11 +8,10 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,15 +20,20 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -38,6 +42,7 @@ import com.example.designsystem.designComponents.DisplayTextField
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
+import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.companyIcon
@@ -52,8 +57,8 @@ fun ClientDetailScreen(
     navController: NavController,
     clientId: String
 ) {
-    val viewModel = ClientDetailsViewModel(clientId = UUID.fromString(clientId))
-    val client = viewModel.client
+    val viewModel = ClientDetailsViewModel(clientId = clientId)
+    val client = viewModel.client.collectAsState().value
 
     Scaffold(
         topBar = {
@@ -71,7 +76,7 @@ fun ClientDetailScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        navController.navigate(Route.EditClient.path.replace("{clientId}", client.id.toString()))
+                        navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
                     }) {
                         Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
                     }
@@ -82,128 +87,227 @@ fun ClientDetailScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 10.dp),
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    ProfileAvatar(
-                        initials = "${client.clientName.first()}${client.clientSurname.first()}",
-                        size = 120.dp,
-                        textSize = 40.sp
-                    )
-                }
-                LargeTitleText(name = " (${if (client.gender == "male") "Mr" else "Mrs"}) ${client.clientName} ${client.clientSurname} ")
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Top
-            ) {
+
+        when(viewModel.loadState.collectAsState().value){
+            is ClientDetailsViewModel.LoadState.Error -> {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(CardGrey)
-                        .padding(horizontal = 20.dp, vertical = 10.dp),
-                    horizontalAlignment = Alignment.Start
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        modifier = Modifier.padding(bottom = 5.dp)
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color.White)
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        MediumTitleText(name = "Contact Details:")
-                    }
-
-                    DisplayTextField(
-                        icon = Icons.Outlined.Phone,
-                        label = "Phone",
-                        text = client.phone,
-                        modifier = Modifier.padding(vertical = 10.dp)
-                    )
-                    DisplayTextField(
-                        icon = Icons.Outlined.Email,
-                        label = "Email",
-                        text = client.email,
-                        modifier = Modifier.padding(vertical = 10.dp)
-                    )
-                    DisplayTextField(
-                        icon = Icons.Outlined.LocationOn,
-                        label = "Address",
-                        text = client.address,
-                        modifier = Modifier.padding(vertical = 10.dp)
-                    )
-
-
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(CardGrey)
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(bottom = 5.dp)
-                    ) {
-                        MediumTitleText(name = "Professional Details:")
-                    }
-                    DisplayTextField(
-                        icon = workIcon,
-                        label = "Job Title",
-                        text = client.jobTitle
-                    )
-
-                    DisplayTextField(
-                        icon = companyIcon,
-                        label = "Company",
-                        text = client.company
-                    )
-
-                }
-                
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp, bottom = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Box(modifier = Modifier
-                        .background(LightGrey)
-                        .height(2.dp)
-                        .fillMaxWidth())
-                    
-                }
-
-                MediumTitleText(name = "Vehicles", modifier = Modifier.padding(start = 20.dp, bottom = 10.dp))
-                FlowRow (
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    client.vehicle.forEach {
-                        ClientVehicleRow(vehicle = it) {
-                            navController.navigate(Route.VehicleDetails.path.replace("{vehicleId}", it.id.toString()))
+                        Text(text = (viewModel.loadState.collectAsState().value as ClientDetailsViewModel.LoadState.Error).message)
+                        Button(onClick = { viewModel.refreshClient() }) {
+                            Text(text = "Refresh")
                         }
                     }
                 }
             }
+            is ClientDetailsViewModel.LoadState.Idle -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color.White)
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        Text(text = "Load Client")
+                        Button(onClick = { viewModel.refreshClient() }) {
+                            Text(text = "Refresh")
+                        }
+                    }
+                }
+            }
+            is ClientDetailsViewModel.LoadState.Loading -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color.White)
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            color = BlueA700,
+                            trackColor = Color.Transparent
+                        )
+                        Text(text = "Loading Client...")
+                    }
+                }
+            }
+            is ClientDetailsViewModel.LoadState.Success -> {
+                if (client != null){
+                    Column(
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp),
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                ProfileAvatar(
+                                    initials = "${client.clientName.first()}${client.clientSurname.first()}",
+                                    size = 120.dp,
+                                    textSize = 40.sp
+                                )
+                            }
+                            LargeTitleText(name = " (${if (client.gender == "male") "Mr" else "Mrs"}) ${client.clientName} ${client.clientSurname} ")
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(CardGrey)
+                                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(bottom = 5.dp)
+                                ) {
+                                    MediumTitleText(name = "Contact Details:")
+                                }
+
+                                DisplayTextField(
+                                    icon = Icons.Outlined.Phone,
+                                    label = "Phone",
+                                    text = client.phone,
+                                    modifier = Modifier.padding(vertical = 10.dp)
+                                )
+                                DisplayTextField(
+                                    icon = Icons.Outlined.Email,
+                                    label = "Email",
+                                    text = client.email,
+                                    modifier = Modifier.padding(vertical = 10.dp)
+                                )
+                                DisplayTextField(
+                                    icon = Icons.Outlined.LocationOn,
+                                    label = "Address",
+                                    text = client.address,
+                                    modifier = Modifier.padding(vertical = 10.dp)
+                                )
 
 
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(CardGrey)
+                                    .padding(horizontal = 20.dp, vertical = 20.dp),
+                                horizontalAlignment = Alignment.Start,
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(bottom = 5.dp)
+                                ) {
+                                    MediumTitleText(name = "Professional Details:")
+                                }
+                                DisplayTextField(
+                                    icon = workIcon,
+                                    label = "Job Title",
+                                    text = client.jobTitle
+                                )
+
+                                DisplayTextField(
+                                    icon = companyIcon,
+                                    label = "Company",
+                                    text = client.company
+                                )
+
+                            }
+
+                            Row (
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 20.dp, bottom = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Box(modifier = Modifier
+                                    .background(LightGrey)
+                                    .height(2.dp)
+                                    .fillMaxWidth())
+
+                            }
+
+                            MediumTitleText(name = "Vehicles", modifier = Modifier.padding(start = 20.dp, bottom = 10.dp))
+                            FlowRow (
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                client.vehicles.forEach {
+                                    ClientVehicleRow(vehicle = it) {
+                                        navController.navigate(Route.VehicleDetails.path.replace("{vehicleId}", it.id.toString()))
+                                    }
+                                }
+                            }
+                        }
+
+
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            Text(text = "Client is null")
+                            Button(onClick = { viewModel.refreshClient() }) {
+                                Text(text = "Refresh")
+                            }
+                        }
+                    }
+                }
+            }
         }
+
+
+
     }
     
 }

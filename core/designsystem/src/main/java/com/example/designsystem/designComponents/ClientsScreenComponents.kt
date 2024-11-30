@@ -51,7 +51,7 @@ fun ClientListCard(
             ProfileAvatar(initials = "${client.clientName.first()}${client.clientSurname.first()}")
             BodyText(text = "${client.clientName} ${client.clientSurname}")
         }
-        Text(text = "${client.vehicle.size}", color = DarkGrey)
+        Text(text = "${client.vehicles.size}", color = DarkGrey)
 
     }
 }
