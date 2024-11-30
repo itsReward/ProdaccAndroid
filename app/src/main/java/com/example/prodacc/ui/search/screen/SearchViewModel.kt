@@ -13,6 +13,8 @@ import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.EmployeeRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.VehicleRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class SearchViewModel(
@@ -24,8 +26,8 @@ class SearchViewModel(
     private val searchQuery = mutableStateOf("")
     val searchQueryState: State<String> = searchQuery
 
-    private val employees = mutableStateOf(employeeRepository.getEmployees())
-    val employeesList: State<List<Employee>> = employees
+    private val employees = MutableStateFlow<List<Employee>>(emptyList())
+    val employeesList = employees.asStateFlow()
 
     private val clients = mutableStateOf(clientRepository.getClientsList())
     val clientsList: State<List<Client>> = clients
@@ -38,10 +40,23 @@ class SearchViewModel(
 
     init {
         viewModelScope.launch {
-            employees.value = employeeRepository.getEmployees()
+            fetchEmployees()
             clients.value = clientRepository.getClientsList()
             //vehicles.value = vehicleRepository.getVehicles()
             //jobCards.value = jobCardRepository.getJobCards()
+        }
+    }
+
+    suspend fun fetchEmployees() {
+        val result = employeeRepository.getEmployees()
+        when (result) {
+            is EmployeeRepository.LoadingResult.EmployeeEntity -> TODO()
+            is EmployeeRepository.LoadingResult.Error -> TODO()
+            EmployeeRepository.LoadingResult.NetworkError -> TODO()
+            is EmployeeRepository.LoadingResult.Success -> {
+                employees.value = result.employees
+
+            }
         }
     }
 

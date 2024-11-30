@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,7 +53,8 @@ fun EmployeeDetailScreen(
     employeeId: String
 ) {
     val viewModel = EmployeeDetailsViewModel(employeeId = employeeId)
-    val employee = viewModel.state.value.employee
+    val employee = viewModel.employee.collectAsState().value
+    val jobCards = viewModel.jobCards.collectAsState().value
 
     Scaffold(
         topBar = {
@@ -70,7 +72,7 @@ fun EmployeeDetailScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        navController.navigate(Route.EditEmployee.path.replace("{employeeId}", employee.id.toString()))
+                        navController.navigate(Route.EditEmployee.path.replace("{employeeId}", employee?.id.toString()))
                     }) {
                         Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
                     }
@@ -81,134 +83,144 @@ fun EmployeeDetailScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 10.dp),
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    ProfileAvatar(
-                        initials = "${employee.employeeName.first()}${employee.employeeSurname.first()}",
-                        size = 120.dp,
-                        textSize = 40.sp
-                    )
-                }
-                LargeTitleText(name = " ${employee.employeeName} ${employee.employeeSurname} ")
-                DisplayTextField(
-                    icon = Icons.Outlined.Star,
-                    label = "Rating",
-                    text = employee.rating.toString(),
-                    modifier = Modifier.padding(vertical = 10.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Top
-            ) {
+
+        when (viewModel.employeeLoadState.collectAsState().value){
+            is EmployeeDetailsViewModel.EmployeeLoadState.Error -> TODO()
+            is EmployeeDetailsViewModel.EmployeeLoadState.Idle -> TODO()
+            is EmployeeDetailsViewModel.EmployeeLoadState.Loading -> TODO()
+            is EmployeeDetailsViewModel.EmployeeLoadState.Success -> {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(CardGrey)
-                        .padding(horizontal = 20.dp, vertical = 10.dp),
-                    horizontalAlignment = Alignment.Start
+                    modifier = Modifier.padding(innerPadding)
                 ) {
-
-
-                    DisplayTextField(
-                        icon = Icons.Outlined.Phone,
-                        label = "Phone",
-                        text = employee.phoneNumber,
-                        modifier = Modifier.padding(vertical = 10.dp)
-                    )
-                    DisplayTextField(
-                        icon = Icons.Outlined.LocationOn,
-                        label = "Address",
-                        text = employee.homeAddress,
-                        modifier = Modifier.padding(vertical = 10.dp)
-                    )
-
-
-
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(CardGrey)
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-
-                    DisplayTextField(
-                        icon = workIcon,
-                        label = "Job Title",
-                        text = employee.employeeRole
-                    )
-
-                    DisplayTextField(
-                        icon = companyIcon,
-                        label = "Department",
-                        text = employee.employeeDepartment
-                    )
-
-                }
-
-                /*Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp, bottom = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Box(modifier = Modifier
-                        .background(LightGrey)
-                        .height(2.dp)
-                        .fillMaxWidth())
-
-                }*/
-
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp, bottom = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ){
-                    MediumTitleText(name = "JobCards")
-
-                }
-
-                LazyColumn (
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    items(viewModel.jobCards){ jobCards ->
-                        if (jobCards != null) {
-                            AllJobCardListItem(
-                                jobCardName = jobCards.jobCardName,
-                                closedDate = jobCards.dateAndTimeClosed,
-                                onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", jobCards.id.toString())) }
-
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            ProfileAvatar(
+                                initials = "${employee!!.employeeName.first()}${employee.employeeSurname.first()}",
+                                size = 120.dp,
+                                textSize = 40.sp
                             )
                         }
+                        LargeTitleText(name = " ${employee!!.employeeName} ${employee.employeeSurname} ")
+                        DisplayTextField(
+                            icon = Icons.Outlined.Star,
+                            label = "Rating",
+                            text = employee.rating.toString(),
+                            modifier = Modifier.padding(vertical = 10.dp)
+                        )
                     }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(CardGrey)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+
+
+                            DisplayTextField(
+                                icon = Icons.Outlined.Phone,
+                                label = "Phone",
+                                text = employee!!.phoneNumber,
+                                modifier = Modifier.padding(vertical = 10.dp)
+                            )
+                            DisplayTextField(
+                                icon = Icons.Outlined.LocationOn,
+                                label = "Address",
+                                text = employee!!.homeAddress,
+                                modifier = Modifier.padding(vertical = 10.dp)
+                            )
+
+
+
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(CardGrey)
+                                .padding(horizontal = 20.dp, vertical = 20.dp),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+
+                            DisplayTextField(
+                                icon = workIcon,
+                                label = "Job Title",
+                                text = employee!!.employeeRole
+                            )
+
+                            DisplayTextField(
+                                icon = companyIcon,
+                                label = "Department",
+                                text = employee.employeeDepartment
+                            )
+
+                        }
+
+                        /*Row (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 20.dp, bottom = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Box(modifier = Modifier
+                                .background(LightGrey)
+                                .height(2.dp)
+                                .fillMaxWidth())
+
+                        }*/
+
+                        Row (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 20.dp, bottom = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ){
+                            MediumTitleText(name = "JobCards")
+
+                        }
+
+                        LazyColumn (
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            items(jobCards){ jobCards ->
+                                if (jobCards != null) {
+                                    AllJobCardListItem(
+                                        jobCardName = jobCards.jobCardName,
+                                        closedDate = jobCards.dateAndTimeClosed,
+                                        onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", jobCards.id.toString())) }
+
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+
                 }
             }
-
-
         }
+
+
     }
 }

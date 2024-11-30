@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prodacc.ui.jobcards.stateClasses.NewJobCardState
+import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.ControlChecklistRepository
@@ -38,8 +39,14 @@ class NewJobCardViewModel(
     vehicleId: String
 ) :ViewModel(){
 
-    val employees = employeeRepository.getEmployees()
     val clients = clientRepository.getClientsList()
+
+    private val _employees = MutableStateFlow<List<Employee>>(emptyList())
+    val employees = _employees.asStateFlow()
+    private val _employeeLoadingState = MutableStateFlow<EmployeeLoadingResult>(EmployeeLoadingResult.Idle)
+    val employeeLoadingState = _employeeLoadingState.asStateFlow()
+
+
 
 
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
@@ -66,6 +73,32 @@ class NewJobCardViewModel(
     val state = _state.value
     private val _vehicleState : MutableState<Vehicle?> = mutableStateOf(null)
     val vehicleState = _vehicleState.value
+
+    suspend fun getEmployees(){
+        _employeeLoadingState.value = EmployeeLoadingResult.Loading
+        try {
+            when (val response = employeeRepository.getEmployees()){
+                is EmployeeRepository.LoadingResult.EmployeeEntity -> {
+                    _employeeLoadingState.value = EmployeeLoadingResult.Error("Returned one element instead of list")
+                }
+                is EmployeeRepository.LoadingResult.Error -> {
+                    _employeeLoadingState.value = EmployeeLoadingResult.Error(response.message)
+                }
+                EmployeeRepository.LoadingResult.NetworkError -> {
+                    _employeeLoadingState.value = EmployeeLoadingResult.NetworkError
+                }
+                is EmployeeRepository.LoadingResult.Success -> {
+                    _employeeLoadingState.value = EmployeeLoadingResult.Success(response.employees)
+                }
+            }
+        } catch (e: Exception){
+            when (e){
+                is IOException -> EmployeeLoadingResult.NetworkError
+                else -> EmployeeLoadingResult.Error(e.message?:"Unknown Error")
+            }
+        }
+
+    }
 
     suspend fun getVehicleEntity(id: String){
         try {
@@ -94,10 +127,15 @@ class NewJobCardViewModel(
         _state.value = update(_state.value)
     }
 
-    fun  updateServiceAdvisor (id: UUID){
-        val employee = employeeRepository.getEmployee(id)
+    fun  updateServiceAdvisor (employee: Employee){
         updateState {
             it.copy(serviceAdvisorId = employee.id)
+        }
+    }
+
+    fun  updateSupervisor (employee: Employee){
+        updateState {
+            it.copy(supervisorId = employee.id)
         }
     }
 
@@ -106,6 +144,15 @@ class NewJobCardViewModel(
 
 
     fun saveJob(){
+
+    }
+
+    sealed class EmployeeLoadingResult {
+        data object Idle: EmployeeLoadingResult()
+        data object Loading: EmployeeLoadingResult()
+        data class Success(val employees: List<Employee>) : EmployeeLoadingResult()
+        data class Error(val message: String) : EmployeeLoadingResult()
+        data object NetworkError : EmployeeLoadingResult()
 
     }
 

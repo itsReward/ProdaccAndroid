@@ -9,13 +9,14 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import java.util.UUID
 
 interface EmployeeService {
     @GET("/employees/all")
     suspend fun getAllEmployees(): Response<List<Employee>>
 
     @GET("/employees/id/{id}")
-    suspend fun getEmployeeById(@Path("id") id: String): Response<Employee>
+    suspend fun getEmployeeById(@Path("id") id: UUID): Response<Employee>
 
     @POST("/employees/new")
     suspend fun createEmployee(@Body employee: NewEmployee): Response<Employee>

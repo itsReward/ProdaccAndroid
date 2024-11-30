@@ -40,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +57,7 @@ import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.ControlChecklist
 import com.example.designsystem.designComponents.DateTimePickerTextField
 import com.example.designsystem.designComponents.DisabledTextField
+import com.example.designsystem.designComponents.EmployeeListCategory
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.NewTimeSheet
@@ -126,7 +128,8 @@ fun JobCardDetailScreen(
                 onDismiss = { showDialog = !showDialog },
                 onAddNewTechnician = { },
                 jobCard = viewModel.jobCard,
-                employees = employeesViewModel.employees,
+                employees = employeesViewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }.groupBy { it.employeeName.first() }.toSortedMap()
+                    .map { EmployeeListCategory(name = it.key.toString(), items = it.value) },
                 onUpdateSupervisor = viewModel::updateSupervisor,
                 onUpdateServiceAdvisor = viewModel::updateServiceAdvisor
             )

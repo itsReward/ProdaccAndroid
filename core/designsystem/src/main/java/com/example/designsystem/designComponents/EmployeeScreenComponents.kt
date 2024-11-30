@@ -85,13 +85,13 @@ fun EmployeeDropDown(
     list: List<Employee>,
     expanded: Boolean,
     onDismissRequest: () -> Unit,
-    onItemClick: (UUID) -> Unit
+    onItemClick: (Employee) -> Unit
 ){
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
         list.forEach { it ->
             DropdownMenuItem(text = {
                 Text(text = "${it.employeeName} ${it.employeeSurname}")
-            }, onClick = { onItemClick(it.id) })
+            }, onClick = { onItemClick(it) })
         }
     }
 }

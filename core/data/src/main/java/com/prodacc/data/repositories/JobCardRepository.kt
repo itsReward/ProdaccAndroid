@@ -30,6 +30,7 @@ class JobCardRepository {
         data object NetworkError : LoadingResult()
     }
 
+    //data class JobCardResult(val jobCard: JobCard):LoadingResult()
 
     suspend fun getJobCards(): LoadingResult {
         return try {

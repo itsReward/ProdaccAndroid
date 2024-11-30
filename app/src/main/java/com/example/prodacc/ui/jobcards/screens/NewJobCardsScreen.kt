@@ -21,6 +21,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,7 @@ fun NewJobCardScreen(
     val viewModel = NewJobCardViewModel(vehicleId = vehicleId)
     var vehicleExpanded by remember { mutableStateOf(false) }
     var serviceAdvisorExpanded by remember { mutableStateOf(false) }
+    var supervisorExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -171,7 +173,7 @@ fun NewJobCardScreen(
                 )
 
                 EmployeeDropDown(
-                    list = viewModel.employees,
+                    list = viewModel.employees.collectAsState().value,
                     expanded = viewModel.serviceAdvisorDropDown.value,
                     onDismissRequest = {
                         viewModel.serviceAdvisorDropDown.value =
@@ -204,10 +206,10 @@ fun NewJobCardScreen(
                 )
 
                 EmployeeDropDown(
-                    list = viewModel.employees,
-                    expanded = serviceAdvisorExpanded,
-                    onDismissRequest = { serviceAdvisorExpanded = !serviceAdvisorExpanded },
-                    onItemClick = viewModel::updateServiceAdvisor
+                    list = viewModel.employees.collectAsState().value,
+                    expanded = supervisorExpanded,
+                    onDismissRequest = { supervisorExpanded = !supervisorExpanded },
+                    onItemClick = viewModel::updateSupervisor
                 )
             }
 
