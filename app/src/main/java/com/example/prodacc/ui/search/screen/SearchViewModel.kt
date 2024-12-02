@@ -52,10 +52,9 @@ class SearchViewModel(
         when (result) {
             is EmployeeRepository.LoadingResult.EmployeeEntity -> TODO()
             is EmployeeRepository.LoadingResult.Error -> TODO()
-            EmployeeRepository.LoadingResult.NetworkError -> TODO()
+            is EmployeeRepository.LoadingResult.NetworkError -> TODO()
             is EmployeeRepository.LoadingResult.Success -> {
-                employees.value = result.employees
-
+                employees.value = result.employees ?: emptyList()
             }
         }
     }

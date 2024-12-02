@@ -9,13 +9,17 @@ import java.io.IOException
 import java.util.UUID
 
 class EmployeeRepository {
-    val service = ApiInstance.employeeService
+    private val service = ApiInstance.employeeService
 
     suspend fun getEmployees(): LoadingResult {
         return try {
             val response = service.getAllEmployees()
             if (response.isSuccessful) {
-                LoadingResult.Success(response.body() ?: emptyList())
+                println("Response Code: ${response.code()}")
+                println("Response Raw: ${response.raw()}")
+                println("Response Headers: ${response.headers()}")
+
+                LoadingResult.Success(response.body()!!)
             } else {
                 LoadingResult.Error(response.message())
             }
@@ -28,11 +32,15 @@ class EmployeeRepository {
         }
     }
 
-    suspend fun getEmployee(id: UUID): LoadingResult{
+    suspend fun getEmployee(id: UUID): LoadingResult {
         return try {
             val response = service.getEmployeeById(id)
+            println(response.body())
             if (response.isSuccessful) {
+
+                println(response.body()!!)
                 if (response.body() != null) {
+
                     LoadingResult.EmployeeEntity(response.body()!!)
                 } else {
                     LoadingResult.Error("Returned Empty Body")
@@ -48,10 +56,66 @@ class EmployeeRepository {
         }
     }
 
+
+    suspend fun updateEmployee(id: UUID, employee: NewEmployee): LoadingResult {
+        return try {
+            val response = service.updateEmployee(id, employee)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    LoadingResult.EmployeeEntity(it)
+                } ?: LoadingResult.Error("Empty response body")
+            } else {
+                LoadingResult.Error(response.message())
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.Error(e.message ?: "Unknown Error")
+            }
+        }
+    }
+
+    suspend fun deleteEmployee(id: UUID): LoadingResult {
+        return try {
+            val response = service.deleteEmployee(id.toString())
+            if (response.isSuccessful) {
+                LoadingResult.Success()
+            } else {
+                LoadingResult.Error(response.message())
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.Error(e.message ?: "Unknown Error")
+            }
+        }
+
+    }
+
+    suspend fun createEmployee(newEmployee: NewEmployee): LoadingResult {
+        return try {
+            val response = service.createEmployee(newEmployee)
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    LoadingResult.Success(listOf(it))
+                } ?: LoadingResult.Error("Empty response body")
+            } else {
+                LoadingResult.Error(response.message())
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.Error(e.message ?: "Unknown Error")
+            }
+        }
+    }
+
+
     sealed class LoadingResult {
-        data class Success(val employees: List<Employee>) : LoadingResult()
+        data class Success(val employees: List<Employee>? = null) : LoadingResult()
         data class Error(val message: String) : LoadingResult()
         data object NetworkError : LoadingResult()
         data class EmployeeEntity(val employee: Employee) : LoadingResult()
     }
+
 }

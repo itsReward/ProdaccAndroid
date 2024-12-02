@@ -33,7 +33,7 @@ class VehicleDetailsViewModel(
     init {
         viewModelScope.launch {
             fetchVehicle()
-            //fetchJobCards()
+            fetchJobCards()
         }
     }
 

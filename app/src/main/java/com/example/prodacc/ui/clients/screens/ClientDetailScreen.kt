@@ -36,6 +36,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.ClientVehicleRow
 import com.example.designsystem.designComponents.DisplayTextField
@@ -49,6 +52,7 @@ import com.example.designsystem.theme.companyIcon
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModel
+import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -57,7 +61,13 @@ fun ClientDetailScreen(
     navController: NavController,
     clientId: String
 ) {
-    val viewModel = ClientDetailsViewModel(clientId = clientId)
+    val viewModel: ClientDetailsViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return ClientDetailsViewModel(clientId = clientId) as T
+            }
+        }
+    )
     val client = viewModel.client.collectAsState().value
 
     Scaffold(

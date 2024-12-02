@@ -15,20 +15,16 @@ interface EmployeeService {
     @GET("/employees/all")
     suspend fun getAllEmployees(): Response<List<Employee>>
 
-    @GET("/employees/id/{id}")
+    @GET("/employees/get/{id}")
     suspend fun getEmployeeById(@Path("id") id: UUID): Response<Employee>
 
     @POST("/employees/new")
     suspend fun createEmployee(@Body employee: NewEmployee): Response<Employee>
 
     @PUT("/employees/update/{id}")
-    suspend fun updateEmployee(@Path("id") id: String, @Body employee: NewEmployee): Response<Employee>
+    suspend fun updateEmployee(@Path("id") id: UUID, @Body employee: NewEmployee): Response<Employee>
 
     @DELETE("/employees/delete/{id}")
     suspend fun deleteEmployee(@Path("id") id: String): Response<Void>
-
-
-
-
 
 }

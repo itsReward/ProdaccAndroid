@@ -88,7 +88,7 @@ class NewJobCardViewModel(
                     _employeeLoadingState.value = EmployeeLoadingResult.NetworkError
                 }
                 is EmployeeRepository.LoadingResult.Success -> {
-                    _employeeLoadingState.value = EmployeeLoadingResult.Success(response.employees)
+                    _employeeLoadingState.value = EmployeeLoadingResult.Success(response.employees?: emptyList())
                 }
             }
         } catch (e: Exception){

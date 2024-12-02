@@ -2,7 +2,6 @@ package com.example.prodacc.ui.employees.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,14 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Star
@@ -33,14 +30,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.DisplayTextField
+import com.example.designsystem.designComponents.ErrorStateColumn
+import com.example.designsystem.designComponents.IdleStateColumn
 import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.CardGrey
-import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.companyIcon
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
@@ -50,11 +52,18 @@ import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
 @Composable
 fun EmployeeDetailScreen(
     navController: NavController,
-    employeeId: String
+    employeeId: String,
+    viewModel: EmployeeDetailsViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return EmployeeDetailsViewModel(employeeId = employeeId) as T
+            }
+        }
+    )
 ) {
-    val viewModel = EmployeeDetailsViewModel(employeeId = employeeId)
+
     val employee = viewModel.employee.collectAsState().value
-    val jobCards = viewModel.jobCards.collectAsState().value
+    val jobCards = viewModel.jobCards.collectAsState()
 
     Scaffold(
         topBar = {
@@ -71,12 +80,21 @@ fun EmployeeDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        navController.navigate(Route.EditEmployee.path.replace("{employeeId}", employee?.id.toString()))
-                    }) {
+                    IconButton(
+                        onClick = {
+                            navController.navigate(
+                                Route.EditEmployee.path.replace(
+                                    "{employeeId}",
+                                    employee?.id.toString()
+                                )
+                            )
+                        }
+                    ) {
                         Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(
+                        onClick = {}
+                    ) {
                         Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
                     }
                 }
@@ -84,10 +102,27 @@ fun EmployeeDetailScreen(
         }
     ) { innerPadding ->
 
-        when (viewModel.employeeLoadState.collectAsState().value){
-            is EmployeeDetailsViewModel.EmployeeLoadState.Error -> TODO()
-            is EmployeeDetailsViewModel.EmployeeLoadState.Idle -> TODO()
-            is EmployeeDetailsViewModel.EmployeeLoadState.Loading -> TODO()
+        when (viewModel.employeeLoadState.collectAsState().value) {
+            is EmployeeDetailsViewModel.EmployeeLoadState.Error -> {
+                ErrorStateColumn(
+                    title = "Could not load Employee, Try Again",
+                    buttonOnClick = viewModel::refreshEmployee,
+                    buttonText = "Reload"
+                )
+            }
+
+            is EmployeeDetailsViewModel.EmployeeLoadState.Idle -> {
+                IdleStateColumn(
+                    title = "Load Employee",
+                    buttonOnClick = viewModel::refreshEmployee,
+                    buttonText = "Load"
+                )
+            }
+
+            is EmployeeDetailsViewModel.EmployeeLoadState.Loading -> {
+                LoadingStateColumn(title = "Loading Employee...")
+            }
+
             is EmployeeDetailsViewModel.EmployeeLoadState.Success -> {
                 Column(
                     modifier = Modifier.padding(innerPadding)
@@ -148,7 +183,6 @@ fun EmployeeDetailScreen(
                             )
 
 
-
                         }
                         Spacer(modifier = Modifier.height(10.dp))
                         Column(
@@ -175,41 +209,35 @@ fun EmployeeDetailScreen(
 
                         }
 
-                        /*Row (
+
+
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 20.dp, bottom = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Box(modifier = Modifier
-                                .background(LightGrey)
-                                .height(2.dp)
-                                .fillMaxWidth())
-
-                        }*/
-
-                        Row (
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 20.dp, bottom = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ){
                             MediumTitleText(name = "JobCards")
 
                         }
 
-                        LazyColumn (
+                        LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            items(jobCards){ jobCards ->
+                            items(jobCards.value) { jobCards ->
                                 if (jobCards != null) {
                                     AllJobCardListItem(
                                         jobCardName = jobCards.jobCardName,
                                         closedDate = jobCards.dateAndTimeClosed,
-                                        onClick = { navController.navigate(Route.JobCardDetails.path.replace("{jobCardId}", jobCards.id.toString())) }
-
+                                        onClick = {
+                                            navController.navigate(
+                                                Route.JobCardDetails.path.replace(
+                                                    "{jobCardId}",
+                                                    jobCards.id.toString()
+                                                )
+                                            )
+                                        }
                                     )
                                 }
                             }
@@ -219,8 +247,8 @@ fun EmployeeDetailScreen(
 
                 }
             }
+            else -> {
+            }
         }
-
-
     }
 }

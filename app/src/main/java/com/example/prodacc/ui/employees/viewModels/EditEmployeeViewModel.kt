@@ -1,14 +1,9 @@
 package com.example.prodacc.ui.employees.viewModels
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.prodacc.ui.employees.stateClasses.EditEmployeeState
-import com.example.prodacc.ui.employees.stateClasses.NewEmployeeState
 import com.prodacc.data.remote.dao.Employee
+import com.prodacc.data.remote.dao.NewEmployee
 import com.prodacc.data.repositories.EmployeeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +21,9 @@ class EditEmployeeViewModel(
 
     private val _loadState = MutableStateFlow<LoadState>(LoadState.Idle)
     val loadState = _loadState.asStateFlow()
+
+    private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
+    val updateState = _updateState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -100,8 +98,55 @@ class EditEmployeeViewModel(
         }
     }
 
-    fun saveEmployee() {
+    fun updateEmployee() {
+        viewModelScope.launch {
+            _updateState.value = UpdateState.Loading
+            try {
+                val currentEmployee = _employee.value
+                if (currentEmployee != null) {
+                    val newEmployee = NewEmployee(
+                        employeeName = currentEmployee.employeeName,
+                        employeeSurname = currentEmployee.employeeSurname,
+                        phoneNumber = currentEmployee.phoneNumber,
+                        homeAddress = currentEmployee.homeAddress,
+                        employeeRole = currentEmployee.employeeRole,
+                        employeeDepartment = currentEmployee.employeeDepartment
+                    )
 
+                    val result = employeeRepository.updateEmployee(
+                        UUID.fromString(employeeId),
+                        newEmployee
+                    )
+
+                    when (result) {
+                        is EmployeeRepository.LoadingResult.EmployeeEntity -> {
+                            _updateState.value = UpdateState.Success
+                            _employee.value = result.employee
+                        }
+                        is EmployeeRepository.LoadingResult.Error -> {
+                            _updateState.value = UpdateState.Error(result.message)
+                        }
+                        EmployeeRepository.LoadingResult.NetworkError -> {
+                            _updateState.value = UpdateState.Error("Network Error")
+                        }
+                        else -> {
+                            _updateState.value = UpdateState.Error("Unknown Error")
+                        }
+                    }
+                } else {
+                    _updateState.value = UpdateState.Error("No employee data")
+                }
+            } catch (e: Exception) {
+                _updateState.value = UpdateState.Error(e.message ?: "Update failed")
+            }
+        }
+    }
+
+    sealed class UpdateState {
+        data object Idle : UpdateState()
+        data object Loading : UpdateState()
+        data object Success : UpdateState()
+        data class Error(val message: String) : UpdateState()
     }
 
     sealed class LoadState{

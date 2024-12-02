@@ -27,22 +27,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.Details
+import com.example.designsystem.designComponents.ErrorStateColumn
+import com.example.designsystem.designComponents.IdleStateColumn
 import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModel
 
 @Composable
 fun VehicleDetailsScreen(
     navController: NavController,
-    vehicleId: String
+    vehicleId: String,
+    viewModel: VehicleDetailsViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return VehicleDetailsViewModel(vehicleId = vehicleId) as T
+            }
+        }
+    )
 ) {
-    val viewModel = VehicleDetailsViewModel(vehicleId = vehicleId)
     val vehicle = viewModel.vehicle.collectAsState().value
     val loadState = viewModel.loadState.collectAsState()
     val jobCardsLoadState = viewModel.vehicleJobCards.collectAsState()
@@ -151,50 +164,15 @@ fun VehicleDetailsScreen(
             }
 
             is VehicleDetailsViewModel.VehicleLoadState.Error -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        Text(text = (loadState.value as VehicleDetailsViewModel.VehicleLoadState.Error).message)
-                        Button(onClick = { viewModel.refreshVehicle() }) {
-                            Text(text = "Refresh")
-                        }
-                    }
-                }
+                ErrorStateColumn(
+                    title = (loadState.value as VehicleDetailsViewModel.VehicleLoadState.Error).message,
+                    buttonOnClick = viewModel::refreshVehicle,
+                    buttonText = "Refresh"
+                )
             }
 
             is VehicleDetailsViewModel.VehicleLoadState.Loading -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        CircularProgressIndicator(
-                            color = BlueA700,
-                            trackColor = Color.Transparent
-                        )
-                        Text(text = "Loading Vehicle...")
-                    }
-                }
+                LoadingStateColumn(title = "Loading Vehicles...")
             }
 
             is VehicleDetailsViewModel.VehicleLoadState.Success -> {
@@ -269,27 +247,14 @@ fun VehicleDetailsScreen(
                             }
 
                             is VehicleDetailsViewModel.JobCardsLoadState.Idle -> {
+
                                 item {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize(),
-                                        verticalArrangement = Arrangement.Center,
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(5.dp))
-                                                .background(Color.White)
-                                                .padding(horizontal = 20.dp, vertical = 10.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(20.dp)
-                                        ) {
-                                            Text(text = "Load Vehicle JobCards")
-                                            Button(onClick = { viewModel.refreshJobCards() }) {
-                                                Text(text = "load")
-                                            }
-                                        }
-                                    }
+                                    IdleStateColumn(
+                                        title = "Load Vehicle JobCards",
+                                        buttonOnClick = viewModel::refreshJobCards,
+                                        buttonText = "Load"
+                                    )
+
                                 }
                             }
 
@@ -339,12 +304,11 @@ fun VehicleDetailsScreen(
 
                     }
 
-
                 }
 
             }
-        }
 
+        }
 
     }
 }

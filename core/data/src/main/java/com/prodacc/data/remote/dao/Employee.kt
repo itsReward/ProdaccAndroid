@@ -21,10 +21,10 @@ data class EmployeeJobCard(
 )
 
 data class NewEmployee (
-    @SerializedName("employeeName") val employeeName: String,
-    @SerializedName("employeeSurname") val employeeSurname: String,
-    @SerializedName("employeeRole") val employeeRole: String,
-    @SerializedName("employeeDepartment") val employeeDepartment: String,
-    @SerializedName("phoneNumber") val phoneNumber: String,
-    @SerializedName("homeAddress") val homeAddress: String
+    @SerializedName("employeeName") val employeeName: String?,
+    @SerializedName("employeeSurname") val employeeSurname: String?,
+    @SerializedName("employeeRole") val employeeRole: String?,
+    @SerializedName("employeeDepartment") val employeeDepartment: String?,
+    @SerializedName("phoneNumber") val phoneNumber: String?,
+    @SerializedName("homeAddress") val homeAddress: String?
 )

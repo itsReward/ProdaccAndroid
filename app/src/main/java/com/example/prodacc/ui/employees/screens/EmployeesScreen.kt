@@ -45,44 +45,35 @@ fun EmployeesScreen(
     viewModel: EmployeesViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
 
-    val employees = viewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }.groupBy { it.employeeName.first() }.toSortedMap()
+    val employees = viewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }
+        .groupBy { it.employeeName.first() }.toSortedMap()
         .map { EmployeeListCategory(name = it.key.toString(), items = it.value) }
 
-    Scaffold(
-        topBar = {
-            TopBar(
-                title = "Employees",
-                onSearchClick = {
-                    navController.navigate(
-                        Route.Search.path.replace(
-                            "{title}",
-                            "Employees"
-                        )
-                    )
-                },
-                logOut = {
-                    TokenManager.saveToken(null)
-                    navController.navigate(Route.LogIn.path)
-                }
+    Scaffold(topBar = {
+        TopBar(title = "Employees", onSearchClick = {
+            navController.navigate(
+                Route.Search.path.replace(
+                    "{title}", "Employees"
+                )
             )
-        },
-        bottomBar = { NavigationBar(navController) },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Route.NewEmployee.path) },
-                shape = CircleShape,
-                containerColor = Color.White
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
-            }
+        }, logOut = {
+            TokenManager.saveToken(null)
+            navController.navigate(Route.LogIn.path)
+        })
+    }, bottomBar = { NavigationBar(navController) }, floatingActionButton = {
+        FloatingActionButton(
+            onClick = { navController.navigate(Route.NewEmployee.path) },
+            shape = CircleShape,
+            containerColor = Color.White
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
         }
-    ) { innerPadding ->
+    }) { innerPadding ->
 
-        when (viewModel.loadState.collectAsState().value){
+        when (viewModel.loadState.collectAsState().value) {
             is EmployeesViewModel.LoadState.Error -> {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -101,10 +92,10 @@ fun EmployeesScreen(
                     }
                 }
             }
+
             is EmployeesViewModel.LoadState.Idle -> {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -123,10 +114,10 @@ fun EmployeesScreen(
                     }
                 }
             }
+
             is EmployeesViewModel.LoadState.Loading -> {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -139,13 +130,13 @@ fun EmployeesScreen(
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         CircularProgressIndicator(
-                            color = BlueA700,
-                            trackColor = Color.Transparent
+                            color = BlueA700, trackColor = Color.Transparent
                         )
                         Text(text = "Loading Employees...")
                     }
                 }
             }
+
             is EmployeesViewModel.LoadState.Success -> {
                 Box(
                     modifier = Modifier
@@ -154,28 +145,27 @@ fun EmployeesScreen(
                 ) {
                     LazyColumn(
                     ) {
+                        println(employees)
                         employees.forEach { category ->
                             stickyHeader {
                                 EmployeeCategoryHeader(text = category.name)
                             }
                             items(category.items) { employee ->
-                                EmployeeListCard(employee = employee, onClick = {
-                                    navController.navigate(
-                                        Route.EmployeeDetails.path.replace(
-                                            "{employeeId}",
-                                            employee.id.toString()
+                                EmployeeListCard(
+                                    employee = employee,
+                                    onClick = {
+                                        navController.navigate(
+                                            Route.EmployeeDetails.path.replace(
+                                                "{employeeId}", employee.id.toString()
+                                            )
                                         )
-                                    )
-                                })
+                                    }
+                                )
                             }
                         }
                     }
                 }
             }
         }
-
-
-
-
     }
 }

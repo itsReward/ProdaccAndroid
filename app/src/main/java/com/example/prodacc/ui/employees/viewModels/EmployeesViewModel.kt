@@ -46,6 +46,7 @@ class EmployeesViewModel(
             }
             is EmployeeRepository.LoadingResult.Success -> {
                 _loadState.value = LoadState.Success
+                _employees.value = response.employees!!
             }
         }
     }

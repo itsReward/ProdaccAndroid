@@ -4,6 +4,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.util.getColumnIndexOrThrow
 import com.example.prodacc.ui.employees.stateClasses.EmployeeDetailsState
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
@@ -26,7 +27,6 @@ class EmployeeDetailsViewModel (
     private val _employeeLoadState = MutableStateFlow<EmployeeLoadState>(EmployeeLoadState.Idle)
     val employeeLoadState = _employeeLoadState.asStateFlow()
 
-
     private val _jobCardLoadState = MutableStateFlow<JobCardsLoadState>(JobCardsLoadState.Idle)
     val jobCardLoadState = _jobCardLoadState.asStateFlow()
 
@@ -37,12 +37,16 @@ class EmployeeDetailsViewModel (
         viewModelScope.launch {
             getEmployee()
             getJobCards()
-
         }
     }
 
+    fun refreshEmployee(){
+        viewModelScope.launch {
+            getEmployee()
+        }
+    }
 
-    suspend fun getEmployee(){
+    private suspend fun getEmployee(){
         try {
             _employeeLoadState.value = EmployeeLoadState.Loading
             val id = UUID.fromString(employeeId)
@@ -69,15 +73,15 @@ class EmployeeDetailsViewModel (
         }
     }
 
-    suspend fun getJobCard(id : UUID){
+    private suspend fun getJobCard(id : UUID){
         val result = jobCardRepository.getJobCard(id)
         if (result != null)
             _jobCards.value += result
         else
-            _jobCards.value += result
+            _jobCards.value = emptyList()
     }
 
-    suspend fun getJobCards(){
+    private suspend fun getJobCards(){
         if (employee.value != null){
             employee.value!!.jobCards.forEach {
                 getJobCard(it.id)
@@ -92,6 +96,7 @@ class EmployeeDetailsViewModel (
         data class Error(val message: String) : JobCardsLoadState()
 
     }
+
     sealed class EmployeeLoadState{
         data object Idle : EmployeeLoadState()
         data object Loading : EmployeeLoadState()
@@ -99,4 +104,5 @@ class EmployeeDetailsViewModel (
         data class Error(val message: String) : EmployeeLoadState()
 
     }
+
 }
