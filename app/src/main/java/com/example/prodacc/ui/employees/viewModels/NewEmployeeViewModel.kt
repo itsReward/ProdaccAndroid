@@ -19,14 +19,14 @@ import kotlin.coroutines.cancellation.CancellationException
 class NewEmployeeViewModel(
     private val employeeRepository: EmployeeRepository = EmployeeRepository()
 ): ViewModel() {
-    private val _state = MutableStateFlow<NewEmployeeState?>(null)
+    private val _state = MutableStateFlow<NewEmployeeState>(NewEmployeeState())
     val state = _state.asStateFlow()
 
     private val _loadState = MutableStateFlow<SaveState>(SaveState.Idle)
     val loadState = _loadState.asStateFlow()
 
     private fun updateState(update: NewEmployeeState.() -> NewEmployeeState) {
-        _state.value = _state.value?.update()
+        _state.value = _state.value.update()
     }
 
     fun updateFirstName(firstName: String) {
@@ -53,6 +53,9 @@ class NewEmployeeViewModel(
         updateState { copy(employeeDepartment = department) }
     }
 
+    fun resetLoadState() {
+        _loadState.value = SaveState.Idle
+    }
 
     fun saveEmployee() {
         // Coroutine scope for launching background operations
@@ -65,12 +68,12 @@ class NewEmployeeViewModel(
                 try {
                     // Create a new employee object from the current state
                     val newEmployee = NewEmployee(
-                        employeeName = state.value?.employeeName,
-                        employeeSurname = state.value?.employeeSurname,
-                        phoneNumber = state.value?.phoneNumber,
-                        homeAddress = state.value?.homeAddress,
-                        employeeRole = state.value?.employeeRole,
-                        employeeDepartment = state.value?.employeeDepartment
+                        employeeName = state.value.employeeName,
+                        employeeSurname = state.value.employeeSurname,
+                        phoneNumber = state.value.phoneNumber,
+                        homeAddress = state.value.homeAddress,
+                        employeeRole = state.value.employeeRole,
+                        employeeDepartment = state.value.employeeDepartment
                     )
 
                     // Perform network call to save employee
@@ -124,27 +127,27 @@ class NewEmployeeViewModel(
         try {
             val currentState = state.value!!
             return when {
-                currentState.employeeName.isBlank() -> {
+                currentState.employeeName?.isBlank() == true -> {
                     _loadState.value = SaveState.Error("First name cannot be empty")
                     false
                 }
-                currentState.employeeSurname.isBlank() -> {
+                currentState.employeeSurname?.isBlank() == true -> {
                     _loadState.value = SaveState.Error("Surname cannot be empty")
                     false
                 }
-                currentState.phoneNumber.isBlank() -> {
+                currentState.phoneNumber?.isBlank() == true -> {
                     _loadState.value = SaveState.Error("Phone number cannot be empty")
                     false
                 }
-                currentState.homeAddress.isBlank() -> {
+                currentState.homeAddress?.isBlank() == true -> {
                     _loadState.value = SaveState.Error("Home address cannot be empty")
                     false
                 }
-                currentState.employeeRole.isBlank() -> {
+                currentState.employeeRole?.isBlank() == true -> {
                     _loadState.value = SaveState.Error("Job title cannot be empty")
                     false
                 }
-                currentState.employeeDepartment.isBlank() -> {
+                currentState.employeeDepartment?.isBlank() == true -> {
                     _loadState.value = SaveState.Error("Department cannot be empty")
                     false
                 }

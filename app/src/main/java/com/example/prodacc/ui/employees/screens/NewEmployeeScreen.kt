@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,53 +33,56 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.designsystem.designComponents.ErrorStateColumn
 import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.contactDetails
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.ui.employees.viewModels.NewEmployeeViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewEmployeeScreen(
     navController: NavController
-){
+) {
     val viewModel = NewEmployeeViewModel()
-    val state = viewModel.state
+    val state = viewModel.state.collectAsState()
     val scroll = rememberScrollState()
 
     AnimatedVisibility(visible = true, enter = slideInHorizontally()) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        LargeTitleText(name = "New Employee")
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            navController.navigateUp()
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Navigate Back"
-                            )
-                        }
-                    },
-                    actions = {
+        Scaffold(topBar = {
+            TopAppBar(title = {
+                LargeTitleText(name = "New Employee")
+            }, navigationIcon = {
+                IconButton(onClick = {
+                    navController.navigateUp()
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Navigate Back"
+                    )
+                }
+            }, actions = {
 
-                        Button(onClick = {
-                            viewModel.saveEmployee()
-                            navController.navigateUp()
-                        }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
-                            Text(text = "Save")
-                        }
-                    }
-                )
-            }
-        ) { innerPadding ->
+                Button(onClick = {
+                    viewModel.saveEmployee()
+                }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
+                    Text(text = "Save")
+                }
+            })
+        }) { innerPadding ->
 
             when (viewModel.loadState.collectAsState().value) {
-                is NewEmployeeViewModel.SaveState.Error -> TODO()
+                is NewEmployeeViewModel.SaveState.Error -> {
+                    ErrorStateColumn(
+                        title = (viewModel.loadState.collectAsState().value as NewEmployeeViewModel.SaveState.Error).message,
+                        buttonOnClick = { viewModel.resetLoadState() },
+                        buttonText = "Try Again"
+                    )
+                }
+
                 is NewEmployeeViewModel.SaveState.Idle -> {
                     Column(
                         modifier = Modifier
@@ -95,9 +100,7 @@ fun NewEmployeeScreen(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 ProfileAvatar(
-                                    initials = "New",
-                                    size = 120.dp,
-                                    textSize = 40.sp
+                                    initials = "New", size = 120.dp, textSize = 40.sp
                                 )
                             }
                         }
@@ -121,20 +124,17 @@ fun NewEmployeeScreen(
                                     verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     OutlinedTextField(
-                                        value = state.value?.employeeName ?: "",
+                                        value = state.value.employeeName ?: "",
                                         onValueChange = viewModel::updateFirstName,
                                         label = { Text(text = "First Name") },
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                     OutlinedTextField(
-                                        value = state.value?.employeeSurname ?: "",
+                                        value = state.value.employeeSurname ?: "",
                                         onValueChange = viewModel::updateSurname,
                                         label = { Text(text = "Surname") },
                                         modifier = Modifier.fillMaxWidth()
                                     )
-
-
-
 
 
                                 }
@@ -154,13 +154,13 @@ fun NewEmployeeScreen(
                                     verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     OutlinedTextField(
-                                        value = state.value?.phoneNumber ?: "",
+                                        value = state.value.phoneNumber ?: "",
                                         onValueChange = viewModel::updatePhone,
                                         label = { Text(text = "Phone Number") },
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                     OutlinedTextField(
-                                        value = state.value?.homeAddress ?:"",
+                                        value = state.value.homeAddress ?: "",
                                         onValueChange = viewModel::updateAddress,
                                         label = { Text(text = "Home Address") },
                                         modifier = Modifier.fillMaxWidth()
@@ -170,7 +170,7 @@ fun NewEmployeeScreen(
                                 }
                             }
 
-                            Row (
+                            Row(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(
@@ -182,21 +182,19 @@ fun NewEmployeeScreen(
                                     verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     OutlinedTextField(
-                                        value = state.value?.employeeDepartment ?: "",
+                                        value = state.value.employeeDepartment ?: "",
                                         onValueChange = viewModel::updateDepartment,
                                         label = { Text(text = "Department") },
-                                        readOnly = true,
+                                        readOnly = false,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                     OutlinedTextField(
-                                        value = state.value?.employeeRole ?: "",
+                                        value = state.value.employeeRole ?: "",
                                         onValueChange = viewModel::updateJobTitle,
                                         label = { Text(text = "Job Title") },
-                                        readOnly = true,
+                                        readOnly = false,
                                         modifier = Modifier.fillMaxWidth()
                                     )
-
-
                                 }
                             }
 
@@ -204,10 +202,29 @@ fun NewEmployeeScreen(
                         }
                     }
                 }
-                is NewEmployeeViewModel.SaveState.Loading -> TODO()
-                is NewEmployeeViewModel.SaveState.Success -> TODO()
-            }
 
+                is NewEmployeeViewModel.SaveState.Loading -> {
+                    LoadingStateColumn(title = "Saving ...")
+                }
+
+                is NewEmployeeViewModel.SaveState.Success -> {
+                    LaunchedEffect(Unit) {
+                        delay(2000L)
+                        navController.navigateUp()
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+
+                    ) {
+                        Text(text = "New Employee Successfully created")
+                    }
+
+
+
+                }
+            }
 
 
         }
