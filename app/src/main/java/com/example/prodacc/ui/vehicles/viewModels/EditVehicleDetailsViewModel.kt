@@ -17,7 +17,7 @@ class EditVehicleDetailsViewModel(
     private val _uiState = mutableStateOf<Vehicle?>(null)
     val uiState : State<Vehicle?> = _uiState
 
-    val clients = clientRepository.getClientsList()
+    val clients = emptyList<Client>()
     val vehicleModels = mapOf(
         "Jeep" to vehicleRepository.jeepModels,
         "Mercedes-Benz" to vehicleRepository.mercedesBenzModels

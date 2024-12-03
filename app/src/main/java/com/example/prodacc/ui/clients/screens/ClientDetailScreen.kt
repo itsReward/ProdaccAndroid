@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,8 +28,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,16 +46,20 @@ import androidx.navigation.NavController
 import com.example.designsystem.designComponents.ClientVehicleRow
 import com.example.designsystem.designComponents.DisplayTextField
 import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.companyIcon
+import com.example.designsystem.theme.errorIcon
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModel
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
+import kotlinx.coroutines.delay
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -90,7 +97,7 @@ fun ClientDetailScreen(
                     }) {
                         Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = {viewModel.toggleDeleteClientConfirmation()}) {
                         Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
                     }
                 }
@@ -314,6 +321,73 @@ fun ClientDetailScreen(
                     }
                 }
             }
+        }
+
+        when(viewModel.deleteState.collectAsState().value){
+            is ClientDetailsViewModel.DeleteState.Error -> {
+                AlertDialog(
+                    onDismissRequest = { viewModel.refreshDeleteState() },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.deleteClient() }) {
+                            Text("Try Again")
+                        }
+                    },
+                    title = {Text(text = "Error")},
+                    text = {Text(text = (viewModel.deleteState.collectAsState().value as ClientDetailsViewModel.DeleteState.Error).message)},
+                    icon = { Icon(imageVector = errorIcon, contentDescription = "Error Icon", tint = DarkGrey) },
+                    dismissButton = {
+                        Button(onClick = { viewModel.refreshDeleteState() }){
+                            Text(text = "Dismiss")
+                        }
+                    }
+                )
+            }
+            is ClientDetailsViewModel.DeleteState.Idle -> {}
+            is ClientDetailsViewModel.DeleteState.Loading -> {
+                LoadingStateColumn(title = "Deleting Client ${client?.clientName} ${client?.clientName} and their vehicles")
+            }
+            is ClientDetailsViewModel.DeleteState.Success -> {
+                LaunchedEffect(Unit) {
+                    delay(1500L)
+                    navController.navigateUp()
+                }
+                Column (
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    Text(text = "Client Successfully deleted")
+                }
+            }
+        }
+
+        when (viewModel.deleteClientConfirmation.collectAsState().value){
+            true -> {
+                AlertDialog(
+                    onDismissRequest = { viewModel.resetDeleteClientConfirmation() },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.deleteClient() }) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { viewModel.resetDeleteClientConfirmation() }) {
+                            Text("Cancel")
+                        }
+                    },
+                    title = {Text(text = "Delete Client")},
+                    text = {Text(text = "Are you sure you want to delete this client?")},
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Client",
+                            tint = DarkGrey
+                        )
+                    }
+
+                )
+            }
+            false -> {}
         }
 
 

@@ -29,7 +29,7 @@ class SearchViewModel(
     private val employees = MutableStateFlow<List<Employee>>(emptyList())
     val employeesList = employees.asStateFlow()
 
-    private val clients = mutableStateOf(clientRepository.getClientsList())
+    private val clients = mutableStateOf<List<Client>>(emptyList())
     val clientsList: State<List<Client>> = clients
 
     private val vehicles: MutableState<List<Vehicle>> = mutableStateOf(emptyList())
@@ -41,7 +41,7 @@ class SearchViewModel(
     init {
         viewModelScope.launch {
             fetchEmployees()
-            clients.value = clientRepository.getClientsList()
+            //clients.value = clientRepository.getClientsList()
             //vehicles.value = vehicleRepository.getVehicles()
             //jobCards.value = jobCardRepository.getJobCards()
         }
@@ -69,10 +69,10 @@ class SearchViewModel(
         employees.value = employees.value.filter { it.employeeName.contains(query, ignoreCase = true) || it.employeeSurname.contains(query, ignoreCase = true) }
     }
 
-    fun searchClients(query: String) {
+    /*fun searchClients(query: String) {
         updateSearchQuery(query)
         clients.value = clients.value.filter { it.clientName.contains(query, ignoreCase = true) || it.clientSurname.contains(query, ignoreCase = true) }
-    }
+    }*/
 
     fun searchVehicles(query: String) {
         updateSearchQuery(query)

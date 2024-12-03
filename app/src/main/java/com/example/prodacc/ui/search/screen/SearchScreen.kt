@@ -36,7 +36,9 @@ fun SearchScreen(navController: NavController, title: String) {
         onQueryChange = {
             when (title) {
                 "Job Cards" -> viewModel.searchJobCards(it)
-                "Clients" -> viewModel.searchClients(it)
+                "Clients" -> {
+                    //viewModel.searchClients(it)
+                }
                 "Vehicles" -> viewModel.searchVehicles(it)
                 "Employees" -> viewModel.searchEmployees(it)
             }

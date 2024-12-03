@@ -27,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,7 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
+import com.example.designsystem.designComponents.ErrorStateColumn
+import com.example.designsystem.designComponents.IdleStateColumn
 import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
@@ -44,16 +48,20 @@ import com.example.designsystem.theme.female
 import com.example.designsystem.theme.male
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.ui.clients.viewModels.EditClientDetailsViewModel
+import com.example.prodacc.ui.clients.viewModels.EditClientDetailsViewModelFactory
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditClientDetailScreen(
     navController: NavController,
-    clientId: String
+    clientId: String,
+    viewModel: EditClientDetailsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = EditClientDetailsViewModelFactory(clientId = clientId)
+    )
 ) {
-    val viewModel = EditClientDetailsViewModel(clientId = UUID.fromString(clientId))
-    val client = viewModel.client
+
+    val client = viewModel.client.collectAsState().value
 
 
 
@@ -85,197 +93,222 @@ fun EditClientDetailScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 10.dp),
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    ProfileAvatar(
-                        initials = "${client.clientName.first()}${client.clientSurname.first()}",
-                        size = 120.dp,
-                        textSize = 40.sp
-                    )
-                }
+
+        when(viewModel.loadingState.collectAsState().value){
+            is EditClientDetailsViewModel.LoadingState.Error -> {
+                ErrorStateColumn(
+                    title = "Error",
+                    buttonOnClick = { viewModel.refreshClient() },
+                    buttonText = "Refresh"
+                )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp, bottom = 10.dp, end = 20.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-
-
-                Row {
-                    Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = "",
-                        modifier = Modifier.padding(10.dp)
-                    )
+            is EditClientDetailsViewModel.LoadingState.Idle -> {
+                IdleStateColumn(
+                    title = "Load Client",
+                    buttonOnClick = { viewModel.refreshClient() },
+                    buttonText = "Load"
+                )
+            }
+            is EditClientDetailsViewModel.LoadingState.Loading -> {
+                LoadingStateColumn(title = "Loading Clients...")
+            }
+            is EditClientDetailsViewModel.LoadingState.Success -> {
+                Column(
+                    modifier = Modifier.padding(innerPadding)
+                ) {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        OutlinedTextField(
-                            value = client.clientName,
-                            onValueChange = viewModel::updateFirstName,
-                            label = { Text(text = "First Name") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = client.clientSurname,
-                            onValueChange = viewModel::updateSurname,
-                            label = { Text(text = "First Name") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            OutlinedTextField(
-                                value = viewModel.client.gender,
-                                onValueChange = {},
-                                label = { Text(text = "Gender") },
-                                readOnly = true
+                            ProfileAvatar(
+                                initials = if (client != null) "${client.clientName.first()}${client.clientSurname.first()}" else "New",
+                                size = 120.dp,
+                                textSize = 40.sp
                             )
-                            IconButton(onClick = { viewModel.toggleGender() }) {
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowDown,
-                                    contentDescription = "DropDown",
-                                    modifier = Modifier.size(50.dp),
-                                    tint = Grey
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = viewModel.dropGenderToggle.value,
-                                onDismissRequest = { viewModel.toggleGender() },
-                                properties = PopupProperties(),
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp, bottom = 10.dp, end = 20.dp),
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+
+
+                        Row {
+                            Icon(
+                                imageVector = Icons.Outlined.Person,
+                                contentDescription = "",
+                                modifier = Modifier.padding(10.dp)
+                            )
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Text(
-                                    text = "Select Gender",
-                                    color = DarkGrey,
-                                    modifier = Modifier.padding(
-                                        horizontal = 10.dp,
-                                        vertical = 10.dp
+                                OutlinedTextField(
+                                    value = client?.clientName?: "",
+                                    onValueChange = viewModel::updateFirstName,
+                                    label = { Text(text = "First Name") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                OutlinedTextField(
+                                    value = client?.clientSurname?: "",
+                                    onValueChange = viewModel::updateSurname,
+                                    label = { Text(text = "First Name") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = client?.gender?: "",
+                                        onValueChange = {},
+                                        label = { Text(text = "Gender") },
+                                        readOnly = true
                                     )
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(2.dp)
-                                        .background(
-                                            LightGrey
-                                        )
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(text = "male", color = DarkGrey) },
-                                    onClick = {
-                                        viewModel.updateGender("male")
-                                    },
-                                    leadingIcon = {
+                                    IconButton(onClick = { viewModel.toggleGender() }) {
                                         Icon(
-                                            imageVector = male,
-                                            contentDescription = "male",
+                                            imageVector = Icons.Default.KeyboardArrowDown,
+                                            contentDescription = "DropDown",
+                                            modifier = Modifier.size(50.dp),
                                             tint = Grey
                                         )
                                     }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(text = "female", color = DarkGrey) },
-                                    onClick = {
-                                        viewModel.updateGender("female")
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = female,
-                                            contentDescription = "Female",
-                                            tint = Grey
+                                    DropdownMenu(
+                                        expanded = viewModel.dropGenderToggle.value,
+                                        onDismissRequest = { viewModel.toggleGender() },
+                                        properties = PopupProperties(),
+                                    ) {
+                                        Text(
+                                            text = "Select Gender",
+                                            color = DarkGrey,
+                                            modifier = Modifier.padding(
+                                                horizontal = 10.dp,
+                                                vertical = 10.dp
+                                            )
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(2.dp)
+                                                .background(
+                                                    LightGrey
+                                                )
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text(text = "male", color = DarkGrey) },
+                                            onClick = {
+                                                viewModel.updateGender("male")
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = male,
+                                                    contentDescription = "male",
+                                                    tint = Grey
+                                                )
+                                            }
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text(text = "female", color = DarkGrey) },
+                                            onClick = {
+                                                viewModel.updateGender("female")
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = female,
+                                                    contentDescription = "Female",
+                                                    tint = Grey
+                                                )
+                                            }
                                         )
                                     }
-                                )
+                                }
+
+
+
+
+
                             }
+
+
                         }
 
 
 
+                        Row {
+                            Icon(
+                                imageVector = contactDetails,
+                                contentDescription = "Contact Details Icon",
+                                modifier = Modifier.padding(10.dp)
+                            )
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = client?.phone?: "",
+                                    onValueChange = viewModel::updatePhone,
+                                    label = { Text(text = "Phone Number") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                OutlinedTextField(
+                                    value = client?.email?: "",
+                                    onValueChange = viewModel::updateEmail,
+                                    label = { Text(text = "Email") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                OutlinedTextField(
+                                    value = client?.address?: "",
+                                    onValueChange = viewModel::updateAddress,
+                                    label = { Text(text = "Home Address") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
 
 
-                    }
+                            }
+                        }
+
+                        Row {
+                            Icon(
+                                imageVector = workIcon,
+                                contentDescription = "Work Icon",
+                                modifier = Modifier.padding(10.dp)
+                            )
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = client?.jobTitle?: "",
+                                    onValueChange = viewModel::updateJobTitle,
+                                    label = { Text(text = "Job Title") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                OutlinedTextField(
+                                    value = client?.company?: "",
+                                    onValueChange = viewModel::updateCompany,
+                                    label = { Text(text = "Company") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
 
 
-                }
-
-
-
-                Row {
-                    Icon(
-                        imageVector = contactDetails,
-                        contentDescription = "Contact Details Icon",
-                        modifier = Modifier.padding(10.dp)
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = client.phone,
-                            onValueChange = viewModel::updatePhone,
-                            label = { Text(text = "Phone Number") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = client.email,
-                            onValueChange = viewModel::updateEmail,
-                            label = { Text(text = "Email") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = client.address,
-                            onValueChange = viewModel::updateAddress,
-                            label = { Text(text = "Home Address") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-
-                    }
-                }
-
-                Row {
-                    Icon(
-                        imageVector = workIcon,
-                        contentDescription = "Work Icon",
-                        modifier = Modifier.padding(10.dp)
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = client.jobTitle,
-                            onValueChange = viewModel::updateJobTitle,
-                            label = { Text(text = "Job Title") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = client.company,
-                            onValueChange = viewModel::updateCompany,
-                            label = { Text(text = "Company") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                            }
+                        }
 
 
                     }
                 }
-
-
             }
         }
+
+
+
 
     }
 

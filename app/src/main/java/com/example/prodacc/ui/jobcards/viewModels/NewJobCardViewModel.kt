@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prodacc.ui.jobcards.stateClasses.NewJobCardState
+import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.ClientRepository
@@ -39,7 +40,7 @@ class NewJobCardViewModel(
     vehicleId: String
 ) :ViewModel(){
 
-    val clients = clientRepository.getClientsList()
+    val clients = emptyList<Client>()
 
     private val _employees = MutableStateFlow<List<Employee>>(emptyList())
     val employees = _employees.asStateFlow()
