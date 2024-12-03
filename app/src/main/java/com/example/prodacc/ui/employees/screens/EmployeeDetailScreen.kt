@@ -18,12 +18,17 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +40,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
+import com.example.designsystem.designComponents.DeleteConfirmation
+import com.example.designsystem.designComponents.DeleteStateError
 import com.example.designsystem.designComponents.DisplayTextField
 import com.example.designsystem.designComponents.ErrorStateColumn
 import com.example.designsystem.designComponents.IdleStateColumn
@@ -43,10 +50,14 @@ import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.companyIcon
+import com.example.designsystem.theme.errorIcon
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
+import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModelFactory
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,53 +65,38 @@ fun EmployeeDetailScreen(
     navController: NavController,
     employeeId: String,
     viewModel: EmployeeDetailsViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return EmployeeDetailsViewModel(employeeId = employeeId) as T
-            }
-        }
+        factory = EmployeeDetailsViewModelFactory(employeeId)
     )
 ) {
-
     val employee = viewModel.employee.collectAsState().value
     val jobCards = viewModel.jobCards.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.navigateUp()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            navController.navigate(
-                                Route.EditEmployee.path.replace(
-                                    "{employeeId}",
-                                    employee?.id.toString()
-                                )
-                            )
-                        }
-                    ) {
-                        Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
-                    }
-                    IconButton(
-                        onClick = {}
-                    ) {
-                        Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
+
+    Scaffold(topBar = {
+        TopAppBar(title = {}, navigationIcon = {
+            IconButton(onClick = {
+                navController.navigateUp()
+            }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Navigate Back"
+                )
+            }
+        }, actions = {
+            IconButton(onClick = {
+                navController.navigate(
+                    Route.EditEmployee.path.replace(
+                        "{employeeId}", employee?.id.toString()
+                    )
+                )
+            }) {
+                Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
+            }
+            IconButton(onClick = { viewModel.toggleDeleteConfirmation()}) {
+                Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
+            }
+        })
+    }) { innerPadding ->
 
         when (viewModel.employeeLoadState.collectAsState().value) {
             is EmployeeDetailsViewModel.EmployeeLoadState.Error -> {
@@ -196,9 +192,7 @@ fun EmployeeDetailScreen(
                         ) {
 
                             DisplayTextField(
-                                icon = workIcon,
-                                label = "Job Title",
-                                text = employee!!.employeeRole
+                                icon = workIcon, label = "Job Title", text = employee!!.employeeRole
                             )
 
                             DisplayTextField(
@@ -227,18 +221,15 @@ fun EmployeeDetailScreen(
                         ) {
                             items(jobCards.value) { jobCards ->
                                 if (jobCards != null) {
-                                    AllJobCardListItem(
-                                        jobCardName = jobCards.jobCardName,
+                                    AllJobCardListItem(jobCardName = jobCards.jobCardName,
                                         closedDate = jobCards.dateAndTimeClosed,
                                         onClick = {
                                             navController.navigate(
                                                 Route.JobCardDetails.path.replace(
-                                                    "{jobCardId}",
-                                                    jobCards.id.toString()
+                                                    "{jobCardId}", jobCards.id.toString()
                                                 )
                                             )
-                                        }
-                                    )
+                                        })
                                 }
                             }
                         }
@@ -247,8 +238,80 @@ fun EmployeeDetailScreen(
 
                 }
             }
+
             else -> {
             }
+        }
+
+        when (viewModel.deleteState.collectAsState().value) {
+            is EmployeeDetailsViewModel.DeleteState.Error -> {
+                AlertDialog(
+                    onDismissRequest = viewModel::resetDeleteState,
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.deleteEmployee() }) {
+                            Text(text = "Try Again")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = {viewModel.resetDeleteState()}) {
+                            Text(text = "Cancel")
+                        }
+                    },
+                    icon = { Icon(
+                        imageVector = errorIcon,
+                        contentDescription = "Delete Icon",
+                        tint = DarkGrey
+                    )},
+                    title = { Text(text = "Error") },
+                    text = {
+                        Text(text = (viewModel.deleteState.collectAsState().value as EmployeeDetailsViewModel.DeleteState.Error).message)
+                    }
+                )
+            }
+            is EmployeeDetailsViewModel.DeleteState.Idle -> {}
+            is EmployeeDetailsViewModel.DeleteState.Loading -> {
+                LoadingStateColumn(title = "Deleting ${viewModel.employee.collectAsState().value?.employeeName}")
+            }
+
+            is EmployeeDetailsViewModel.DeleteState.Success -> {
+                LaunchedEffect(Unit) {
+                    delay(1000L)
+                    navController.navigateUp()
+                }
+                Column {
+                    Text(text = "Successfully deleted ${viewModel.employee.collectAsState().value?.employeeName} ${viewModel.employee.collectAsState().value?.employeeSurname}")
+                }
+            }
+        }
+
+        when (viewModel.deleteConfirmationState.collectAsState().value) {
+            true -> {
+
+                AlertDialog(
+                    onDismissRequest = viewModel::closeDeleteConfirmation,
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.deleteEmployee() }) {
+                            Text(text = "Delete")
+                        }
+                                    },
+                    dismissButton = {
+                        Button(onClick = {viewModel.closeDeleteConfirmation()}) {
+                            Text(text = "Cancel")
+                        }
+                    },
+                    icon = { Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Icon",
+                        tint = DarkGrey
+                    )},
+                    title = { Text(text = "Delete Employee?") },
+                    text = {
+                        Text(text = "Are you sure you want to delete ${viewModel.employee.collectAsState().value?.employeeName} ${viewModel.employee.collectAsState().value?.employeeSurname}")
+                    },
+                    
+                )
+            }
+            false -> {}
         }
     }
 }

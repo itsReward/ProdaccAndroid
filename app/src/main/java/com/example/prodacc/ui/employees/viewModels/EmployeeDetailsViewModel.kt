@@ -3,7 +3,9 @@ package com.example.prodacc.ui.employees.viewModels
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.room.util.getColumnIndexOrThrow
 import com.example.prodacc.ui.employees.stateClasses.EmployeeDetailsState
 import com.prodacc.data.remote.dao.Employee
@@ -30,6 +32,12 @@ class EmployeeDetailsViewModel (
     private val _jobCardLoadState = MutableStateFlow<JobCardsLoadState>(JobCardsLoadState.Idle)
     val jobCardLoadState = _jobCardLoadState.asStateFlow()
 
+    private val _deleteState = MutableStateFlow<DeleteState>(DeleteState.Idle)
+    val deleteState = _deleteState.asStateFlow()
+
+    private val _deleteConfirmationState = MutableStateFlow(false)
+    val deleteConfirmationState = _deleteConfirmationState.asStateFlow()
+
     private val _jobCards = MutableStateFlow<List<JobCard?>>(emptyList())
     var jobCards = _jobCards.asStateFlow()
 
@@ -44,6 +52,13 @@ class EmployeeDetailsViewModel (
         viewModelScope.launch {
             getEmployee()
         }
+    }
+
+    fun toggleDeleteConfirmation(){
+        _deleteConfirmationState.value = !_deleteConfirmationState.value
+    }
+    fun closeDeleteConfirmation(){
+        _deleteConfirmationState.value = false
     }
 
     private suspend fun getEmployee(){
@@ -89,6 +104,36 @@ class EmployeeDetailsViewModel (
         }
     }
 
+    fun deleteEmployee() {
+        viewModelScope.launch {
+            _deleteConfirmationState.value = false
+            _deleteState.value = DeleteState.Loading
+            try {
+                val result = employeeRepository.deleteEmployee(UUID.fromString(employeeId))
+                when (result) {
+                    EmployeeRepository.LoadingResult.Success() -> {
+                        _deleteState.value = DeleteState.Success
+                    }
+                    is EmployeeRepository.LoadingResult.Error -> {
+                        _deleteState.value = DeleteState.Error(result.message)
+                    }
+                    EmployeeRepository.LoadingResult.NetworkError -> {
+                        _deleteState.value = DeleteState.Error("Network Error")
+                    }
+                    else -> {
+                        _deleteState.value = DeleteState.Error("Unknown Error")
+                    }
+                }
+            } catch (e: Exception) {
+                _deleteState.value = DeleteState.Error(e.message ?: "Delete failed")
+            }
+        }
+    }
+
+    fun resetDeleteState() {
+        _deleteState.value = DeleteState.Idle
+    }
+
     sealed class JobCardsLoadState{
         data object Idle : JobCardsLoadState()
         data object Loading : JobCardsLoadState()
@@ -105,4 +150,24 @@ class EmployeeDetailsViewModel (
 
     }
 
+    sealed class DeleteState {
+        data object Idle : DeleteState()
+        data object Loading : DeleteState()
+        data object Success : DeleteState()
+        data class Error(val message: String) : DeleteState()
+    }
+
+}
+
+class EmployeeDetailsViewModelFactory(private val employeeId: String) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(
+        modelClass: Class<T>,
+        extras: CreationExtras
+    ): T {
+        if (modelClass.isAssignableFrom(EmployeeDetailsViewModel::class.java)) {
+            return EmployeeDetailsViewModel(employeeId = employeeId) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }

@@ -71,7 +71,7 @@ fun EditEmployeeScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        LargeTitleText(name = "New Employee")
+                        LargeTitleText(name = "Edit Employee")
                     },
                     navigationIcon = {
                         IconButton(onClick = {

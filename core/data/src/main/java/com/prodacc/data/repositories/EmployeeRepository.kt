@@ -78,6 +78,7 @@ class EmployeeRepository {
     suspend fun deleteEmployee(id: UUID): LoadingResult {
         return try {
             val response = service.deleteEmployee(id.toString())
+            println(response.raw())
             if (response.isSuccessful) {
                 LoadingResult.Success()
             } else {

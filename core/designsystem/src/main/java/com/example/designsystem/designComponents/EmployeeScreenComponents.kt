@@ -32,9 +32,9 @@ fun EmployeeListCard(
 ){
     Row(
         modifier = Modifier
+            .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 10.dp)
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ){

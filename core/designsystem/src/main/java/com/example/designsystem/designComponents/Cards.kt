@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,6 +50,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.wear.compose.material.dialog.Dialog
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
@@ -564,13 +567,13 @@ fun LoadingStateColumn(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(5.dp))
                 .background(Color.White)
                 .padding(horizontal = 20.dp, vertical = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             CircularProgressIndicator(
                 color = BlueA700,
@@ -579,6 +582,7 @@ fun LoadingStateColumn(
             Text(text = title)
         }
     }
+
 }
 
 @Composable
@@ -635,4 +639,66 @@ fun IdleStateColumn(
             }
         }
     }
+}
+
+@Composable
+fun DeleteStateError(
+    title: String,
+    onClick: () -> Unit
+){
+        Column(
+        modifier = Modifier.padding(20.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = title)
+        Button(onClick = onClick) {
+            Text(text = "Okay")
+        }
+    }
+    }
+
+
+@Composable
+fun DeleteConfirmation(
+    title: String,
+    onDelete: () -> Unit,
+    onCancel: () -> Unit
+){
+    var showDialogState by remember {
+        mutableStateOf(true)
+    }
+    Dialog(
+        showDialog = showDialogState,
+        onDismissRequest = { showDialogState = !showDialogState },
+        modifier = Modifier
+            .background(Color.White)
+            .wrapContentSize()
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = title)
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ){
+                Button(onClick = {
+                    showDialogState = !showDialogState
+                    run { onCancel }
+                }) {
+                    Text(text = "Cancel")
+                }
+                Button(onClick = onDelete, colors = ButtonDefaults.buttonColors(containerColor = Red)) {
+                    Text(text = "Delete")
+                }
+
+            }
+
+        }
+    }
+
 }
