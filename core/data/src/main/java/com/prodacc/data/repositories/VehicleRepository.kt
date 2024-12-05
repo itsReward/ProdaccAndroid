@@ -78,13 +78,13 @@ class VehicleRepository {
         "AMG Project ONE"
     )
     val jeepModels = listOf(
-        "Jeep Wrangler",
-        "Jeep Grand Cherokee",
-        "Jeep Cherokee",
-        "Jeep Liberty",
-        "Jeep Compass",
-        "Jeep Patriot",
-        "Jeep Commander"
+        "Wrangler",
+        "Grand Cherokee",
+        "Cherokee",
+        "Liberty",
+        "Compass",
+        "Patriot",
+        "Commander"
     )
 
 
@@ -150,6 +150,62 @@ class VehicleRepository {
             when (e) {
                 is IOException -> LoadingResult.NetworkError
                 else -> LoadingResult.ErrorSingleMessage(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+    suspend fun updateVehicle(id: UUID, vehicle: NewVehicle): LoadingResult {
+        println(vehicle)
+        return try {
+            val response = vehicleService.updateVehicle(id, vehicle )
+
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    LoadingResult.SingleEntity(it, null)
+                } ?: LoadingResult.SingleEntity(null, "Update failed")
+            } else {
+                LoadingResult.Error(response.errorBody()?.string() ?: "Update failed")
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.ErrorSingleMessage(e.message ?: "Update error")
+            }
+        }
+    }
+
+    suspend fun deleteVehicle(id: UUID): LoadingResult {
+        return try {
+            val response = vehicleService.deleteVehicle(id)
+            if (response.isSuccessful) {
+                LoadingResult.Success(emptyList()) // Successful deletion
+            } else {
+                LoadingResult.Error(response.errorBody()?.string() ?: "Deletion failed")
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.ErrorSingleMessage(e.message ?: "Deletion error")
+            }
+        }
+    }
+
+    suspend fun searchVehicles(
+        make: String? = null,
+        model: String? = null,
+        regNumber: String? = null,
+        clientId: UUID? = null
+    ): LoadingResult {
+        return try {
+            val response = vehicleService.searchVehicles(make, model, regNumber, clientId)
+            if (response.isSuccessful) {
+                LoadingResult.Success(response.body() ?: emptyList())
+            } else {
+                LoadingResult.Error(response.errorBody()?.string() ?: "Search failed")
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.ErrorSingleMessage(e.message ?: "Search error")
             }
         }
     }

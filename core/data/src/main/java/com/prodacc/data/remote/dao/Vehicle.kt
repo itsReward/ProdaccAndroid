@@ -43,3 +43,23 @@ data class NewVehicle(
     @SerializedName("clientSurname") val clientSurname: String
 
 )
+
+data class UpdateVehicle(
+
+    @SerializedName("model") val model: String? = null,
+
+    @SerializedName("regNumber") val regNumber: String? = null,
+
+    @SerializedName("make") val make: String? = null,
+
+    @SerializedName("color") val color: String? = null,
+
+    @SerializedName("chassisNumber") val chassisNumber: String? = null,
+
+    @SerializedName("clientId") val clientId: UUID? = null,
+
+    @SerializedName("clientName") val clientName: String? = null,
+
+    @SerializedName("clientSurname") val clientSurname: String? = null
+
+)

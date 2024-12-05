@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -28,16 +29,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
@@ -47,14 +52,15 @@ import com.example.designsystem.theme.female
 import com.example.designsystem.theme.male
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.ui.clients.viewModels.NewClientViewModel
+import com.example.prodacc.ui.vehicles.viewModels.NewVehicleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewClientScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: NewClientViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    val viewModel = NewClientViewModel()
-    val state = viewModel.state
+    val state = viewModel.uiState.collectAsState().value
     val scroll = rememberScrollState()
 
     AnimatedVisibility(visible = true, enter = slideInHorizontally()) {
@@ -78,7 +84,6 @@ fun NewClientScreen(
 
                         Button(onClick = {
                             viewModel.saveClient()
-                            navController.navigateUp()
                         }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
                             Text(text = "Save")
                         }
@@ -149,7 +154,7 @@ fun NewClientScreen(
                                     label = { Text(text = "Gender") },
                                     readOnly = true
                                 )
-                                IconButton(onClick = { viewModel.toggleGender() }) {
+                                IconButton(onClick = { viewModel.onGenderToggle() }) {
                                     Icon(
                                         imageVector = Icons.Default.KeyboardArrowDown,
                                         contentDescription = "DropDown",
@@ -158,8 +163,8 @@ fun NewClientScreen(
                                     )
                                 }
                                 DropdownMenu(
-                                    expanded = viewModel.dropGenderToggle.value,
-                                    onDismissRequest = { viewModel.toggleGender() },
+                                    expanded = viewModel.genderDropdown.value,
+                                    onDismissRequest = { viewModel.onGenderToggle() },
                                     properties = PopupProperties(),
                                 ) {
                                     Text(
@@ -178,38 +183,23 @@ fun NewClientScreen(
                                                 LightGrey
                                             )
                                     )
-                                    DropdownMenuItem(
-                                        text = { Text(text = "male", color = DarkGrey) },
-                                        onClick = {
-                                            viewModel.updateGender("male")
-                                        },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = male,
-                                                contentDescription = "male",
-                                                tint = Grey
-                                            )
-                                        }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text(text = "female", color = DarkGrey) },
-                                        onClick = {
-                                            viewModel.updateGender("female")
-                                        },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = female,
-                                                contentDescription = "Female",
-                                                tint = Grey
-                                            )
-                                        }
-                                    )
+                                    for (i in viewModel.genderOptions){
+                                        DropdownMenuItem(
+                                            text = { Text(text = i, color = DarkGrey) },
+                                            onClick = {
+                                                viewModel.updateGender(i)
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = if (i == "male") male else female,
+                                                    contentDescription = "gender",
+                                                    tint = Grey
+                                                )
+                                            }
+                                        )
+                                    }
                                 }
                             }
-
-
-
-
 
                         }
 
@@ -271,12 +261,51 @@ fun NewClientScreen(
                                 label = { Text(text = "Company") },
                                 modifier = Modifier.fillMaxWidth()
                             )
-
-
                         }
                     }
 
 
+                }
+            }
+
+            when (viewModel.saveState.collectAsState().value){
+                is NewClientViewModel.SaveState.Error -> {
+                    AlertDialog(
+                        onDismissRequest = { viewModel.resetSaveState() },
+                        confirmButton = {
+                            Button(onClick = { viewModel.saveClient() }) {
+                                Text(text = "Try Again")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { viewModel.resetSaveState() }) {
+                                Text(text = "Cancel")
+                            }
+                        },
+                        title = { Text(text = "Error") },
+                        text = { Text(text = (viewModel.saveState.collectAsState().value as NewClientViewModel.SaveState.Error).message) }
+                    )
+                }
+
+                is NewClientViewModel.SaveState.Idle -> {}
+
+                is NewClientViewModel.SaveState.Loading -> {
+                    Dialog(onDismissRequest = {}) {
+                        LoadingStateColumn(title = "Saving New Client")
+                    }
+                }
+
+                is NewClientViewModel.SaveState.Success -> {
+                    AlertDialog(
+                        onDismissRequest = { navController.navigateUp() },
+                        confirmButton = {
+                            Button(onClick = { navController.navigateUp() }) {
+                                Text(text = "Close")
+                            }
+                        },
+                        title = { Text(text = "Saved Successful") },
+                        text = { Text(text = "Your changes have been saved") }
+                    )
                 }
             }
 

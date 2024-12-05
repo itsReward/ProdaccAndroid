@@ -142,6 +142,10 @@ class EditEmployeeViewModel(
         }
     }
 
+    fun resetUpdateState() {
+        _updateState.value = UpdateState.Idle
+    }
+
     sealed class UpdateState {
         data object Idle : UpdateState()
         data object Loading : UpdateState()

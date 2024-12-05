@@ -14,12 +14,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -27,8 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
@@ -41,19 +41,15 @@ import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.prodacc.navigation.Route
-import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModel
+import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModelFactory
 
 @Composable
 fun VehicleDetailsScreen(
     navController: NavController,
     vehicleId: String,
     viewModel: VehicleDetailsViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return VehicleDetailsViewModel(vehicleId = vehicleId) as T
-            }
-        }
+        factory = VehicleDetailsViewModelFactory(vehicleId)
     )
 ) {
     val vehicle = viewModel.vehicle.collectAsState().value
@@ -105,30 +101,23 @@ fun VehicleDetailsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End
             ) {
-                if (viewModel.editVehicle.value) {
-                    com.example.designsystem.designComponents.IconButton(
-                        onClick = viewModel::saveVehicle,
-                        icon = Icons.AutoMirrored.Filled.Send,
-                        color = Color.White
-                    )
-                } else {
-                    com.example.designsystem.designComponents.IconButton(
-                        onClick = {
-                            navController.navigate(
-                                Route.EditVehicle.path.replace(
-                                    "{vehicleId}",
-                                    vehicleId
-                                )
+                com.example.designsystem.designComponents.IconButton(
+                    onClick = {
+                        navController.navigate(
+                            Route.EditVehicle.path.replace(
+                                "{vehicleId}",
+                                vehicleId
                             )
-                        },
-                        icon = Icons.Filled.Edit,
-                        color = Color.White
-                    )
-
-                }
+                        )
+                    },
+                    icon = Icons.Filled.Edit,
+                    color = Color.White
+                )
 
                 com.example.designsystem.designComponents.IconButton(
-                    onClick = { },
+                    onClick = {
+                        viewModel.toggleDeleteConfirmation()
+                    },
                     icon = Icons.Filled.Delete,
                     color = Color.White
                 )
@@ -172,7 +161,7 @@ fun VehicleDetailsScreen(
             }
 
             is VehicleDetailsViewModel.VehicleLoadState.Loading -> {
-                LoadingStateColumn(title = "Loading Vehicles...")
+                LoadingStateColumn(title = "Loading Vehicle...")
             }
 
             is VehicleDetailsViewModel.VehicleLoadState.Success -> {
@@ -308,6 +297,66 @@ fun VehicleDetailsScreen(
 
             }
 
+        }
+
+        when (viewModel.deleteConfirmation.collectAsState().value){
+            true -> {
+                AlertDialog(
+                    onDismissRequest = { viewModel.resetDeleteConfirmation() },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.deleteVehicle() }) {
+                            Text(text = "Confirm")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { viewModel.resetDeleteConfirmation() }) {
+                            Text(text = "Cancel")
+                        }
+                    },
+                    title = { Text(text = "Delete Confirmation")},
+                    text = { Text(text = "Are you sure you want to delete this vehicle?")}
+                )
+            }
+            false -> {
+
+            }
+        }
+
+        when(viewModel.deleteState.collectAsState().value){
+            is VehicleDetailsViewModel.DeleteVehicleState.Error -> {
+                AlertDialog(
+                    onDismissRequest = { viewModel.resetDeleteState() },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.deleteVehicle() }) {
+                            Text(text = "Try Again")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { viewModel.resetDeleteState() }) {
+                            Text(text = "Close")
+                        }
+                    },
+                    title = { Text(text = "Failed to delete")},
+                    text = { Text(text = (viewModel.deleteState.collectAsState().value as VehicleDetailsViewModel.DeleteVehicleState.Error).message)}
+                )
+            }
+            is VehicleDetailsViewModel.DeleteVehicleState.Idle -> {}
+            is VehicleDetailsViewModel.DeleteVehicleState.Loading -> {
+                Dialog(onDismissRequest = { }) {
+                    LoadingStateColumn(title = "Deleting Vehicle...")
+                }
+            }
+            is VehicleDetailsViewModel.DeleteVehicleState.Success -> {
+                AlertDialog(
+                    onDismissRequest = { navController.navigateUp() },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.deleteVehicle() }) {
+                            Text(text = "Close")
+                        }
+                    },
+                    title = { Text(text = "Vehicle Deleted")}
+                )
+            }
         }
 
     }

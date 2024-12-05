@@ -569,9 +569,9 @@ fun LoadingStateColumn(
     ) {
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(5.dp))
+                .clip(RoundedCornerShape(2.dp))
                 .background(Color.White)
-                .padding(horizontal = 20.dp, vertical = 10.dp),
+                .padding(horizontal = 10.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
