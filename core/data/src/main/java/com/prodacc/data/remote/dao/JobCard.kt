@@ -42,9 +42,9 @@ data class JobCard(
 
     @SerializedName("timesheets") val timesheets: List<Timesheet>,
 
-    @SerializedName("stateChecklistId") val stateChecklistId: UUID,
+    @SerializedName("stateChecklistId") val stateChecklistId: UUID?,
 
-    @SerializedName("serviceChecklistId") val serviceChecklistId: UUID,
+    @SerializedName("serviceChecklistId") val serviceChecklistId: UUID?,
 
-    @SerializedName("controlChecklistId") val controlChecklistId: UUID
+    @SerializedName("controlChecklistId") val controlChecklistId: UUID?
 )

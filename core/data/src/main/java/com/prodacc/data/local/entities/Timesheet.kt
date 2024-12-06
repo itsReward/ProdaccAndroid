@@ -2,6 +2,7 @@ package com.prodacc.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -9,11 +10,11 @@ import java.util.UUID
 data class Timesheet(
     @PrimaryKey(autoGenerate = true) val id: UUID,
 
-    val clockIn: LocalDateTime,
-    val clockOut: LocalDateTime,
-    val technician: UUID,
-    val sheetTitle: String,
-    val report: String,
-    val jobCardId: UUID,
-    val version: Int = 0
+    @SerializedName("clockIn") val clockIn: LocalDateTime,
+    @SerializedName("clockOut") val clockOut: LocalDateTime,
+    @SerializedName("technician") val technician: UUID,
+    @SerializedName("sheetTitle") val sheetTitle: String,
+    @SerializedName("report") val report: String,
+    @SerializedName("jobCardId") val jobCardId: UUID,
+    @SerializedName("version") val version: Int = 0
 )

@@ -28,6 +28,7 @@ class JobCardRepository {
         data class Error(val message: String) : LoadingResult()
         data class ErrorSingleMessage(val message: String): LoadingResult()
         data object NetworkError : LoadingResult()
+        data class SingleEntity(val jobCard: JobCard) : LoadingResult()
     }
 
     //data class JobCardResult(val jobCard: JobCard):LoadingResult()
@@ -36,7 +37,6 @@ class JobCardRepository {
         return try {
             val jobCards = jobCardService.getJobCards()
             if (jobCards.isSuccessful){
-
                 LoadingResult.Success(jobCards.body()?: emptyList())
             } else {
                 println(jobCards.errorBody())
@@ -52,12 +52,20 @@ class JobCardRepository {
 
 
     }
-    suspend fun getJobCard(id: UUID): JobCard? {
-        val jobCard =  jobCardService.getJobCard(id)
-        return if (jobCard.isSuccessful){
-           return jobCard.body()
-        } else {
-            null
+    suspend fun getJobCard(id: UUID): LoadingResult {
+        return try {
+            val response = jobCardService.getJobCard(id)
+            if (response.isSuccessful){
+                response.body()?.let { LoadingResult.SingleEntity(it) } ?: LoadingResult.Error("Server returned null")
+            } else {
+                LoadingResult.Error("Unknown Error")
+            }
+        } catch (e: Exception){
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.Error(e.message?:"Unknown Error")
+            }
         }
+
     }
 }

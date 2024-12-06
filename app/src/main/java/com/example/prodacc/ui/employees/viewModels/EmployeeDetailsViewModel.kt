@@ -90,10 +90,14 @@ class EmployeeDetailsViewModel (
 
     private suspend fun getJobCard(id : UUID){
         val result = jobCardRepository.getJobCard(id)
-        if (result != null)
-            _jobCards.value += result
-        else
-            _jobCards.value = emptyList()
+
+        when (result){
+            is JobCardRepository.LoadingResult.SingleEntity -> {
+                _jobCards.value += result.jobCard
+            }
+            else -> _jobCards.value = emptyList()
+        }
+
     }
 
     private suspend fun getJobCards(){

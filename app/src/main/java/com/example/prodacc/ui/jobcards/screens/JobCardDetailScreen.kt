@@ -3,10 +3,7 @@ package com.example.prodacc.ui.jobcards.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.EaseIn
-import androidx.compose.animation.core.EaseInElastic
-import androidx.compose.animation.core.EaseInQuart
 import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.EaseOutQuart
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -51,14 +48,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.ControlChecklist
 import com.example.designsystem.designComponents.DateTimePickerTextField
 import com.example.designsystem.designComponents.DisabledTextField
 import com.example.designsystem.designComponents.EmployeeListCategory
-import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.ErrorStateColumn
+import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.NewTimeSheet
 import com.example.designsystem.designComponents.ServiceChecklist
@@ -74,17 +71,21 @@ import com.example.designsystem.theme.checklistIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
+import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModelFactory
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun JobCardDetailScreen(
-    navController: NavController, jobCardId: String
+    navController: NavController,
+    jobCardId: String,
+    viewModel: JobCardDetailsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = JobCardDetailsViewModelFactory(jobCardId)
+    )
 ) {
-    val viewModel = JobCardDetailsViewModel(job = UUID.fromString(jobCardId))
     val employeesViewModel = EmployeesViewModel()
+    val jobCard = viewModel.jobCard.collectAsState().value
 
     val scroll = rememberScrollState()
     val statusScroll = rememberScrollState()
@@ -107,324 +108,362 @@ fun JobCardDetailScreen(
         mutableStateOf(false)
     }
 
-
-    Column(
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.Top,
-        modifier = Modifier
-            .background(Color.White)
-            .fillMaxSize()
-            .navigationBarsPadding()
-
-    ) {
-        TopBar(
-            jobCardName = viewModel.jobCard.jobCardName,
-            navController = navController,
-            onClickPeople = { showDialog = !showDialog },
-            onClickDelete = {}
-        )
-        if (showDialog) {
-            TeamDialog(
-                onDismiss = { showDialog = !showDialog },
-                onAddNewTechnician = { },
-                jobCard = viewModel.jobCard,
-                employees = employeesViewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }.groupBy { it.employeeName.first() }.toSortedMap()
-                    .map { EmployeeListCategory(name = it.key.toString(), items = it.value) },
-                onUpdateSupervisor = viewModel::updateSupervisor,
-                onUpdateServiceAdvisor = viewModel::updateServiceAdvisor
+    when (val load = viewModel.loadingState.collectAsState().value) {
+        is JobCardDetailsViewModel.LoadingState.Error -> {
+            ErrorStateColumn(
+                title = load.message,
+                buttonOnClick = { viewModel.refreshJobCard() },
+                buttonText = "Reload"
             )
         }
 
+        is JobCardDetailsViewModel.LoadingState.Idle -> {
 
-        //content
+        }
 
+        is JobCardDetailsViewModel.LoadingState.Loading -> {
+            LoadingStateColumn(title = "Loading JobCard")
+        }
 
-        Column(
-            modifier = Modifier
-                .verticalScroll(scroll)
-                .animateContentSize()
-                .padding(horizontal = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(top = 20.dp)
-                    .fillMaxWidth()
-                    .animateContentSize()
-                //.horizontalScroll(statusScroll)
-                ,
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StepIndicator(
-                    jobCardStatuses = viewModel.jobCardStatusList.subList(0, 4)
-                )
-
-            }
-
+        is JobCardDetailsViewModel.LoadingState.Success -> {
             Column(
-                modifier = Modifier,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier
+                    .background(Color.White)
+                    .fillMaxSize()
+                    .navigationBarsPadding()
+
             ) {
+                TopBar(
+                    jobCardName = jobCard!!.jobCardName,
+                    navController = navController,
+                    onClickPeople = { showDialog = !showDialog },
+                    onClickDelete = {}
+                )
+                if (showDialog) {
+                    TeamDialog(
+                        onDismiss = { showDialog = !showDialog },
+                        onAddNewTechnician = { },
+                        jobCard = jobCard!!,
+                        employees = employeesViewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }
+                            .groupBy { it.employeeName.first() }.toSortedMap()
+                            .map {
+                                EmployeeListCategory(
+                                    name = it.key.toString(),
+                                    items = it.value
+                                )
+                            },
+                        onUpdateSupervisor = viewModel::updateSupervisor,
+                        onUpdateServiceAdvisor = viewModel::updateServiceAdvisor
+                    )
+                }
+
+
+                //content
+
+
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .clip(
-                            RoundedCornerShape(10.dp)
-                        )
-                        .background(CardGrey)
-                        .padding(20.dp),
+                        .verticalScroll(scroll)
+                        .animateContentSize()
+                        .padding(horizontal = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
-
                 ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 20.dp)
+                            .fillMaxWidth()
+                            .animateContentSize()
+                        //.horizontalScroll(statusScroll)
+                        ,
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        StepIndicator(
+                            jobCardStatuses = viewModel.jobCardStatusList.subList(0, 4)
+                        )
 
-                    Row {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(2f)
-                        ) {
-                            MediumTitleText(name = "Vehicle : ")
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Box(
-                                modifier = Modifier
-                                    .border(2.dp, LightGrey, RoundedCornerShape(100.dp))
-                                    .clip(RoundedCornerShape(100.dp))
-                                    .clickable(onClick = {
-                                        navController.navigate(
-                                            Route.VehicleDetails.path.replace(
-                                                "{vehicleId}",
-                                                viewModel.jobCard.vehicleId.toString()
-                                            )
-                                        )
-                                    })
-                                    .padding(horizontal = 20.dp, vertical = 8.dp)
-                            ) {
-                                BodyText(text = viewModel.jobCard.vehicleName)
-
-                            }
-
-
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(2f)
-                        ) {
-                            MediumTitleText(name = "Client : ")
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Box(
-                                modifier = Modifier
-                                    .border(2.dp, LightGrey, RoundedCornerShape(100.dp))
-                                    .clip(RoundedCornerShape(100.dp))
-                                    .clickable(onClick = {
-                                        navController.navigate(
-                                            Route.ClientDetails.path.replace(
-                                                "{clientId}",
-                                                viewModel.jobCard.clientId.toString()
-                                            )
-                                        )
-                                    })
-                                    .padding(horizontal = 20.dp, vertical = 8.dp)
-                            ) {
-                                BodyText(text = viewModel.jobCard.clientName.substringAfter(" "))
-
-                            }
-
-
-                        }
                     }
 
-
-                    Row {
-                        DisabledTextField(
-                            label = "JobCard No.",
-                            text = viewModel.jobCard.jobCardNumber.toString(),
+                    Column(
+                        modifier = Modifier,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Column(
                             modifier = Modifier
-                        )
-                    }
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .clip(
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .background(CardGrey)
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+
+                        ) {
+
+                            Row {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(2f)
+                                ) {
+                                    MediumTitleText(name = "Vehicle : ")
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .border(2.dp, LightGrey, RoundedCornerShape(100.dp))
+                                            .clip(RoundedCornerShape(100.dp))
+                                            .clickable(onClick = {
+                                                navController.navigate(
+                                                    Route.VehicleDetails.path.replace(
+                                                        "{vehicleId}",
+                                                        jobCard.vehicleId.toString()
+                                                    )
+                                                )
+                                            })
+                                            .padding(horizontal = 20.dp, vertical = 8.dp)
+                                    ) {
+                                        BodyText(text = jobCard.vehicleName)
+
+                                    }
 
 
-                }
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(2f)
+                                ) {
+                                    MediumTitleText(name = "Client : ")
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .border(2.dp, LightGrey, RoundedCornerShape(100.dp))
+                                            .clip(RoundedCornerShape(100.dp))
+                                            .clickable(onClick = {
+                                                navController.navigate(
+                                                    Route.ClientDetails.path.replace(
+                                                        "{clientId}",
+                                                        jobCard.clientId.toString()
+                                                    )
+                                                )
+                                            })
+                                            .padding(horizontal = 20.dp, vertical = 8.dp)
+                                    ) {
+                                        BodyText(text = jobCard.clientName.substringAfter(" "))
 
-                DateTimePickerTextField(
-                    value = viewModel.jobCard.dateAndTimeIn,
-                    onValueChange = { viewModel.updateDateAndTimeIn(it) },
-                    label = "Date In",
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                DateTimePickerTextField(
-                    value = viewModel.jobCard.jobCardDeadline,
-                    onValueChange = { viewModel.updateJobCardDeadline(it) },
-                    label = "Deadline",
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-
-                DateTimePickerTextField(
-                    value = viewModel.jobCard.dateAndTimeFrozen,
-                    onValueChange = { newDateTime -> viewModel.updateDateAndTimeFrozen(newDateTime) },
-                    label = "Date Frozen",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
-
-
-            }
+                                    }
 
 
-            Button(
-                onClick = {
-                    showStateChecklistDialog = true
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Grey,
-                )
-            ) {
-                Text(text = "State Checklist")
-
-            }
+                                }
+                            }
 
 
-            Column {
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = { it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    label = {
-                        Text(
-                            text = "Service Advisor Report"
-                        )
-                    }
-                )
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = { it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    label = {
-                        Text(
-                            text = "Diagnostics Report"
-                        )
-                    }
-                )
-
-                DateTimePickerTextField(
-                    value = viewModel.jobCard.estimatedTimeOfCompletion,
-                    onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
-                    label = "E.T.C.",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp)
-                )
-            }
+                            Row {
+                                DisabledTextField(
+                                    label = "JobCard No.",
+                                    text = jobCard.jobCardNumber.toString(),
+                                    modifier = Modifier
+                                )
+                            }
 
 
-
-
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    MediumTitleText(name = "Timesheets/work done ")
-                    TextButton(
-                        onClick = {
-                            showBottomSheet = true
                         }
-                    ) {
-                        Text(text = "Add")
+
+                        DateTimePickerTextField(
+                            value = jobCard.dateAndTimeIn,
+                            onValueChange = { viewModel.updateDateAndTimeIn(it) },
+                            label = "Date In",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        DateTimePickerTextField(
+                            value = jobCard.jobCardDeadline,
+                            onValueChange = { viewModel.updateJobCardDeadline(it) },
+                            label = "Deadline",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+
+                        DateTimePickerTextField(
+                            value = jobCard.dateAndTimeFrozen,
+                            onValueChange = { newDateTime ->
+                                viewModel.updateDateAndTimeFrozen(
+                                    newDateTime
+                                )
+                            },
+                            label = "Date Frozen",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )
+
+
                     }
-                }
-
-                viewModel.timesheets.forEach {
-                    Timesheets(
-                        it
-                    )
-                }
-            }
 
 
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(imageVector = checklistIcon, contentDescription = "Checklist icon")
-                    MediumTitleText(name = "Checklists", modifier = Modifier.padding(start = 5.dp))
-                }
-
-                Row {
                     Button(
                         onClick = {
-                            showControlChecklistDialog = true
+                            showStateChecklistDialog = true
                         },
-                        modifier = Modifier,
+                        modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Grey,
                         )
                     ) {
-                        // Icon(imageVector = checklistIcon, contentDescription = "")
-                        Text(text = "Control")
+                        Text(text = "State Checklist")
 
                     }
-                    Spacer(modifier = Modifier.width(5.dp))
 
-                    Button(
-                        onClick = {
-                            showServiceChecklistDialog = true
-                        },
-                        modifier = Modifier,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Grey,
+
+                    Column {
+                        OutlinedTextField(
+                            value = "",
+                            onValueChange = { it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            label = {
+                                Text(
+                                    text = "Service Advisor Report"
+                                )
+                            }
                         )
+                        OutlinedTextField(
+                            value = "",
+                            onValueChange = { it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            label = {
+                                Text(
+                                    text = "Diagnostics Report"
+                                )
+                            }
+                        )
+
+                        DateTimePickerTextField(
+                            value = jobCard.estimatedTimeOfCompletion,
+                            onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
+                            label = "E.T.C.",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp)
+                        )
+                    }
+
+
+
+
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(text = "Service ")
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            MediumTitleText(name = "Timesheets/work done ")
+                            TextButton(
+                                onClick = {
+                                    showBottomSheet = true
+                                }
+                            ) {
+                                Text(text = "Add")
+                            }
+                        }
+
+                        viewModel.timesheets.forEach {
+                            Timesheets(
+                                it
+                            )
+                        }
+                    }
+
+
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(imageVector = checklistIcon, contentDescription = "Checklist icon")
+                            MediumTitleText(
+                                name = "Checklists",
+                                modifier = Modifier.padding(start = 5.dp)
+                            )
+                        }
+
+                        Row {
+                            Button(
+                                onClick = {
+                                    showControlChecklistDialog = true
+                                },
+                                modifier = Modifier,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Grey,
+                                )
+                            ) {
+                                // Icon(imageVector = checklistIcon, contentDescription = "")
+                                Text(text = "Control")
+
+                            }
+                            Spacer(modifier = Modifier.width(5.dp))
+
+                            Button(
+                                onClick = {
+                                    showServiceChecklistDialog = true
+                                },
+                                modifier = Modifier,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Grey,
+                                )
+                            ) {
+                                Text(text = "Service ")
+
+                            }
+                        }
+
 
                     }
+
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = { it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        label = {
+                            Text(
+                                text = "Control Report"
+                            )
+                        }
+                    )
+
+                    DateTimePickerTextField(
+                        value = jobCard.dateAndTimeClosed,
+                        onValueChange = { newDateTime ->
+                            viewModel.updateDateAndTimeClosed(
+                                newDateTime
+                            )
+                        },
+                        label = "Date Closed",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+
                 }
 
 
             }
-
-            OutlinedTextField(
-                value = "",
-                onValueChange = { it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                label = {
-                    Text(
-                        text = "Control Report"
-                    )
-                }
-            )
-
-            DateTimePickerTextField(
-                value = viewModel.jobCard.dateAndTimeClosed,
-                onValueChange = { newDateTime -> viewModel.updateDateAndTimeClosed(newDateTime) },
-                label = "Date Closed",
-                modifier = Modifier.fillMaxWidth()
-            )
-
-
         }
-
-
     }
+
+
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = {
@@ -468,7 +507,11 @@ fun JobCardDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
-                StateChecklist(jobCardName = viewModel.jobCard.jobCardName, onClose = { showStateChecklistDialog = false })
+                jobCard?.jobCardName?.let {
+                    StateChecklist(
+                        jobCardName = it,
+                        onClose = { showStateChecklistDialog = false })
+                }
 
             }
 
@@ -499,7 +542,11 @@ fun JobCardDetailScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
 
-                ServiceChecklist(jobCardName = viewModel.jobCard.jobCardName, onClose = { showServiceChecklistDialog = false })
+                jobCard?.jobCardName?.let {
+                    ServiceChecklist(
+                        jobCardName = it,
+                        onClose = { showServiceChecklistDialog = false })
+                }
 
             }
 
@@ -510,8 +557,8 @@ fun JobCardDetailScreen(
 
     AnimatedVisibility(
         visible = showControlChecklistDialog,
-        enter = slideInVertically(animationSpec = tween(durationMillis = 500, easing = EaseIn )),
-        exit = slideOutVertically(animationSpec = tween(durationMillis = 500, easing = EaseOut ))
+        enter = slideInVertically(animationSpec = tween(durationMillis = 500, easing = EaseIn)),
+        exit = slideOutVertically(animationSpec = tween(durationMillis = 500, easing = EaseOut))
     ) {
 
 
@@ -529,7 +576,11 @@ fun JobCardDetailScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
 
-                ControlChecklist(jobCardName = viewModel.jobCard.jobCardName, onClose = { showControlChecklistDialog = false })
+                jobCard?.jobCardName?.let {
+                    ControlChecklist(
+                        jobCardName = it,
+                        onClose = { showControlChecklistDialog = false })
+                }
 
             }
 

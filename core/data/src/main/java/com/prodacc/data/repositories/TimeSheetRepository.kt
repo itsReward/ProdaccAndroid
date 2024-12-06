@@ -1,24 +1,24 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.dao.TimeSheet
+import com.prodacc.data.remote.dao.Timesheet
 import java.time.LocalDateTime
 import java.util.UUID
 
 class TimeSheetRepository {
-    private val timeSheets: List<TimeSheet> = generateTimeSheets(6)
+    private val timesheets: List<Timesheet> = generateTimeSheets(6)
 
 
-    fun getTimeSheets(): List<TimeSheet> {
-        return timeSheets
+    fun getTimeSheets(): List<Timesheet> {
+        return timesheets
     }
 
-    fun getTimeSheet(id: UUID): TimeSheet? {
-        return timeSheets.find { it.id == id }
+    fun getTimeSheet(id: UUID): Timesheet? {
+        return timesheets.find { it.id == id }
     }
 
-    private fun generateTimeSheets(size: Int): List<TimeSheet> {
+    private fun generateTimeSheets(size: Int): List<Timesheet> {
         return List(size) {
-            TimeSheet(
+            Timesheet(
                 id = UUID.randomUUID(),
                 sheetTitle = "Time Sheet ${it + 1}",
                 report = "Report content ${it + 1}",

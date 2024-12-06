@@ -124,6 +124,10 @@ class VehicleDetailsViewModel(
                         it.vehicleId == UUID.fromString(vehicleId)
                     })
                 }
+
+                is JobCardRepository.LoadingResult.SingleEntity -> {
+                    //will never happen when searching multiple jobCards
+                }
             }
 
         } catch (e: Exception) {

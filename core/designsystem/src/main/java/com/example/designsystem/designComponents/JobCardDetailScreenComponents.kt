@@ -86,7 +86,7 @@ import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Orange
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
-import com.prodacc.data.remote.dao.TimeSheet
+import com.prodacc.data.remote.dao.Timesheet
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -589,7 +589,7 @@ fun DatePickerContent(
 
 @Composable
 fun Timesheets(
-    timeSheet: TimeSheet
+    timeSheet: Timesheet
 ) {
     val currentDateTime = LocalDate.now()
     var timeSheetDialog by remember { mutableStateOf(false) }
@@ -902,7 +902,7 @@ fun TechnicianRow(
             //maxItemsInEachRow = 4,
             modifier = Modifier.fillMaxWidth()
         ) {
-            employees.subList(1, 4).forEach {
+            employees.forEach {
                 it.items.forEach {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
