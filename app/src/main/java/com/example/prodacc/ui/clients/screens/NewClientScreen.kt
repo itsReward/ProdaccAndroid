@@ -52,7 +52,6 @@ import com.example.designsystem.theme.female
 import com.example.designsystem.theme.male
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.ui.clients.viewModels.NewClientViewModel
-import com.example.prodacc.ui.vehicles.viewModels.NewVehicleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -183,7 +182,7 @@ fun NewClientScreen(
                                                 LightGrey
                                             )
                                     )
-                                    for (i in viewModel.genderOptions){
+                                    for (i in viewModel.genderOptions) {
                                         DropdownMenuItem(
                                             text = { Text(text = i, color = DarkGrey) },
                                             onClick = {
@@ -268,7 +267,7 @@ fun NewClientScreen(
                 }
             }
 
-            when (viewModel.saveState.collectAsState().value){
+            when (viewModel.saveState.collectAsState().value) {
                 is NewClientViewModel.SaveState.Error -> {
                     AlertDialog(
                         onDismissRequest = { viewModel.resetSaveState() },
@@ -307,6 +306,7 @@ fun NewClientScreen(
                         text = { Text(text = "Your changes have been saved") }
                     )
                 }
+
             }
 
         }

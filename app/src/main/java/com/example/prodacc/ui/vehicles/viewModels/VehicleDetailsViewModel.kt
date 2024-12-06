@@ -1,6 +1,5 @@
 package com.example.prodacc.ui.vehicles.viewModels
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -48,7 +47,7 @@ class VehicleDetailsViewModel(
         _deleteConfirmation.value = true
     }
 
-    fun resetDeleteConfirmation(){
+    fun resetDeleteConfirmation() {
         _deleteConfirmation.value = false
     }
 
@@ -104,11 +103,10 @@ class VehicleDetailsViewModel(
 
     }
 
-    suspend fun fetchJobCards() {
+    private suspend fun fetchJobCards() {
         try {
             _vehicleJobCards.value = JobCardsLoadState.Loading
-            val response = jobCardRepository.getJobCards()
-            when (response) {
+            when (val response = jobCardRepository.getJobCards()) {
                 is JobCardRepository.LoadingResult.Error -> {
                     _vehicleJobCards.value = JobCardsLoadState.Error(response.message)
                 }
@@ -133,33 +131,38 @@ class VehicleDetailsViewModel(
         }
     }
 
-    fun deleteVehicle(){
+    fun deleteVehicle() {
         _deleteConfirmation.value = false
         viewModelScope.launch {
             try {
                 _deleteState.value = DeleteVehicleState.Loading
-                val response = vehicleRepository.deleteVehicle(UUID.fromString(vehicleId))
-                when (response){
+                when (val response = vehicleRepository.deleteVehicle(UUID.fromString(vehicleId))) {
                     is VehicleRepository.LoadingResult.Error -> {
-                        _deleteState.value = DeleteVehicleState.Error(response.message?: "Unknown Error")
+                        _deleteState.value =
+                            DeleteVehicleState.Error(response.message ?: "Unknown Error")
                     }
+
                     is VehicleRepository.LoadingResult.ErrorSingleMessage -> {
                         _deleteState.value = DeleteVehicleState.Error(response.message)
                     }
+
                     is VehicleRepository.LoadingResult.NetworkError -> {
                         _deleteState.value = DeleteVehicleState.Error("Network Error")
                     }
+
                     is VehicleRepository.LoadingResult.SingleEntity -> {
                         _deleteState.value = DeleteVehicleState.Error("Unknown Error")
                     }
+
                     is VehicleRepository.LoadingResult.Success -> {
                         _deleteState.value = DeleteVehicleState.Success
                     }
                 }
-            } catch (e: Exception){
-                when (e){
+            } catch (e: Exception) {
+                when (e) {
                     is IOException -> _deleteState.value = DeleteVehicleState.Error("Network Error")
-                    else -> _deleteState.value = DeleteVehicleState.Error(e.message?: "Unknown Error")
+                    else -> _deleteState.value =
+                        DeleteVehicleState.Error(e.message ?: "Unknown Error")
                 }
             }
         }
@@ -186,11 +189,11 @@ class VehicleDetailsViewModel(
 
     }
 
-    sealed class DeleteVehicleState{
-        data object Idle: DeleteVehicleState()
-        data object Loading: DeleteVehicleState()
+    sealed class DeleteVehicleState {
+        data object Idle : DeleteVehicleState()
+        data object Loading : DeleteVehicleState()
         data object Success : DeleteVehicleState()
-        data class Error(val message: String): DeleteVehicleState()
+        data class Error(val message: String) : DeleteVehicleState()
     }
 }
 

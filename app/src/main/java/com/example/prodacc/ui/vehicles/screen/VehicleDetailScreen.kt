@@ -173,9 +173,9 @@ fun VehicleDetailsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 5.dp),
+                            .padding(bottom = 5.dp, start = 18.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.Start
                     ) {
                         MediumTitleText(name = "Details")
                     }
@@ -199,11 +199,11 @@ fun VehicleDetailsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 20.dp),
+                            .padding(top = 20.dp, start = 18.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.Start
                     ) {
-                        MediumTitleText(name = "JobCards")
+                        MediumTitleText(name = "Service History")
                     }
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(5.dp)
