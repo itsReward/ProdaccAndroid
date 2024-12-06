@@ -13,7 +13,7 @@ interface UserService {
     @GET("/users/get/{id}")
     suspend fun getUserById(@Path("id") id: UUID): Response<User>
 
-    @GET("/users/find/username/{username}")
+    @GET("/users/findByUserName/{username}")
     suspend fun getUserByUsername(@Path("username") username: String): Response<User>
 
     @GET("/users/find/email/{email}")

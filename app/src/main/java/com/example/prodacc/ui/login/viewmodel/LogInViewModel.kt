@@ -2,9 +2,11 @@ package com.example.prodacc.ui.login.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.repositories.LogInRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
@@ -20,6 +22,9 @@ class LogInViewModel(
 
     private val _loginState = MutableStateFlow<LogInState>(LogInState.Idle)
     val loginState = _loginState
+
+    private val _signedInScreen = MutableStateFlow(false)
+    val signedInScreen = _signedInScreen.asStateFlow()
 
     private val _APIAddress = MutableStateFlow(ApiInstance.BASE_URL)
     val APIAddress = _APIAddress
@@ -43,6 +48,10 @@ class LogInViewModel(
 
     }
 
+    private fun signedInScreenShow(){
+        _signedInScreen.value = true
+    }
+
     fun resetLoginState() {
         _loginState.value = LogInState.Idle
     }
@@ -53,7 +62,15 @@ class LogInViewModel(
             logInRepository.login(username.value, password.value).let { result ->
                 when (result) {
                     is LogInRepository.LoginResult.Success -> {
-                        _loginState.value = LogInState.Success(result.token)
+                        when (val user = SignedInUser.initialize(username.value)){
+
+                            is SignedInUser.UserSignInResult.Error -> LogInState.Error(user.message)
+                            is SignedInUser.UserSignInResult.Success -> {
+                                signedInScreenShow()
+                                _loginState.value = LogInState.Success(result.token)
+                            }
+                        }
+
                     }
 
                     is LogInRepository.LoginResult.Error -> {

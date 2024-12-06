@@ -2,6 +2,7 @@ package com.prodacc.data.repositories
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.TokenManager
 import com.prodacc.data.remote.dao.Token

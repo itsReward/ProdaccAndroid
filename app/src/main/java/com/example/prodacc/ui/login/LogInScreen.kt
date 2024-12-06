@@ -1,6 +1,7 @@
 package com.example.prodacc.ui.login
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +49,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
+import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.PasswordTextField
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
@@ -56,6 +60,8 @@ import com.example.designsystem.theme.errorIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.login.viewmodel.LogInState
 import com.example.prodacc.ui.login.viewmodel.LogInViewModel
+import com.prodacc.data.SignedInUser
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -216,7 +222,27 @@ fun LogInScreen(
                 }
             }
             is LogInState.Success -> {
-                navController.navigate(Route.JobCards.path)
+
+                AnimatedVisibility(visible = viewModel.signedInScreen.collectAsState().value) {
+                    Column (
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(bottomEnd = 50.dp, bottomStart = 50.dp))
+                            .background(Color.Blue)
+                            .fillMaxSize()
+                            .systemBarsPadding(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LargeTitleText(name = "Welcome")
+                        MediumTitleText(name = SignedInUser.user!!.employeeName)
+
+                    }
+                    LaunchedEffect(Unit) {
+                        delay(1500L)
+                        navController.navigate(Route.JobCards.path)
+                    }
+                }
+
             }
             is LogInState.Error -> {
                 Dialog(onDismissRequest = viewModel::resetLoginState) {
