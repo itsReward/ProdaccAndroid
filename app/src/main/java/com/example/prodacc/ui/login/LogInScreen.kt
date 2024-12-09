@@ -227,14 +227,14 @@ fun LogInScreen(
                     Column (
                         modifier = Modifier
                             .clip(RoundedCornerShape(bottomEnd = 50.dp, bottomStart = 50.dp))
-                            .background(Color.Blue)
+                            .background(Color.White)
                             .fillMaxSize()
                             .systemBarsPadding(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         LargeTitleText(name = "Welcome")
-                        MediumTitleText(name = SignedInUser.user!!.employeeName)
+                        MediumTitleText(name = SignedInUser.user?.employeeName?: "Loading")
 
                     }
                     LaunchedEffect(Unit) {
