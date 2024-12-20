@@ -4,9 +4,16 @@ import android.content.Context
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.prodacc.data.remote.services.ClientService
+import com.prodacc.data.remote.services.ControlChecklistService
 import com.prodacc.data.remote.services.EmployeeService
+import com.prodacc.data.remote.services.JobCardReportService
 import com.prodacc.data.remote.services.JobCardService
+import com.prodacc.data.remote.services.JobCardStatusService
+import com.prodacc.data.remote.services.JobCardTechniciansService
 import com.prodacc.data.remote.services.LogInService
+import com.prodacc.data.remote.services.ServiceChecklistService
+import com.prodacc.data.remote.services.StateChecklistService
+import com.prodacc.data.remote.services.TimesheetService
 import com.prodacc.data.remote.services.UserService
 import com.prodacc.data.remote.services.VehicleService
 import okhttp3.Cache
@@ -21,7 +28,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiInstance {
     @Volatile
-    var BASE_URL = "http://192.168.138.124:5000"
+    var BASE_URL = "http://10.88.80.123:5000"
         set
 
     // Add a method to initialize with context
@@ -37,6 +44,14 @@ object ApiInstance {
         _clientService = _retrofitBuilder.create(ClientService::class.java)
         _employeeService = _retrofitBuilder.create(EmployeeService::class.java)
         _userService = _retrofitBuilder.create(UserService::class.java)
+        _controlChecklistService = _retrofitBuilder.create(ControlChecklistService::class.java)
+        _jobCardReportService = _retrofitBuilder.create(JobCardReportService::class.java)
+        _jobCardStatusService = _retrofitBuilder.create(JobCardStatusService::class.java)
+        _jobCardTechniciansService = _retrofitBuilder.create(JobCardTechniciansService::class.java)
+        _serviceChecklistService = _retrofitBuilder.create(ServiceChecklistService::class.java)
+        _stateChecklistService = _retrofitBuilder.create(StateChecklistService::class.java)
+        _timesheetService = _retrofitBuilder.create(TimesheetService::class.java)
+
     }
 
     val gson = GsonBuilder().registerTypeAdapter(
@@ -60,6 +75,14 @@ object ApiInstance {
         _retrofitBuilder.create(EmployeeService::class.java)
     private var _userService = _retrofitBuilder.create(UserService::class.java)
 
+    private var _controlChecklistService = _retrofitBuilder.create(ControlChecklistService::class.java)
+    private var _jobCardReportService = _retrofitBuilder.create(JobCardReportService::class.java)
+    private var _jobCardStatusService = _retrofitBuilder.create(JobCardStatusService::class.java)
+    private var _jobCardTechniciansService = _retrofitBuilder.create(JobCardTechniciansService::class.java)
+    private var _serviceChecklistService = _retrofitBuilder.create(ServiceChecklistService::class.java)
+    private var _stateChecklistService = _retrofitBuilder.create(StateChecklistService::class.java)
+    private var _timesheetService = _retrofitBuilder.create(TimesheetService::class.java)
+
     // Getter for retrofitBuilder that returns the current instance
     val retrofitBuilder: Retrofit
         get() = _retrofitBuilder
@@ -82,6 +105,27 @@ object ApiInstance {
 
     val userService: UserService
         get() = _userService
+
+    val controlChecklistService: ControlChecklistService
+        get() = _controlChecklistService
+
+    val jobCardReportService: JobCardReportService
+        get() = _jobCardReportService
+
+    val jobCardStatusService: JobCardStatusService
+        get() = _jobCardStatusService
+
+    val jobCardTechniciansService: JobCardTechniciansService
+        get() = _jobCardTechniciansService
+
+    val serviceChecklistService: ServiceChecklistService
+        get() = _serviceChecklistService
+
+    val stateChecklistService: StateChecklistService
+        get() = _stateChecklistService
+
+    val timesheetService: TimesheetService
+        get() = _timesheetService
 
 
     // Default builder without caching (for initial setup)
@@ -137,3 +181,4 @@ object ApiInstance {
             .addConverterFactory(GsonConverterFactory.create(gson)).build()
     }
 }
+

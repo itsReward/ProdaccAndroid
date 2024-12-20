@@ -74,8 +74,8 @@ class LogInViewModel(
                     }
 
                     is LogInRepository.LoginResult.Error -> {
-                        _loginState.value = result.message?.let { LogInState.Error(it.message?:"Unknown Error gegege") }
-                            ?: LogInState.Error("Unknown Error hahha")
+                        _loginState.value = result.message?.let { LogInState.Error(it.message) }
+                            ?: LogInState.Error("Unknown Error")
                     }
 
                     is LogInRepository.LoginResult.ErrorSingleMessage -> {
