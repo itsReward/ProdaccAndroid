@@ -1,6 +1,5 @@
 package com.example.prodacc.ui.jobcards.viewModels
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -46,6 +45,7 @@ class NewJobCardViewModel(
     val employees = _employees.asStateFlow()
 
     private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
+    val vehicles = _vehicles.asStateFlow()
 
     private val _employeeLoadingState =
         MutableStateFlow<EmployeeLoadingResult>(EmployeeLoadingResult.Idle)
@@ -54,28 +54,30 @@ class NewJobCardViewModel(
     private val _vehiclesLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val vehicleLoadingState = _vehiclesLoadingState.asStateFlow()
 
-    private val _vehicleState: MutableState<Vehicle?> = mutableStateOf(null)
-    val vehicleState = _vehicleState.value
 
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
     val vehicle = _vehicle.asStateFlow()
 
-    private val _state = mutableStateOf(
-        NewJobCardState(
-            vehicle.value?.id,
-            null,
-            null,
-            null
-        )
-    )
-    val state = _state.value
+    private val _supervisor = MutableStateFlow<Employee?>(null)
+    val supervisor = _supervisor.asStateFlow()
+
+    private val _serviceAdvisor = MutableStateFlow<Employee?>(null)
+    val serviceAdvisor = _serviceAdvisor.asStateFlow()
+
+    private val _saveState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val saveState = _saveState.asStateFlow()
 
     private val _vehicleLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val loadState = _vehicleLoadState.asStateFlow()
 
+    private val _serviceAdvisorDropdown = MutableStateFlow<Boolean>(false)
+    val serviceAdvisorDropdown = _serviceAdvisorDropdown.asStateFlow()
 
-    val serviceAdvisorDropdown = mutableStateOf(false)
-    val supervisorDropdown = mutableStateOf(false)
+    private val _supervisorDropdown = MutableStateFlow<Boolean>(false)
+    val supervisorDropdown = _supervisorDropdown.asStateFlow()
+
+    val vehiclesDropdown = mutableStateOf(false)
+
     init {
         viewModelScope.launch {
             getEmployees()
@@ -83,15 +85,16 @@ class NewJobCardViewModel(
         }
     }
 
-
-    fun toggleSupervisorDropdown(){
-        supervisorDropdown.value = !supervisorDropdown.value
-    }
-    fun toggleServiceAdvisor(){
-        serviceAdvisorDropdown.value = !serviceAdvisorDropdown.value
+    fun toggleSupervisorDropdown() {
+        _supervisorDropdown.value = !_supervisorDropdown.value
     }
 
-    suspend fun getEmployees() {
+    fun toggleServiceAdvisor() {
+        _serviceAdvisorDropdown.value = !_serviceAdvisorDropdown.value
+    }
+
+
+    private suspend fun getEmployees() {
         _employeeLoadingState.value = EmployeeLoadingResult.Loading
         try {
             when (val response = employeeRepository.getEmployees()) {
@@ -109,6 +112,7 @@ class NewJobCardViewModel(
                 }
 
                 is EmployeeRepository.LoadingResult.Success -> {
+                    _employees.value = response.employees ?: emptyList()
                     _employeeLoadingState.value =
                         EmployeeLoadingResult.Success(response.employees ?: emptyList())
                 }
@@ -122,21 +126,36 @@ class NewJobCardViewModel(
 
     }
 
-    suspend fun getVehicles(){
+    private suspend fun getVehicles() {
         try {
-            when(val vehicles = vehicleRepository.getVehicles()){
+            when (val vehicles = vehicleRepository.getVehicles()) {
                 is VehicleRepository.LoadingResult.Error -> {
-                    _vehiclesLoadingState
+                    _vehiclesLoadingState.value =
+                        LoadingState.Error(vehicles.message ?: "Unknown error")
                 }
-                is VehicleRepository.LoadingResult.ErrorSingleMessage -> TODO()
-                is VehicleRepository.LoadingResult.NetworkError -> TODO()
-                is VehicleRepository.LoadingResult.SingleEntity -> TODO()
-                is VehicleRepository.LoadingResult.Success -> TODO()
+
+                is VehicleRepository.LoadingResult.ErrorSingleMessage -> {
+                    _vehicleLoadState.value = LoadingState.Error(vehicles.message)
+                }
+
+                is VehicleRepository.LoadingResult.NetworkError -> {
+                    _vehicleLoadState.value = LoadingState.NetworkError
+                }
+
+                is VehicleRepository.LoadingResult.SingleEntity -> {
+                    //will never happen
+                }
+
+                is VehicleRepository.LoadingResult.Success -> {
+                    _vehicles.value = vehicles.vehicles ?: emptyList()
+                    _vehiclesLoadingState.value = LoadingState.Success(vehicles.vehicles)
+                }
             }
-        }catch (e: Exception){
+        } catch (e: Exception) {
             when (e) {
                 is IOException -> _vehiclesLoadingState.value = LoadingState.NetworkError
-                else -> _vehiclesLoadingState.value = LoadingState.Error(e.message ?: "Unknown Error")
+                else -> _vehiclesLoadingState.value =
+                    LoadingState.Error(e.message ?: "Unknown Error")
             }
         }
     }
@@ -183,25 +202,37 @@ class NewJobCardViewModel(
     }
 
 
-    private fun updateState(update: (NewJobCardState) -> NewJobCardState) {
-        _state.value = update(_state.value)
-    }
+
 
     fun updateServiceAdvisor(employee: Employee) {
-        updateState {
-            it.copy(serviceAdvisorId = employee.id)
-        }
+        _serviceAdvisor.value = employee
     }
 
     fun updateSupervisor(employee: Employee) {
-        updateState {
-            it.copy(supervisorId = employee.id)
-        }
+        _supervisor.value = employee
+    }
+
+    fun updateVehicle(vehicle: Vehicle) {
+        _vehicle.value = vehicle
     }
 
 
-    fun saveJob() {
 
+    fun toggleVehiclesDropDown() {
+        vehiclesDropdown.value = !vehiclesDropdown.value
+    }
+
+    fun saveJob() {
+        try {
+            when (val response = jobCardRepository.saveJob()) {
+
+            }
+        } catch (e: Exception){
+            when (e) {
+                is IOException -> _saveState.value = LoadingState.NetworkError
+                else -> _saveState.value = LoadingState.Error(e.message ?: "Unknown Error")
+            }
+        }
     }
 
     sealed class EmployeeLoadingResult {
@@ -220,6 +251,8 @@ class NewJobCardViewModel(
         data class Error(val message: String) : LoadingState()
         data object NetworkError : LoadingState()
     }
+
+
 
 }
 

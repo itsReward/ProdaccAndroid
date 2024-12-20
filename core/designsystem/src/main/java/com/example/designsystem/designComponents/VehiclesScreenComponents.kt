@@ -248,7 +248,6 @@ fun VehiclesDropDown(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
         modifier = Modifier
-            .fillMaxSize()
             .padding(10.dp)
         ,
         properties = PopupProperties(

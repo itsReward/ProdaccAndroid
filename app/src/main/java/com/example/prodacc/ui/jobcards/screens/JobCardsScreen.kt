@@ -68,7 +68,6 @@ fun JobCardsScreen(
     vehiclesViewModel: VehiclesViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val scroll = rememberScrollState()
-    var newJobCardDialog by remember { mutableStateOf(false) }
 
     var vehicleState = vehiclesViewModel.vehicleState.collectAsState()
     val vehicles = vehiclesViewModel.vehicles.collectAsState()
@@ -97,7 +96,11 @@ fun JobCardsScreen(
         bottomBar = { NavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { newJobCardDialog = !newJobCardDialog },
+                onClick = {
+                    navController.navigate(
+                        Route.NewJobCard.path
+                    )
+                },
                 shape = CircleShape,
                 containerColor = Color.White
             ) {
@@ -106,114 +109,6 @@ fun JobCardsScreen(
         }
     ) { innerPadding ->
 
-        AnimatedVisibility(visible = newJobCardDialog) {
-            Dialog(onDismissRequest = { newJobCardDialog = !newJobCardDialog }) {
-                var errorText by remember {
-                    mutableStateOf(false)
-                }
-
-                Column(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White)
-                        .wrapContentSize()
-                        .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 10.dp)
-                ) {
-                    var vehicleExpanded by remember { mutableStateOf(false) }
-
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp, top = 20.dp, start = 10.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LargeTitleText(name = "New Job Card")
-                        }
-
-                    }
-                    TextField(
-                        value =  if (vehicleState.value == null) "Select Vehicle" else "${vehicleState.value!!.color} ${vehicleState.value!!.model} ${vehicleState.value!!.regNumber}",
-                        onValueChange = {},
-                        placeholder = { Text(text = "Vehicle") },
-                        label = { Text(text = "Vehicle") },
-                        readOnly = true,
-                        leadingIcon = {
-                            Icon(imageVector = vehicleIcon, contentDescription = "Vehicle Icon")
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { vehicleExpanded = !vehicleExpanded }) {
-                                Icon(
-                                    imageVector = Icons.Filled.KeyboardArrowDown,
-                                    contentDescription = "Drop down"
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(
-                            unfocusedContainerColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent
-                        )
-                    )
-
-                    VehiclesDropDown(
-                        expanded = vehicleExpanded,
-                        onDismissRequest = { vehicleExpanded = !vehicleExpanded },
-                        vehicles = vehicles.value,
-                        onVehicleSelected = vehiclesViewModel::updateVehicle,
-                        newVehicle = { navController.navigate(Route.NewVehicle.path) }
-                    )
-                    if (errorText){
-                        Text(text = "Please select a vehicle", color = Color.Red)
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 20.dp),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextButton(
-                            onClick = {
-                                newJobCardDialog = !newJobCardDialog
-                            }
-                        ) {
-                            Text(text = "Cancel")
-
-                        }
-
-                        Button(
-                            onClick = {
-                                if (vehicleState.value != null) {
-                                    navController.navigate(
-                                        Route.NewJobCard.path.replace(
-                                            "vehicleId",
-                                            vehicleState.value!!.id.toString()
-                                        )
-                                    )
-                                } else {
-                                    errorText = true
-                                }
-
-                            }
-                        ) {
-                            Text(text = "Proceed")
-                        }
-                    }
-
-
-                }
-
-            }
-        }
 
 
 

@@ -76,7 +76,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             }
         ){ backStackEntry ->
             val vehicleId = backStackEntry.arguments?.getString("vehicleId") ?: ""
-            NewJobCardScreen(navController, vehicleId)
+            NewJobCardScreen(navController)
         }
 
 

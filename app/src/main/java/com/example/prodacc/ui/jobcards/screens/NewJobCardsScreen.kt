@@ -23,9 +23,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -34,6 +31,7 @@ import androidx.navigation.NavController
 import com.example.designsystem.designComponents.EmployeeDropDown
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.VehiclesDropDown
+import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.car
 import com.example.designsystem.theme.person
@@ -51,6 +49,8 @@ fun NewJobCardScreen(
 ) {
 
     val vehicle by viewModel.vehicle.collectAsState()
+    val supervisor by viewModel.supervisor.collectAsState()
+    val serviceAdvisor by viewModel.serviceAdvisor.collectAsState()
 
     Scaffold(
         topBar = {
@@ -87,26 +87,68 @@ fun NewJobCardScreen(
                 .padding(horizontal = 10.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Row {
-                Icon(
-                    imageVector = car,
-                    contentDescription = "Navigate Back",
-                    modifier = Modifier.padding(end = 15.dp)
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(Blue50)
+                        .padding(horizontal = 10.dp, vertical = 1.dp)
+                ) {
+                    Text(text = "Vehicle")
+                }
+
+            }
+
+
+            Column {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     OutlinedTextField(
-                        value = "${vehicle?.color} ${vehicle?.model} ${vehicle?.regNumber}",
+                        value = if (vehicle == null) "Select Vehicle" else "${vehicle!!.color} ${vehicle!!.model} ${vehicle!!.regNumber}",
                         onValueChange = {},
                         label = { Text(text = "Vehicle") },
                         readOnly = true,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+
+                            Icon(
+                                imageVector = car,
+                                contentDescription = "Navigate Back"
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                viewModel.toggleVehiclesDropDown()
+                            }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.KeyboardArrowDown,
+                                    contentDescription = "Drop down"
+                                )
+                            }
+                            VehiclesDropDown(
+                                vehicles = viewModel.vehicles.collectAsState().value,
+                                expanded = viewModel.vehiclesDropdown.value,
+                                onDismissRequest = {
+                                    viewModel.toggleVehiclesDropDown()
+                                },
+                                onVehicleSelected = viewModel::updateVehicle,
+                                newVehicle = { navController.navigate(Route.NewVehicle.path) }
+                            )
+                        }
                     )
 
+
                     OutlinedTextField(
-                        value = "${vehicle?.clientName} ${vehicle?.clientSurname}",
+                        value = if (vehicle == null) "Select Vehicle" else "${vehicle?.clientName} ${vehicle?.clientSurname}",
                         onValueChange = {},
+                        leadingIcon = {
+                            Icon(imageVector = person, contentDescription = "Client")
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         readOnly = true,
                         label = { Text(text = "Client") }
@@ -119,22 +161,30 @@ fun NewJobCardScreen(
 
 
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(Blue50)
+                        .padding(horizontal = 10.dp, vertical = 1.dp)
+                ) {
+                    Text(text = "Team")
+                }
 
+            }
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(5.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(20.dp)
-                    )
-                    .background(CardGrey)
-                    .padding(vertical = 10.dp, horizontal = 5.dp)
+                    .padding(horizontal = 5.dp)
             ) {
 
-                // SectionLineHeadingSeperator(heading = "Team")
 
                 TextField(
-                    value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",
+                    value = if (serviceAdvisor == null) "Select Service Advisor" else "${serviceAdvisor!!.employeeName} ${serviceAdvisor!!.employeeSurname}",
                     onValueChange = {},
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
@@ -142,7 +192,7 @@ fun NewJobCardScreen(
                     leadingIcon = { Icon(imageVector = person, contentDescription = "employee") },
                     trailingIcon = {
                         IconButton(onClick = {
-
+                            viewModel.toggleServiceAdvisor()
                         }
                         ) {
                             Icon(
@@ -150,55 +200,59 @@ fun NewJobCardScreen(
                                 contentDescription = "Drop down"
                             )
                         }
+                        EmployeeDropDown(
+                            list = viewModel.employees.collectAsState().value,
+                            expanded = viewModel.serviceAdvisorDropdown.collectAsState().value,
+                            onDismissRequest = {
+                                viewModel.toggleServiceAdvisor()
+                            },
+                            onItemClick = viewModel::updateServiceAdvisor
+                        )
                     },
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
+                        focusedContainerColor = CardGrey,
+                        unfocusedContainerColor = CardGrey,
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent
-                    )
+                    ),
+
                 )
 
-                Text(text = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}")
 
-                EmployeeDropDown(
-                    list = viewModel.employees.collectAsState().value,
-                    expanded = viewModel.serviceAdvisorDropdown.value,
-                    onDismissRequest = {
-                        viewModel.toggleServiceAdvisor()
-                    },
-                    onItemClick = viewModel::updateServiceAdvisor
-                )
 
                 TextField(
-                    value = "${viewModel.vehicleState?.clientName} ${viewModel.vehicleState?.clientSurname}",
+                    value = if (supervisor == null) "Select Supervisor" else "${supervisor!!.employeeName} ${supervisor!!.employeeSurname}",
                     onValueChange = {},
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
                     label = { Text(text = "Supervisor") },
                     leadingIcon = { Icon(imageVector = person, contentDescription = "employee") },
                     trailingIcon = {
-                        IconButton(onClick = { /*TODO*/ }) {
+                        IconButton(onClick = {
+                            viewModel.toggleSupervisorDropdown()
+                        }) {
                             Icon(
                                 imageVector = Icons.Filled.KeyboardArrowDown,
                                 contentDescription = "Drop down"
                             )
                         }
+
+                        EmployeeDropDown(
+                            list = viewModel.employees.collectAsState().value,
+                            expanded = viewModel.supervisorDropdown.collectAsState().value,
+                            onDismissRequest = { viewModel.toggleSupervisorDropdown() },
+                            onItemClick = viewModel::updateSupervisor
+                        )
                     },
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
+                        focusedContainerColor = CardGrey,
+                        unfocusedContainerColor = CardGrey,
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent
                     )
                 )
 
-                EmployeeDropDown(
-                    list = viewModel.employees.collectAsState().value,
-                    expanded = viewModel.supervisorDropdown.value,
-                    onDismissRequest = { viewModel.toggleSupervisorDropdown()},
-                    onItemClick = viewModel::updateSupervisor
-                )
+
             }
 
 
