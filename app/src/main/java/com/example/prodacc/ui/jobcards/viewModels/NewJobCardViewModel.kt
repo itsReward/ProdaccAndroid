@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.jobcards.stateClasses.NewJobCardState
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
+import com.prodacc.data.remote.dao.NewJobCard
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.ControlChecklistRepository
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.time.LocalDateTime
 import java.util.UUID
 
 class NewJobCardViewModel(
@@ -223,16 +225,51 @@ class NewJobCardViewModel(
     }
 
     fun saveJob() {
-        try {
-            when (val response = jobCardRepository.saveJob()) {
-
-            }
-        } catch (e: Exception){
-            when (e) {
-                is IOException -> _saveState.value = LoadingState.NetworkError
-                else -> _saveState.value = LoadingState.Error(e.message ?: "Unknown Error")
+        if (vehicle.value == null || supervisor.value == null || serviceAdvisor.value == null) {
+            _saveState.value = LoadingState.Error("All fields must be filled")
+            return
+        } else {
+            viewModelScope.launch {
+                _saveState.value = LoadingState.Loading
+                try {
+                    when (val response = jobCardRepository.newJobCard(
+                        NewJobCard(
+                            vehicleId = vehicle.value!!.id,
+                            supervisorId = supervisor.value!!.id,
+                            serviceAdvisorId = serviceAdvisor.value!!.id,
+                            dateAndTimeIn = LocalDateTime.now()
+                        )
+                    )) {
+                        is JobCardRepository.LoadingResult.Error -> {
+                            _saveState.value = LoadingState.Error(response.message)
+                        }
+                        is JobCardRepository.LoadingResult.ErrorSingleMessage -> {
+                            _saveState.value = LoadingState.Error(response.message)
+                        }
+                        is JobCardRepository.LoadingResult.NetworkError -> {
+                            _saveState.value = LoadingState.Error("Network Error")
+                        }
+                        is JobCardRepository.LoadingResult.SingleEntity -> {
+                            _saveState.value = LoadingState.Success(response.jobCard)
+                        }
+                        is JobCardRepository.LoadingResult.Success -> {
+                            //will never happen for save
+                        }
+                    }
+                } catch (e: Exception){
+                    when (e) {
+                        is IOException -> _saveState.value = LoadingState.NetworkError
+                        else -> _saveState.value = LoadingState.Error(e.message ?: "Unknown Error")
+                    }
+                }
             }
         }
+
+
+    }
+
+    fun resetSaveState() {
+        _saveState.value = LoadingState.Idle
     }
 
     sealed class EmployeeLoadingResult {

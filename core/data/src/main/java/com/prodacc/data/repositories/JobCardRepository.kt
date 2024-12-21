@@ -4,6 +4,8 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.dao.JobCard;
+import com.prodacc.data.remote.dao.NewJobCard
+import com.prodacc.data.remote.dao.NewJobCardStatus
 import okhttp3.ResponseBody
 import java.io.IOException
 import java.time.LocalDateTime
@@ -13,7 +15,10 @@ import java.util.UUID
 
 class JobCardRepository {
     private val jobCardService = ApiInstance.jobCardService
-    private val gson = GsonBuilder()
+    private val jobCardStatusService = ApiInstance.jobCardStatusService
+
+
+    val gson = GsonBuilder()
         .registerTypeAdapter(LocalDateTime::class.java, JsonDeserializer { json, _, _ ->
             // Adjust the parsing format to match your actual JSON
             val dateString = json.asString
@@ -31,7 +36,39 @@ class JobCardRepository {
         data class SingleEntity(val jobCard: JobCard) : LoadingResult()
     }
 
-    //data class JobCardResult(val jobCard: JobCard):LoadingResult()
+
+    suspend fun newJobCard(newJobCard: NewJobCard): LoadingResult {
+        return try {
+            val response = jobCardService.createJobCard(newJobCard)
+            when {
+                response.isSuccessful -> {
+                    response.body()?.let { jobCard ->
+                        try {
+                            val statusResponse = jobCardStatusService.addNewJobCardStatus(
+                                NewJobCardStatus(jobCard.id, "open")
+                            )
+                            if (statusResponse.isSuccessful) {
+                                LoadingResult.SingleEntity(jobCard)
+                            } else {
+                                LoadingResult.Error("Failed to create job card status: ${statusResponse.errorBody()?.string()}")
+                            }
+                        } catch (e: Exception) {
+                            LoadingResult.Error("Failed to create job card status: ${e.message}")
+                        }
+                    } ?: LoadingResult.Error("Response successful but body was null")
+                }
+                else -> {
+                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                    LoadingResult.Error("Server error: $errorBody")
+                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.Error("Network error: ${e.message}")
+            }
+        }
+    }
 
     suspend fun getJobCards(): LoadingResult {
         return try {
@@ -67,5 +104,21 @@ class JobCardRepository {
             }
         }
 
+    }
+
+    suspend fun deleteJobCard(id: UUID) : String {
+        return try {
+            val response = jobCardService.deleteJobCard(id)
+            if (response.isSuccessful){
+                response.body()?.let { "deleted successfully" } ?: "Server returned null"
+            } else {
+                "Unknown Error"
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> "Network Error"
+                else -> "Unknown Error"
+            }
+        }
     }
 }

@@ -48,3 +48,10 @@ data class JobCard(
 
     @SerializedName("controlChecklistId") val controlChecklistId: UUID?
 )
+
+data class NewJobCard(
+    @SerializedName("vehicleId") val vehicleId: UUID,
+    @SerializedName("serviceAdvisorId") val serviceAdvisorId: UUID,
+    @SerializedName("supervisorId") val supervisorId: UUID,
+    @SerializedName("dateAndTimeIn") val dateAndTimeIn: LocalDateTime
+)

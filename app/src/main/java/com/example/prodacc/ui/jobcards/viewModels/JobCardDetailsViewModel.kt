@@ -36,6 +36,13 @@ class JobCardDetailsViewModel(
         }
     }
 
+    private val _deleteJobCardConfirmation = MutableStateFlow(false)
+    val deleteJobCardConfirmation = _deleteJobCardConfirmation.asStateFlow()
+
+    fun setDeleteJobCardConfirmation(value: Boolean){
+        _deleteJobCardConfirmation.value = value
+    }
+
 
     val jobCardStatusList = jobCardStatusRepository.generateJobCardStatus(UUID.randomUUID())
     val timesheets = timeSheetRepository.getTimeSheets()
@@ -116,6 +123,17 @@ class JobCardDetailsViewModel(
                 else -> _loadingState.value = LoadingState.Error(e.message?:"Unknown Error")
             }
         }
+    }
+
+    fun updateJobCardStatus(status: String){
+
+    }
+
+    fun deleteJobCard() {
+        viewModelScope.launch {
+            jobCardRepository.deleteJobCard(jobCard.value!!.id)
+        }
+
     }
 
     sealed class LoadingState{

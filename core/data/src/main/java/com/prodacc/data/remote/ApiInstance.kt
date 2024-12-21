@@ -3,6 +3,8 @@ package com.prodacc.data.remote
 import android.content.Context
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializer
 import com.prodacc.data.remote.services.ClientService
 import com.prodacc.data.remote.services.ControlChecklistService
 import com.prodacc.data.remote.services.EmployeeService
@@ -54,12 +56,17 @@ object ApiInstance {
 
     }
 
-    val gson = GsonBuilder().registerTypeAdapter(
-        LocalDateTime::class.java,
+    val gson = GsonBuilder()
+        .registerTypeAdapter(LocalDateTime::class.java,
+            JsonSerializer<LocalDateTime> { src, _, _ ->
+                JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            })
+        .registerTypeAdapter(LocalDateTime::class.java,
         JsonDeserializer { json, _, _ ->
             val dateString = json.asString
             LocalDateTime.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        }).create()
+        })
+        .create()
 
     // Use a private backing field for retrofitBuilder
     private var _retrofitBuilder: Retrofit = createDefaultRetrofitBuilder()
@@ -135,7 +142,6 @@ object ApiInstance {
 
             // Add Authorization header if token is available
             TokenManager.getToken()?.let { token ->
-                println("Authorization Bearer ${token.accessToken}")
                 requestBuilder.addHeader("Authorization", "Bearer ${token.accessToken}")
             }
 
@@ -154,20 +160,20 @@ object ApiInstance {
         val httpCacheDirectory = File(context.cacheDir, "http-cache")
         val cache = Cache(httpCacheDirectory, cacheSize)
 
+
         val client = OkHttpClient.Builder().cache(cache) // Add cache to OkHttpClient
             .addInterceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()
 
                 // Add Authorization header if token is available
                 TokenManager.getToken()?.let { token ->
-                    println("Authorization Bearer ${token.accessToken}")
                     requestBuilder.addHeader("Authorization", "Bearer ${token.accessToken}")
                 }
 
                 // Add caching headers
                 requestBuilder.addHeader(
-                    "Cache-Control", "public, max-age=60"
-                ) // Cache for 60 seconds
+                    "Cache-Control", "public, max-age=60"// Cache for 60 seconds
+                ).addHeader("Content-Type", "application/json")
 
                 chain.proceed(requestBuilder.build())
             }.addNetworkInterceptor { chain ->

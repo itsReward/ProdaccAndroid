@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -139,13 +140,14 @@ fun JobCardDetailScreen(
                     jobCardName = jobCard!!.jobCardName,
                     navController = navController,
                     onClickPeople = { showDialog = !showDialog },
-                    onClickDelete = {}
+                    onClickDelete = { viewModel.setDeleteJobCardConfirmation(true) }
                 )
+
                 if (showDialog) {
                     TeamDialog(
                         onDismiss = { showDialog = !showDialog },
                         onAddNewTechnician = { },
-                        jobCard = jobCard!!,
+                        jobCard = jobCard,
                         employees = employeesViewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }
                             .groupBy { it.employeeName.first() }.toSortedMap()
                             .map {
@@ -156,6 +158,30 @@ fun JobCardDetailScreen(
                             },
                         onUpdateSupervisor = viewModel::updateSupervisor,
                         onUpdateServiceAdvisor = viewModel::updateServiceAdvisor
+                    )
+                }
+
+                if (viewModel.deleteJobCardConfirmation.collectAsState().value){
+                    AlertDialog(
+                        onDismissRequest = { viewModel.setDeleteJobCardConfirmation(false) },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                viewModel.deleteJobCard()
+                                navController.navigate(Route.JobCards.path)
+                                viewModel.setDeleteJobCardConfirmation(false)
+                            }) {
+                                Text(text = "Delete")
+                            }
+                        },
+                        dismissButton = {
+                            Button(onClick = { viewModel.setDeleteJobCardConfirmation(false) }) {
+                                Text(text = "Cancel")
+                            }
+
+                        },
+                        title = {Text(text = "Delete JobCard?")},
+                        text = { Text(text = "Are you sure you want to delete this job card?")}
+
                     )
                 }
 

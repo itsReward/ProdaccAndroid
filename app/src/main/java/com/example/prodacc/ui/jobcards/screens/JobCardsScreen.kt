@@ -1,15 +1,18 @@
 package com.example.prodacc.ui.jobcards.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -18,59 +21,54 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
+import com.example.designsystem.designComponents.BodyText
+import com.example.designsystem.designComponents.BodyTextItalic
 import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.JobStatusFilters
 import com.example.designsystem.designComponents.LargeJobCard
 import com.example.designsystem.designComponents.LargeTitleText
+import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.designComponents.SectionHeading
 import com.example.designsystem.designComponents.TopBar
-import com.example.designsystem.designComponents.VehiclesDropDown
+import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
-import com.example.designsystem.theme.vehicleIcon
+import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.DarkGrey
+import com.example.designsystem.theme.LightGrey
+import com.example.designsystem.theme.Orange
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
-import com.example.prodacc.ui.jobcards.viewModels.JobCardLoadState
+import com.example.prodacc.ui.jobcards.viewModels.LoadingState
 import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
-import com.example.prodacc.ui.vehicles.VehiclesViewModel
+import com.example.prodacc.ui.jobcards.viewModels.ReportLoadingState
 import com.prodacc.data.remote.TokenManager
-import java.time.LocalDateTime
 
 @Composable
 fun JobCardsScreen(
     navController: NavController,
-    viewModel: JobCardViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    vehiclesViewModel: VehiclesViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: JobCardViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val scroll = rememberScrollState()
-
-    var vehicleState = vehiclesViewModel.vehicleState.collectAsState()
-    val vehicles = vehiclesViewModel.vehicles.collectAsState()
 
     val jobCards = viewModel.jobCards.collectAsState()
     val pastJobCards = viewModel.pastJobCards.collectAsState()
@@ -114,7 +112,7 @@ fun JobCardsScreen(
 
         viewModel.jobCardLoadState.collectAsState().value.let { state ->
             when (state) {
-                is JobCardLoadState.Idle -> {
+                is LoadingState.Idle -> {
                     Column(
                         modifier = Modifier
                             .padding(innerPadding)
@@ -138,7 +136,7 @@ fun JobCardsScreen(
                     }
                 }
 
-                is JobCardLoadState.Loading -> {
+                is LoadingState.Loading -> {
                     Column(
                         modifier = Modifier
                             .padding(innerPadding)
@@ -163,7 +161,7 @@ fun JobCardsScreen(
                     }
                 }
 
-                is JobCardLoadState.Success -> {
+                is LoadingState.Success -> {
                     Column(
                         modifier = Modifier
                             .padding(innerPadding)
@@ -190,8 +188,9 @@ fun JobCardsScreen(
                         ) {
 
                             items(jobCards.value) { jobCard ->
-                                LargeJobCard(
-                                    jobCardName = jobCard.jobCardName.substringAfter(" ", " "),
+                                viewModel.fetchJobCardReports(jobCard.id)
+
+                                Card(
                                     onClick = {
                                         navController.navigate(
                                             Route.JobCardDetails.path.replace(
@@ -200,9 +199,114 @@ fun JobCardsScreen(
                                             )
                                         )
                                     },
-                                    jobCardDeadline = jobCard.jobCardDeadline
-                                        ?: LocalDateTime.now(),
-                                )
+                                    modifier = Modifier
+                                        .wrapContentHeight()
+                                        .fillMaxWidth(),
+                                    shape = RoundedCornerShape(20.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = CardGrey
+                                    )
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(vertical = 15.dp, horizontal = 20.dp)
+                                            .fillMaxHeight(),
+                                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 5.dp),
+                                        ) {
+                                            LargeTitleText(name = jobCard.jobCardName)
+                                            if (jobCard.jobCardDeadline != null){
+
+                                                BodyText(
+                                                    text = "Due: ${
+                                                        jobCard.jobCardDeadline!!.dayOfWeek.toString().lowercase()
+                                                            .replaceFirstChar { it.uppercase() }
+                                                    } ${jobCard.jobCardDeadline!!.hour}:${jobCard.jobCardDeadline!!.minute}",
+                                                    modifier = Modifier.padding(top = 2.dp)
+                                                )
+                                            } else {
+                                                Row (
+                                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ){
+                                                    Text(
+                                                        text = "No Set Deadline",
+                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        color = Orange,
+                                                        modifier = Modifier.padding(top = 2.dp)
+                                                    )
+                                                }
+
+                                            }
+
+
+
+                                        }
+
+                                        Row(
+                                            modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
+                                        ) {
+
+                                            val reportsMap = viewModel.reportsMap.collectAsState().value
+                                            when(val reportState = reportsMap[jobCard.id] ?: ReportLoadingState.Idle) {
+                                                is ReportLoadingState.Error -> {
+                                                    BodyTextItalic(text = reportState.message)
+                                                }
+                                                is ReportLoadingState.Idle -> {
+                                                    BodyTextItalic(text = "Load Report")
+                                                }
+                                                is ReportLoadingState.Loading -> {
+                                                    Row(
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                                    ) {
+                                                        CircularProgressIndicator(
+                                                            color = BlueA700,
+                                                            trackColor = Color.Transparent,
+                                                            modifier = Modifier.size(15.dp),
+                                                            strokeWidth = 1.dp
+                                                        )
+                                                        Text(text = "Loading Reports...", color = DarkGrey)
+                                                    }
+                                                }
+                                                is ReportLoadingState.Success -> {
+                                                    BodyTextItalic(text = reportState.response?.jobReport ?: "No Report")
+                                                }
+                                            }
+
+
+                                        }
+
+                                        Row(
+                                            modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            ProfileAvatar(
+                                                initials = "${jobCard.serviceAdvisorName.first()}",
+                                                modifier = Modifier.weight(2f),
+                                                color = LightGrey
+                                            )
+                                            //Text("Progress:", color = DarkGrey, modifier = Modifier.weight(2f))
+                                            LinearProgressIndicator(progress = { 3f / 5f }, modifier = Modifier.weight(2f))
+                                        }
+
+
+                                    }
+
+                                }
+
+
+
+
+
+
+
                             }
 
 
@@ -239,7 +343,7 @@ fun JobCardsScreen(
                     }
                 }
 
-                is JobCardLoadState.Error -> {
+                is LoadingState.Error -> {
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(5.dp))

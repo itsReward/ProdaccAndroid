@@ -67,10 +67,10 @@ class LogInViewModel(
                             is SignedInUser.UserSignInResult.Error -> LogInState.Error(user.message)
                             is SignedInUser.UserSignInResult.Success -> {
                                 signedInScreenShow()
-                                _loginState.value = LogInState.Success(result.token)
+                                println(SignedInUser.user)
                             }
                         }
-
+                        _loginState.value = LogInState.Success(result.token)
                     }
 
                     is LogInRepository.LoginResult.Error -> {

@@ -1,5 +1,8 @@
 package com.example.prodacc.ui.login
 
+import android.app.Activity
+import android.content.Context
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +64,7 @@ fun LogInScreen(
     navController: NavController,
     viewModel: LogInViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val context = LocalContext.current
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -122,6 +127,9 @@ fun LogInScreen(
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {
+                    val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    val currentFocus = (context as? Activity)?.currentFocus
+                    inputMethodManager.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
                     viewModel.logIn()
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -214,7 +222,10 @@ fun LogInScreen(
             }
             is LogInState.Success -> {
 
-                AnimatedVisibility(visible = viewModel.signedInScreen.collectAsState().value) {
+                AnimatedVisibility(
+                    visible = viewModel.signedInScreen.collectAsState().value,
+
+                ) {
                     Column (
                         modifier = Modifier
                             .clip(RoundedCornerShape(bottomEnd = 50.dp, bottomStart = 50.dp))

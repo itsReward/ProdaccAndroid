@@ -1,6 +1,7 @@
 package com.prodacc.data.remote.services
 
 import com.prodacc.data.remote.dao.JobCard
+import com.prodacc.data.remote.dao.NewJobCard
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -18,7 +19,7 @@ interface JobCardService {
     suspend fun getJobCard(@Path("id") id: UUID): Response<JobCard>
 
     @POST("/jobCards/new")
-    suspend fun createJobCard(@Body jobCard: JobCard): Response<JobCard>
+    suspend fun createJobCard(@Body jobCard: NewJobCard): Response<JobCard>
 
     @PUT("/jobCards/update/{id}")
     suspend fun updateJobCard(@Path("id") id: UUID, @Body jobCard: JobCard): Response<JobCard>

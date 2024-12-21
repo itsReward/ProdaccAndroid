@@ -13,24 +13,24 @@ import retrofit2.http.Path
 import java.util.UUID
 
 interface JobCardReportService {
-    @GET("getReportById/{id}")
+    @GET("/job-card-reports/getReportById/{id}")
     suspend fun getReportById(@Path("id") id: UUID): Response<JobCardReport>
 
-    @GET("getJobCardReports/{id}")
-    suspend fun getJobCardReports(@Path("id") id: UUID): Response<JobCardReport>
+    @GET("/job-card-reports/getJobCardReports/{id}")
+    suspend fun getJobCardReports(@Path("id") id: UUID): Response<List<JobCardReport>>
 
-    @GET("getAllJobCardReports/{id}")
+    @GET("/job-card-reports/getAllJobCardReports/{id}")
     suspend fun getAllJobCardReports(@Path("id") id: UUID): Response<List<JobCardReport>>
 
-    @POST("job-card-reports/new")
+    @POST("/job-card-reports/new")
     suspend fun createReport(@Body reportRequest: NewJobCardReport): Response<JobCardReport>
 
-    @PUT("job-cards-report/update/{id}")
+    @PUT("/job-cards-reports/update/{id}")
     suspend fun updateReport(
         @Path("id") id: UUID,
         @Body reportRequest: UpdateJobCardReport
     ): Response<JobCardReport>
 
-    @DELETE("job-cards-report/delete/{id}")
+    @DELETE("/job-cards-reports/delete/{id}")
     suspend fun deleteReport(@Path("id") id: UUID): Response<String>
 }

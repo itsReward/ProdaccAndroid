@@ -63,13 +63,15 @@ import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.LightOrange
 import com.example.designsystem.theme.Red
 import com.example.designsystem.theme.generateRandomColor
+import com.prodacc.data.remote.dao.JobCard
+import com.prodacc.data.remote.dao.JobCardReport
 import java.time.LocalDateTime
 
 @Composable
 fun LargeJobCard(
     onClick: () -> Unit,
-    jobCardName: String,
-    jobCardDeadline: LocalDateTime
+    jobCard: JobCard,
+    reports: List<JobCardReport>
 ) {
     Card(
         onClick = onClick,
@@ -92,14 +94,34 @@ fun LargeJobCard(
                     .fillMaxWidth()
                     .padding(top = 5.dp),
             ) {
-                LargeTitleText(name = jobCardName)
-                BodyText(
-                    text = "Due: ${
-                        jobCardDeadline.dayOfWeek.toString().lowercase()
-                            .replaceFirstChar { it.uppercase() }
-                    } ${jobCardDeadline.hour}:${jobCardDeadline.minute}",
-                    modifier = Modifier.padding(top = 2.dp)
-                )
+                LargeTitleText(name = jobCard.jobCardName)
+                if (jobCard.jobCardDeadline != null){
+                    BodyText(
+                        text = "Due: ${
+                            jobCard.jobCardDeadline!!.dayOfWeek.toString().lowercase()
+                                .replaceFirstChar { it.uppercase() }
+                        } ${jobCard.jobCardDeadline!!.hour}:${jobCard.jobCardDeadline!!.minute}",
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                } else {
+                    Row (
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Box(
+                            modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(Color.Red)
+                        )
+                        BodyText(
+                            text = "No Set Deadline",
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+
+                }
+
 
 
             }
@@ -107,15 +129,16 @@ fun LargeJobCard(
             Row(
                 modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
             ) {
-                BodyTextItalic(text = "Check the breaks, Check the tires, Steering need attention \nPerform major service")
+                BodyTextItalic(text = "Check the breaks, Check the tires, Steering need attention Perform major service")
             }
 
             Row(
-                //modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
+                modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ProfileAvatar(initials = "AT", modifier = Modifier.weight(2f))
+                //Text("Progress:", color = DarkGrey, modifier = Modifier.weight(2f))
                 LinearProgressIndicator(progress = { 3f / 5f }, modifier = Modifier.weight(2f))
             }
 
@@ -132,11 +155,9 @@ fun ProfileAvatar(
     initials: String,
     modifier: Modifier = Modifier,
     size: Dp = 40.dp,
-    textSize: TextUnit = 12.sp
+    textSize: TextUnit = 12.sp,
+    color: Color = generateRandomColor()
 ) {
-    val color by remember {
-        mutableStateOf(generateRandomColor())
-    }
 
     Row(modifier = modifier) {
 
