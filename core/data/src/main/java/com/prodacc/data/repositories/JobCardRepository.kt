@@ -42,20 +42,19 @@ class JobCardRepository {
             val response = jobCardService.createJobCard(newJobCard)
             when {
                 response.isSuccessful -> {
-                    response.body()?.let { jobCard ->
+
                         try {
                             val statusResponse = jobCardStatusService.addNewJobCardStatus(
-                                NewJobCardStatus(jobCard.id, "open")
+                                NewJobCardStatus(response.body()!!.id, "opened")
                             )
                             if (statusResponse.isSuccessful) {
-                                LoadingResult.SingleEntity(jobCard)
+                                LoadingResult.SingleEntity(response.body()!!)
                             } else {
                                 LoadingResult.Error("Failed to create job card status: ${statusResponse.errorBody()?.string()}")
                             }
                         } catch (e: Exception) {
-                            LoadingResult.Error("Failed to create job card status: ${e.message}")
+                            LoadingResult.Error("## ${e.message}")
                         }
-                    } ?: LoadingResult.Error("Response successful but body was null")
                 }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: "Unknown error"

@@ -5,6 +5,10 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -73,6 +77,7 @@ import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModelFactory
+import com.prodacc.data.remote.dao.JobCardReport
 import kotlinx.coroutines.launch
 
 
@@ -96,6 +101,12 @@ fun JobCardDetailScreen(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+
+    val serviceAdvisorReport: JobCardReport? = if (viewModel.jobCardReports.collectAsState().value.isNotEmpty()) {
+        viewModel.jobCardReports.collectAsState().value.first { it.reportType == "serviceAdvisorReport" }
+    } else {
+        null
+    }
 
 
     //checklist dialogs
@@ -342,29 +353,22 @@ fun JobCardDetailScreen(
 
 
                     Column {
-                        OutlinedTextField(
-                            value = "",
-                            onValueChange = { it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            label = {
-                                Text(
-                                    text = "Service Advisor Report"
-                                )
-                            }
+                        ReportTextField(
+                            value = viewModel.serviceAdvisorReport.collectAsState().value?.jobReport ?: "",
+                            onValueChange = { viewModel.updateServiceAdvisorReport(it) },
+                            label = "Service Advisor Report",
+                            isEdited = viewModel.isServiceAdvisorReportEdited.collectAsState().value,
+                            onSave = { viewModel.saveServiceAdvisorReport() },
+                            modifier = Modifier.fillMaxWidth()
                         )
-                        OutlinedTextField(
-                            value = "",
-                            onValueChange = { it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            label = {
-                                Text(
-                                    text = "Diagnostics Report"
-                                )
-                            }
+
+                        ReportTextField(
+                            value = viewModel.diagnosticsReport.collectAsState().value?.jobReport ?: "",
+                            onValueChange = { viewModel.updateDiagnosticsReport(it) },
+                            label = "Diagnostics Report",
+                            isEdited = viewModel.isDiagnosticsReportEdited.collectAsState().value,
+                            onSave = { viewModel.saveDiagnosticsReport() },
+                            modifier = Modifier.fillMaxWidth()
                         )
 
                         DateTimePickerTextField(
@@ -457,17 +461,13 @@ fun JobCardDetailScreen(
 
                     }
 
-                    OutlinedTextField(
-                        value = "",
-                        onValueChange = { it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        label = {
-                            Text(
-                                text = "Control Report"
-                            )
-                        }
+                    ReportTextField(
+                        value = viewModel.controlReport.collectAsState().value?.jobReport ?: "",
+                        onValueChange = { viewModel.updateControlReport(it) },
+                        label = "Control Report",
+                        isEdited = viewModel.isControlReportEdited.collectAsState().value,
+                        onSave = { viewModel.saveControlReport() },
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     DateTimePickerTextField(
@@ -615,5 +615,42 @@ fun JobCardDetailScreen(
 
     }
 
+}
+
+
+@Composable
+fun ReportTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    isEdited: Boolean,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            label = { Text(text = label) }
+        )
+
+        AnimatedVisibility(
+            visible = isEdited,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Button(
+                onClick = onSave,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(top = 8.dp)
+            ) {
+                Text("Save Changes")
+            }
+        }
+    }
 }
 

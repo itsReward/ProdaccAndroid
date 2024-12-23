@@ -6,7 +6,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.vehicles.viewModels.EditVehicleDetailsViewModel
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.JobCard
+import com.prodacc.data.remote.dao.JobCardReport
+import com.prodacc.data.repositories.JobCardReportRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardStatusRepository
 import com.prodacc.data.repositories.TimeSheetRepository
@@ -22,10 +25,14 @@ class JobCardDetailsViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
     private val timeSheetRepository: TimeSheetRepository = TimeSheetRepository(),
+    private val jobCardReportRepository: JobCardReportRepository = JobCardReportRepository(),
     private val jobId: String
 ):ViewModel() {
     private val _jobCard = MutableStateFlow<JobCard?>(null)
     val jobCard = _jobCard.asStateFlow()
+
+    private val _jobCardReports = MutableStateFlow<List<JobCardReport>>(emptyList())
+    val jobCardReports = _jobCardReports.asStateFlow()
 
     private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val loadingState = _loadingState.asStateFlow()
@@ -33,6 +40,7 @@ class JobCardDetailsViewModel(
     init {
         viewModelScope.launch {
             fetchJobCard()
+
         }
     }
 
@@ -45,6 +53,29 @@ class JobCardDetailsViewModel(
 
 
     val jobCardStatusList = jobCardStatusRepository.generateJobCardStatus(UUID.randomUUID())
+
+    // States for each report type
+    private val _serviceAdvisorReport = MutableStateFlow<JobCardReport?>(null)
+    val serviceAdvisorReport = _serviceAdvisorReport.asStateFlow()
+
+    private val _diagnosticsReport = MutableStateFlow<JobCardReport?>(null)
+    val diagnosticsReport = _diagnosticsReport.asStateFlow()
+
+    private val _controlReport = MutableStateFlow<JobCardReport?>(null)
+    val controlReport = _controlReport.asStateFlow()
+
+    // Report editing states
+    private val _isServiceAdvisorReportEdited = MutableStateFlow(false)
+    val isServiceAdvisorReportEdited = _isServiceAdvisorReportEdited.asStateFlow()
+
+    private val _isDiagnosticsReportEdited = MutableStateFlow(false)
+    val isDiagnosticsReportEdited = _isDiagnosticsReportEdited.asStateFlow()
+
+    private val _isControlReportEdited = MutableStateFlow(false)
+    val isControlReportEdited = _isControlReportEdited.asStateFlow()
+
+
+
     val timesheets = timeSheetRepository.getTimeSheets()
 
     val teamExpanded = mutableStateOf(false)
@@ -56,6 +87,7 @@ class JobCardDetailsViewModel(
     fun refreshJobCard() {
         viewModelScope.launch {
             fetchJobCard()
+            fetchJobCardReports()
         }
     }
 
@@ -91,6 +123,8 @@ class JobCardDetailsViewModel(
 
     }
 
+
+
     suspend fun fetchJobCard(){
         _loadingState.value = LoadingState.Loading
         try {
@@ -124,6 +158,109 @@ class JobCardDetailsViewModel(
             }
         }
     }
+
+    private fun fetchJobCardReports() {
+        viewModelScope.launch {
+            when (val response =
+                jobCardReportRepository.getJobCardReports(UUID.fromString(jobId))) {
+                is JobCardReportRepository.LoadingResult.Success -> {
+                    val reports = response.response
+                    _jobCardReports.value = reports
+
+                    // Populate individual report states
+                    _serviceAdvisorReport.value =
+                        reports.find { it.reportType == "serviceAdvisorReport" }
+                    _diagnosticsReport.value = reports.find { it.reportType == "diagnosticsReport" }
+                    _controlReport.value = reports.find { it.reportType == "controlReport" }
+                }
+
+                else -> { /* Handle errors */
+                }
+            }
+        }
+    }
+
+
+    fun updateServiceAdvisorReport(newReport: String) {
+        val existingReport = jobCardReports.value.find { it.reportType == "serviceAdvisorReport" }
+        _serviceAdvisorReport.value = existingReport?.copy(jobReport = newReport) ?:
+                JobCardReport(
+                    reportId = UUID.randomUUID(),
+                    jobCardId = UUID.fromString(jobId),
+                    employeeId = SignedInUser.user!!.employeeId, // Set actual employee ID
+                    reportType = "serviceAdvisorReport",
+                    jobReport = newReport
+                )
+        _isServiceAdvisorReportEdited.value = true
+    }
+
+
+    fun updateDiagnosticsReport(newReport: String) {
+        val existingReport = jobCardReports.value.find { it.reportType == "diagnosticsReport" }
+        _diagnosticsReport.value = existingReport?.copy(jobReport = newReport) ?:
+                JobCardReport(
+                    reportId = UUID.randomUUID(),
+                    jobCardId = UUID.fromString(jobId),
+                    employeeId = SignedInUser.user!!.employeeId, // Set actual employee ID
+                    reportType = "diagnosticsReport",
+                    jobReport = newReport
+                )
+        _isDiagnosticsReportEdited.value = true
+    }
+
+
+    fun updateControlReport(newReport: String) {
+        val existingReport = jobCardReports.value.find { it.reportType == "controlReport" }
+        _controlReport.value = existingReport?.copy(jobReport = newReport) ?:
+                JobCardReport(
+                    reportId = UUID.randomUUID(),
+                    jobCardId = UUID.fromString(jobId),
+                    employeeId = SignedInUser.user!!.employeeId, // Set actual employee ID
+                    reportType = "diagnosticsReport",
+                    jobReport = newReport
+                )
+        _isControlReportEdited.value = true
+    }
+
+
+    fun saveServiceAdvisorReport() {
+        _serviceAdvisorReport.value?.let { report ->
+            saveReport(report)
+            _isServiceAdvisorReportEdited.value = false
+        }
+    }
+
+    fun saveDiagnosticsReport() {
+        _diagnosticsReport.value?.let { report ->
+            saveReport(report)
+            _isDiagnosticsReportEdited.value = false
+        }
+    }
+
+    fun saveControlReport() {
+        _controlReport.value?.let { report ->
+            saveReport(report)
+            _isControlReportEdited.value = false
+        }
+    }
+
+    private fun saveReport(report: JobCardReport) {
+        viewModelScope.launch {
+            try {
+                if (jobCardReports.value.any { it.reportType == report.reportType }) {
+                    // Update existing report
+                    jobCardReportRepository.updateJobCardReport(report)
+                } else {
+                    // Create new report
+                    jobCardReportRepository.saveJobCardReport(report)
+                }
+                fetchJobCardReports() // Refresh reports after save/update
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
 
     fun updateJobCardStatus(status: String){
 

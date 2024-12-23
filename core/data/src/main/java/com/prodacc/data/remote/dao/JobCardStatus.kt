@@ -12,7 +12,7 @@ data class JobCardStatus (
 )
 
 data class NewJobCardStatus (
-    @SerializedName("jobId") val jobId : UUID,
+    @SerializedName("jobCardId") val jobCardId : UUID,
     @SerializedName("status") val status : String,
     @SerializedName("createdAt") val createdAt : LocalDateTime?= null
 )

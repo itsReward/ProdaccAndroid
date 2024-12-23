@@ -1,6 +1,8 @@
 package com.example.designsystem.designComponents
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +46,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -51,6 +54,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.dialog.Dialog
+import com.example.designsystem.R
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
@@ -156,7 +160,8 @@ fun ProfileAvatar(
     modifier: Modifier = Modifier,
     size: Dp = 40.dp,
     textSize: TextUnit = 12.sp,
-    color: Color = generateRandomColor()
+    color: Color = generateRandomColor(),
+    textColor: Color = Color.White
 ) {
 
     Row(modifier = modifier) {
@@ -167,18 +172,18 @@ fun ProfileAvatar(
                 .clip(CircleShape)
                 .size(size)
                 .background(color)
-            //.border(1.dp, LightGrey, CircleShape)
+                //.border(0.25.dp, Grey, CircleShape)
             ,
             contentAlignment = Alignment.Center
         ) {
             /*Image(
                 painter = painterResource(id = R.drawable.profile_avatar),
                 contentDescription = "Profile Icon",
-                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(LightGrey),
+                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Grey),
                 modifier = Modifier.size(20.dp)
 
             )*/
-            Text(text = initials, color = Color.White, fontSize = textSize)
+            Text(text = initials, color = textColor, fontSize = textSize)
 
         }
     }

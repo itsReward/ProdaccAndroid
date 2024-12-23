@@ -1,6 +1,7 @@
 package com.example.prodacc.ui.jobcards.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -39,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.BodyText
@@ -53,14 +56,19 @@ import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
+import com.example.designsystem.theme.DarkOrange
 import com.example.designsystem.theme.LightGrey
+import com.example.designsystem.theme.LightOrange
 import com.example.designsystem.theme.Orange
+import com.example.designsystem.theme.Red
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.jobcards.viewModels.LoadingState
 import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
 import com.example.prodacc.ui.jobcards.viewModels.ReportLoadingState
+import com.example.prodacc.ui.jobcards.viewModels.StatusLoadingState
 import com.prodacc.data.remote.TokenManager
 
 @Composable
@@ -72,6 +80,9 @@ fun JobCardsScreen(
 
     val jobCards = viewModel.jobCards.collectAsState()
     val pastJobCards = viewModel.pastJobCards.collectAsState()
+
+    val reportsMap = viewModel.reportsMap.collectAsState().value
+    val statusMap = viewModel.statusMap.collectAsState().value
 
     Scaffold(
         topBar = {
@@ -167,12 +178,13 @@ fun JobCardsScreen(
                             .padding(innerPadding)
                             .verticalScroll(scroll)
                     ) {
+
                         SectionHeading(
                             text = "Today's Jobs",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(start = 25.dp, top = 10.dp),
-                            textAlign = TextAlign.Start
+                            textAlign = TextAlign.Center
                         )
 
                         JobStatusFilters()
@@ -189,6 +201,7 @@ fun JobCardsScreen(
 
                             items(jobCards.value) { jobCard ->
                                 viewModel.fetchJobCardReports(jobCard.id)
+                                viewModel.fetchJobCardStatus(jobCard.id)
 
                                 Card(
                                     onClick = {
@@ -251,8 +264,7 @@ fun JobCardsScreen(
                                             modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
                                         ) {
 
-                                            val reportsMap = viewModel.reportsMap.collectAsState().value
-                                            when(val reportState = reportsMap[jobCard.id] ?: ReportLoadingState.Idle) {
+                                            when (val reportState = reportsMap[jobCard.id] ?: ReportLoadingState.Idle) {
                                                 is ReportLoadingState.Error -> {
                                                     BodyTextItalic(text = reportState.message)
                                                 }
@@ -271,12 +283,13 @@ fun JobCardsScreen(
                                                             modifier = Modifier.size(15.dp),
                                                             strokeWidth = 1.dp
                                                         )
-                                                        Text(text = "Loading Reports...", color = DarkGrey)
+                                                        Text(text = "Loading Report...", color = DarkGrey)
                                                     }
                                                 }
                                                 is ReportLoadingState.Success -> {
-                                                    BodyTextItalic(text = reportState.response?.jobReport ?: "No Report")
+                                                    BodyTextItalic(text = reportState.response?.jobReport ?: "${jobCard.serviceAdvisorName}'s report missing")
                                                 }
+
                                             }
 
 
@@ -289,11 +302,59 @@ fun JobCardsScreen(
                                         ) {
                                             ProfileAvatar(
                                                 initials = "${jobCard.serviceAdvisorName.first()}",
-                                                modifier = Modifier.weight(2f),
-                                                color = LightGrey
+                                                modifier = Modifier
+                                                    .weight(2f),
+                                                color = LightGrey,
+                                                textColor = DarkGrey
                                             )
                                             //Text("Progress:", color = DarkGrey, modifier = Modifier.weight(2f))
-                                            LinearProgressIndicator(progress = { 3f / 5f }, modifier = Modifier.weight(2f))
+
+                                            when (val status = statusMap[jobCard.id]){
+                                                is StatusLoadingState.Error -> {
+                                                    Text(text = status.message, color = Orange, fontSize = 12.sp)
+                                                }
+                                                is StatusLoadingState.Idle -> {
+                                                    Text(text = "Load Status", color = Orange, fontSize = 10.sp)
+                                                }
+                                                is StatusLoadingState.Loading -> {
+                                                    LinearProgressIndicator(
+                                                        color = BlueA700,
+                                                        trackColor = Color.Transparent,
+                                                        modifier = Modifier.height(2.dp)
+                                                    )
+                                                }
+                                                is StatusLoadingState.Success -> {
+                                                    if (status.response?.status != null && status.response.status.isNotBlank()) {
+                                                        LinearProgressIndicator(
+                                                            progress = {
+                                                                when (status.response.status){
+                                                                    "opened" -> 0.15f / 6f
+                                                                    "diagnostics" -> 2f / 6f
+                                                                    "approval" -> 3f / 6f
+                                                                    "work in progress" -> 4f / 6f
+                                                                    "testing" -> 5f / 6f
+                                                                    "done" -> 6f / 6f
+                                                                    "frozen" -> 0f
+                                                                    else -> 0f
+                                                                }
+                                                            },
+                                                            modifier = Modifier.height(5.dp).clip(RoundedCornerShape(10.dp)),
+                                                            color = when (status.response.status){
+                                                                "done" -> DarkGreen
+                                                                "frozen" -> Red
+                                                                else -> BlueA700
+                                                            }
+                                                        )
+                                                    } else {
+                                                        Text(text = "No Status", color = Color.Red, fontSize = 10.sp)
+
+                                                    }
+
+                                                }
+                                                null -> {
+                                                    Text(text = "HUGE ERROR ", color = Color.Red, fontSize = 10.sp)
+                                                }
+                                            }
                                         }
 
 
@@ -365,4 +426,6 @@ fun JobCardsScreen(
 
     }
 }
+
+
 
