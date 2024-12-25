@@ -194,6 +194,9 @@ class JobCardDetailsViewModel(
         _isServiceAdvisorReportEdited.value = true
     }
 
+    fun editDiagnosticsReport(newReport: String){
+        _diagnosticsReport.value = _diagnosticsReport.value?.copy(jobReport = newReport)
+    }
 
     fun updateDiagnosticsReport(newReport: String) {
         val existingReport = jobCardReports.value.find { it.reportType == "diagnosticsReport" }
