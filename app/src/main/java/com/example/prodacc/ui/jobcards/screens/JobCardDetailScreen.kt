@@ -355,7 +355,7 @@ fun JobCardDetailScreen(
                     Column {
                         ReportTextField(
                             value = viewModel.serviceAdvisorReport.collectAsState().value?.jobReport ?: "",
-                            onValueChange = { viewModel.updateServiceAdvisorReport(it) },
+                            onValueChange = { viewModel.editServiceAdvisorReport(it) },
                             label = "Service Advisor Report",
                             isEdited = viewModel.isServiceAdvisorReportEdited.collectAsState().value,
                             onSave = { viewModel.saveServiceAdvisorReport() },
@@ -364,7 +364,7 @@ fun JobCardDetailScreen(
 
                         ReportTextField(
                             value = viewModel.diagnosticsReport.collectAsState().value?.jobReport ?: "",
-                            onValueChange = { viewModel.updateDiagnosticsReport(it) },
+                            onValueChange = { viewModel.editDiagnosticsReport(it) },
                             label = "Diagnostics Report",
                             isEdited = viewModel.isDiagnosticsReportEdited.collectAsState().value,
                             onSave = { viewModel.saveDiagnosticsReport() },
@@ -463,7 +463,7 @@ fun JobCardDetailScreen(
 
                     ReportTextField(
                         value = viewModel.controlReport.collectAsState().value?.jobReport ?: "",
-                        onValueChange = { viewModel.updateControlReport(it) },
+                        onValueChange = { viewModel.editControlReport(it) },
                         label = "Control Report",
                         isEdited = viewModel.isControlReportEdited.collectAsState().value,
                         onSave = { viewModel.saveControlReport() },

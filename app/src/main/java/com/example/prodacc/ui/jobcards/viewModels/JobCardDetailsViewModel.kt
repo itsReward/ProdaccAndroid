@@ -198,6 +198,14 @@ class JobCardDetailsViewModel(
         _diagnosticsReport.value = _diagnosticsReport.value?.copy(jobReport = newReport)
     }
 
+    fun editControlReport(newReport: String){
+        _controlReport.value = _controlReport.value?.copy(jobReport = newReport)
+    }
+
+    fun editServiceAdvisorReport(newReport: String){
+        _serviceAdvisorReport.value = _serviceAdvisorReport.value?.copy(jobReport = newReport)
+    }
+
     fun updateDiagnosticsReport(newReport: String) {
         val existingReport = jobCardReports.value.find { it.reportType == "diagnosticsReport" }
         _diagnosticsReport.value = existingReport?.copy(jobReport = newReport) ?:
