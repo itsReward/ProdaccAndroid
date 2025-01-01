@@ -356,7 +356,7 @@ fun JobCardDetailScreen(
                         ReportTextField(
                             value = viewModel.serviceAdvisorReport.collectAsState().value?.jobReport ?: "",
                             onValueChange = { viewModel.editServiceAdvisorReport(it) },
-                            label = "Service Advisor Report",
+                            label = if (viewModel.serviceAdvisorReport.collectAsState().value != null)"Service Advisor Report" else "New Service Advisor Report",
                             isEdited = viewModel.isServiceAdvisorReportEdited.collectAsState().value,
                             onSave = { viewModel.saveServiceAdvisorReport() },
                             modifier = Modifier.fillMaxWidth()

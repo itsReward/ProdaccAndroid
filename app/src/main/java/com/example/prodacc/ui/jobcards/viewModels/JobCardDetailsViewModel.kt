@@ -40,7 +40,7 @@ class JobCardDetailsViewModel(
     init {
         viewModelScope.launch {
             fetchJobCard()
-
+            fetchJobCardReports()
         }
     }
 
@@ -125,7 +125,7 @@ class JobCardDetailsViewModel(
 
 
 
-    suspend fun fetchJobCard(){
+    private suspend fun fetchJobCard(){
         _loadingState.value = LoadingState.Loading
         try {
             val id = UUID.fromString(jobId)
@@ -203,7 +203,16 @@ class JobCardDetailsViewModel(
     }
 
     fun editServiceAdvisorReport(newReport: String){
-        _serviceAdvisorReport.value = _serviceAdvisorReport.value?.copy(jobReport = newReport)
+        _serviceAdvisorReport.value = _serviceAdvisorReport.value?.copy(jobReport = newReport).let {
+            JobCardReport(
+                reportId = UUID.randomUUID(),
+                jobCardId = UUID.fromString(jobId),
+                employeeId = SignedInUser.user!!.employeeId,
+                jobReport = newReport,
+                reportType = "serviceAdvisorReport"
+            )
+        }
+        _isServiceAdvisorReportEdited.value = true
     }
 
     fun updateDiagnosticsReport(newReport: String) {
