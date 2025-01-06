@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.ControlChecklist
@@ -77,6 +78,8 @@ import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModelFactory
+import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModel
+import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModelFactory
 import com.prodacc.data.remote.dao.JobCardReport
 import kotlinx.coroutines.launch
 
@@ -86,8 +89,11 @@ import kotlinx.coroutines.launch
 fun JobCardDetailScreen(
     navController: NavController,
     jobCardId: String,
-    viewModel: JobCardDetailsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+    viewModel: JobCardDetailsViewModel = viewModel(
         factory = JobCardDetailsViewModelFactory(jobCardId)
+    ),
+    reportsViewModel: JobCardReportsViewModel = viewModel(
+        factory = JobCardReportsViewModelFactory(jobCardId)
     )
 ) {
     val employeesViewModel = EmployeesViewModel()
@@ -101,13 +107,6 @@ fun JobCardDetailScreen(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
-
-    val serviceAdvisorReport: JobCardReport? = if (viewModel.jobCardReports.collectAsState().value.isNotEmpty()) {
-        viewModel.jobCardReports.collectAsState().value.first { it.reportType == "serviceAdvisorReport" }
-    } else {
-        null
-    }
-
 
     //checklist dialogs
     var showStateChecklistDialog by remember {
@@ -354,20 +353,20 @@ fun JobCardDetailScreen(
 
                     Column {
                         ReportTextField(
-                            value = viewModel.serviceAdvisorReport.collectAsState().value?.jobReport ?: "",
-                            onValueChange = { viewModel.editServiceAdvisorReport(it) },
-                            label = if (viewModel.serviceAdvisorReport.collectAsState().value != null)"Service Advisor Report" else "New Service Advisor Report",
-                            isEdited = viewModel.isServiceAdvisorReportEdited.collectAsState().value,
-                            onSave = { viewModel.saveServiceAdvisorReport() },
+                            value = reportsViewModel.serviceAdvisorReport.collectAsState().value?.jobReport ?: "",
+                            onValueChange = { reportsViewModel.editServiceAdvisorReport(it) },
+                            label = if (reportsViewModel.serviceAdvisorReport.collectAsState().value != null)"Service Advisor Report" else "New Service Advisor Report",
+                            isEdited = reportsViewModel.isServiceAdvisorReportEdited.collectAsState().value,
+                            onSave = { reportsViewModel.saveServiceAdvisorReport() },
                             modifier = Modifier.fillMaxWidth()
                         )
 
                         ReportTextField(
-                            value = viewModel.diagnosticsReport.collectAsState().value?.jobReport ?: "",
-                            onValueChange = { viewModel.editDiagnosticsReport(it) },
-                            label = "Diagnostics Report",
-                            isEdited = viewModel.isDiagnosticsReportEdited.collectAsState().value,
-                            onSave = { viewModel.saveDiagnosticsReport() },
+                            value = reportsViewModel.diagnosticsReport.collectAsState().value?.jobReport ?: "",
+                            onValueChange = { reportsViewModel.editDiagnosticsReport(it) },
+                            label = if (reportsViewModel.diagnosticsReport.collectAsState().value != null)"Diagnostics Report" else "New Diagnostics Report",
+                            isEdited = reportsViewModel.isDiagnosticsReportEdited.collectAsState().value,
+                            onSave = { reportsViewModel.saveDiagnosticsReport() },
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -462,11 +461,11 @@ fun JobCardDetailScreen(
                     }
 
                     ReportTextField(
-                        value = viewModel.controlReport.collectAsState().value?.jobReport ?: "",
-                        onValueChange = { viewModel.editControlReport(it) },
-                        label = "Control Report",
-                        isEdited = viewModel.isControlReportEdited.collectAsState().value,
-                        onSave = { viewModel.saveControlReport() },
+                        value = reportsViewModel.controlReport.collectAsState().value?.jobReport ?: "",
+                        onValueChange = { reportsViewModel.editControlReport(it) },
+                        label = if (reportsViewModel.controlReport.collectAsState().value != null)"Control Report" else "New Control Report",
+                        isEdited = reportsViewModel.isControlReportEdited.collectAsState().value,
+                        onSave = { reportsViewModel.saveControlReport() },
                         modifier = Modifier.fillMaxWidth()
                     )
 

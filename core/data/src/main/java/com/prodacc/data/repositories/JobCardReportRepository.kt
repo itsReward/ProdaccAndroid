@@ -28,7 +28,7 @@ class JobCardReportRepository {
         }
     }
 
-    suspend fun saveJobCardReport(report: JobCardReport): LoadingResult {
+    suspend fun newJobCardReport(report: JobCardReport): LoadingResult {
         return try {
             val response = service.createReport(
                 NewJobCardReport(
