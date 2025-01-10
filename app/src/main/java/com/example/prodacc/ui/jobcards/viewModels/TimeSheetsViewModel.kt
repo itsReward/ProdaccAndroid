@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.time.LocalDateTime
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 
 class TimeSheetsViewModel(
     private val timeSheetRepository: TimeSheetRepository = TimeSheetRepository(),
@@ -29,6 +30,8 @@ class TimeSheetsViewModel(
 
     private val _newTimeSheetLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val newTimeSheetLoadState = _newTimeSheetLoadState.asStateFlow()
+
+    private val _isSavingNewTimeSheet = AtomicBoolean(false)
 
     //New TimeSheet
     private val _newTimeSheet = MutableStateFlow<CreateTimesheet>(CreateTimesheet(technicianId = signedInUser.user!!.employeeId, jobCardId = UUID.fromString(jobCardId)))
@@ -57,9 +60,17 @@ class TimeSheetsViewModel(
     }
 
     fun saveTimesheet(){
-        viewModelScope.launch {
-            addTimesheets()
+        if (_isSavingNewTimeSheet.compareAndSet(false, true)){
+            viewModelScope.launch {
+                try {
+                    addTimesheets()
+                } finally {
+                    _isSavingNewTimeSheet.set(false)
+                }
+
+            }
         }
+
     }
 
 

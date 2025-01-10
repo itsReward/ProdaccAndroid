@@ -13,7 +13,7 @@ interface JobCardTechniciansService {
     @GET("job-card-technicians/allEntities")
     suspend fun getAllJobCardTechnicians(): Response<List<JobCardTechnician>>
 
-    @GET("job-card-technicians/{id}")
+    @GET("job-card-technicians/getAllJobCardTechnicians/{id}")
     suspend fun getTechniciansForJobCard(@Path("id") jobCardId: UUID): Response<List<UUID>>
 
     @GET("job-card-technicians/getJobCardsByTechnician/{id}")

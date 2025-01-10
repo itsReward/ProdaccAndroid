@@ -2,8 +2,11 @@ package com.example.prodacc.ui.employees.viewModels
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.designsystem.designComponents.EmployeeListCategory
+import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.repositories.EmployeeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,5 +61,18 @@ class EmployeesViewModel(
         data object Success : LoadState()
         data class Error(val message: String) : LoadState()
 
+    }
+}
+
+class EmployeesViewModelFactory : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(
+        modelClass: Class<T>,
+        extras: CreationExtras
+    ): T {
+        if (modelClass.isAssignableFrom(EmployeesViewModel::class.java)) {
+            return EmployeesViewModel() as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

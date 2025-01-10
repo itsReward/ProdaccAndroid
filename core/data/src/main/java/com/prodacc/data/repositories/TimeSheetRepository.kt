@@ -67,16 +67,7 @@ class TimeSheetRepository {
 
     suspend fun addTimeSheet(timesheet: NewTimesheet): LoadingResult {
         return try {
-            println("Request URL: ${service.addTimesheet(timesheet).raw().request().url()}")
-            println("Request Body: $timesheet")
-            println("Headers: ${service.addTimesheet(timesheet).raw().request().headers()}")
-
             val response = service.addTimesheet(timesheet)
-
-            println("Response Code: ${response.code()}")
-            println("Response Message: ${response.message()}")
-            println("Response Body: ${response.errorBody()?.string()}")
-
             if (response.isSuccessful){
                 if (response.body() == null){
                     LoadingResult.Error("No TimeSheet Response")
@@ -84,13 +75,9 @@ class TimeSheetRepository {
                     LoadingResult.TimeSheet(response.body()!!)
                 }
             } else {
-                LoadingResult.Error("Error: ${response.code()}")
+                LoadingResult.Error("Error: ${response.code()} ${response.errorBody()}")
             }
         } catch (e: Exception){
-
-            println("Exception: ${e.message}")
-            println("Stack trace: ${e.stackTrace}")
-
             when (e){
                 is IOException -> LoadingResult.Error("Network Error")
                 else -> LoadingResult.Error(e.message ?: "Unknown Error")

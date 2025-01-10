@@ -68,7 +68,6 @@ class JobCardReportsViewModel(
                     _serviceAdvisorReport.value =
                         reports.find { it.reportType == "serviceAdvisorReport" }
 
-                    println(_serviceAdvisorReport.value)
                     _serviceAdvisorReportLoadingState.value = LoadingState.Success
 
                     _diagnosticsReport.value = reports.find { it.reportType == "diagnosticsReport" }
@@ -152,7 +151,6 @@ class JobCardReportsViewModel(
             try {
                 if (jobCardReports.value.any { it.reportType == report.reportType }) {
                     // Update existing report
-                    println(report.reportId)
                     jobCardReportRepository.updateJobCardReport(report.reportId, report)
                 } else {
                     // Create new report

@@ -72,7 +72,6 @@ import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.ServiceChecklist
 import com.example.designsystem.designComponents.StateChecklist
 import com.example.designsystem.designComponents.StepIndicator
-import com.example.designsystem.designComponents.TeamDialog
 import com.example.designsystem.designComponents.Timesheets
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.BlueA700
@@ -84,10 +83,15 @@ import com.example.designsystem.theme.Red
 import com.example.designsystem.theme.checklistIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
+import com.example.prodacc.ui.employees.viewModels.EmployeesViewModelFactory
+import com.example.prodacc.ui.jobcards.viewModels.ControlChecklistViewModel
+import com.example.prodacc.ui.jobcards.viewModels.ControlChecklistViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModelFactory
+import com.example.prodacc.ui.jobcards.viewModels.JobCardTechnicianViewModel
+import com.example.prodacc.ui.jobcards.viewModels.JobCardTechnicianViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModelFactory
 import com.prodacc.data.remote.dao.CreateTimesheet
@@ -112,9 +116,17 @@ fun JobCardDetailScreen(
     ),
     timeSheetViewModel: TimeSheetsViewModel = viewModel(
         factory = TimeSheetsViewModelFactory(jobCardId)
+    ),
+    jobCardTechnicianViewModel: JobCardTechnicianViewModel = viewModel(
+        factory = JobCardTechnicianViewModelFactory(jobCardId)
+    ),
+    employeesViewModel: EmployeesViewModel = viewModel(
+        factory = EmployeesViewModelFactory()
+    ),
+    controlChecklistViewModel: ControlChecklistViewModel = viewModel(
+        factory = ControlChecklistViewModelFactory(jobCardId)
     )
 ) {
-    val employeesViewModel = EmployeesViewModel()
     val jobCard = viewModel.jobCard.collectAsState().value
 
     val scroll = rememberScrollState()
@@ -125,6 +137,7 @@ fun JobCardDetailScreen(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    val newTimeSheetLoadState by timeSheetViewModel.newTimeSheetLoadState.collectAsState()
 
     //checklist dialogs
     var showStateChecklistDialog by remember {
@@ -174,7 +187,7 @@ fun JobCardDetailScreen(
                 if (showDialog) {
                     TeamDialog(
                         onDismiss = { showDialog = !showDialog },
-                        onAddNewTechnician = { },
+                        onAddNewTechnician = jobCardTechnicianViewModel::addTechnician,
                         jobCard = jobCard,
                         employees = employeesViewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }
                             .groupBy { it.employeeName.first() }.toSortedMap()
@@ -185,7 +198,9 @@ fun JobCardDetailScreen(
                                 )
                             },
                         onUpdateSupervisor = viewModel::updateSupervisor,
-                        onUpdateServiceAdvisor = viewModel::updateServiceAdvisor
+                        onUpdateServiceAdvisor = viewModel::updateServiceAdvisor,
+                        technicians = jobCardTechnicianViewModel.technicians.collectAsState().value,
+                        techniciansLoadingState = jobCardTechnicianViewModel.loadingState.collectAsState().value
                     )
                 }
 
@@ -555,10 +570,13 @@ fun JobCardDetailScreen(
     }
 
 
+
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = {
-                showBottomSheet = false
+                if (newTimeSheetLoadState !is TimeSheetsViewModel.LoadingState.Loading) {
+                    showBottomSheet = false
+                }
             },
             sheetState = sheetState,
             containerColor = Color.White
@@ -566,7 +584,12 @@ fun JobCardDetailScreen(
             // Sheet content
             NewTimeSheet(
                 onDismiss = {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                    scope.launch {
+                        // Only dismiss if not in loading state
+                        if (newTimeSheetLoadState !is TimeSheetsViewModel.LoadingState.Loading) {
+                            sheetState.hide()
+                        }
+                    }.invokeOnCompletion {
                         if (!sheetState.isVisible) {
                             showBottomSheet = false
                         }
@@ -677,7 +700,8 @@ fun JobCardDetailScreen(
                 jobCard?.jobCardName?.let {
                     ControlChecklist(
                         jobCardName = it,
-                        onClose = { showControlChecklistDialog = false })
+                        onClose = { showControlChecklistDialog = false }
+                    )
                 }
 
             }
@@ -823,6 +847,7 @@ fun NewTimeSheet(
     onReportChange: (String) -> Unit,
     saveState: TimeSheetsViewModel.LoadingState
 ) {
+    val lastClickTime = remember { mutableStateOf(0L) }
 
     when (saveState) {
         is TimeSheetsViewModel.LoadingState.Loading -> {
@@ -833,10 +858,26 @@ fun NewTimeSheet(
         }
 
         is TimeSheetsViewModel.LoadingState.Success -> {
-            Text(text = "Timesheet Saved")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 50.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(imageVector = Icons.Default.Check, contentDescription = "Check", tint = DarkGreen)
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(text = "Timesheet Saved")
+            }
+
+            val scope = rememberCoroutineScope()
             LaunchedEffect(Unit) {
-                delay(1000L)
-                onDismiss()
+                scope.launch {
+                    delay(1000L)
+                    onDismiss()
+                }.invokeOnCompletion {
+                    resetState()
+                }
             }
         }
 
@@ -881,7 +922,14 @@ fun NewTimeSheet(
                     TextButton(onClick = onDismiss) {
                         Text(text = "Cancel", color = BlueA700, fontWeight = FontWeight.SemiBold)
                     }
-                    Button(onClick = saveSheet) {
+                    Button(onClick = {
+                        val currentTime = System.currentTimeMillis()
+                        if (currentTime - lastClickTime.value > 1000) { // 1 second debounce
+                            lastClickTime.value = currentTime
+                            saveSheet()
+                        }
+                    }
+                    ) {
                         Text(text = "Save")
                     }
                 }

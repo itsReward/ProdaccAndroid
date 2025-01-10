@@ -62,17 +62,13 @@ class JobCardReportRepository {
                     reportType = report.reportType
                 )
             )
-            println(report)
-            println(response)
             if (response.isSuccessful) {
-                println(response.body()!!)
                 LoadingResult.SingleEntitySuccess(response.body()!!)
 
             } else {
                 LoadingResult.Error(response.message())
             }
         } catch (e: Exception) {
-            println(e)
             when (e) {
                 is IOException -> LoadingResult.Error("Network Error")
                 else -> LoadingResult.Error(e.message ?: "Unknown Error")

@@ -84,12 +84,12 @@ import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Orange
-import com.prodacc.data.remote.dao.CreateTimesheet
+import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
-import com.prodacc.data.remote.dao.NewTimesheet
 import com.prodacc.data.remote.dao.Timesheet
 import java.time.DayOfWeek
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -226,8 +226,7 @@ fun StepIndicator(
             .clip(RoundedCornerShape(100.dp))
             .clickable { expanded = !expanded }
             .background(Blue50),
-            horizontalArrangement = Arrangement.Start
-        ) {
+            horizontalArrangement = Arrangement.Start) {
             Row(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -254,8 +253,7 @@ fun StepIndicator(
                             "done" -> 1f
                             else -> 0.1f
                         }
-                    ),
-                horizontalArrangement = Arrangement.End
+                    ), horizontalArrangement = Arrangement.End
 
             ) {
                 Text(text = jobCardStatuses.last().status)
@@ -441,14 +439,11 @@ fun DateTimePickerTextField(
     val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")
 
     Column(modifier = modifier) {
-        TextField(
-            value = value?.format(formatter) ?: "",
+        TextField(value = value?.format(formatter) ?: "",
             onValueChange = { },
             leadingIcon = {
                 Text(
-                    "$label :",
-                    color = Color.DarkGray,
-                    modifier = Modifier.padding(start = 15.dp)
+                    "$label :", color = Color.DarkGray, modifier = Modifier.padding(start = 15.dp)
                 )
             },
             enabled = false,
@@ -518,16 +513,17 @@ fun DateTimePickerDialog(
                 state = pagerState, modifier = Modifier.height(500.dp)
             ) { page ->
                 when (page) {
-                    0 -> TimePickerContent(initialTime = selectedTime,
+                    0 -> TimePickerContent(
+                        initialTime = selectedTime,
                         onTimeSelected = { selectedTime = it })
 
-                    1 -> DatePickerContent(initialDate = selectedDate,
+                    1 -> DatePickerContent(
+                        initialDate = selectedDate,
                         onDateSelected = { selectedDate = it })
                 }
             }
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center
             ) {
                 MediumTitleText(name = "Swipe ${if (pagerState.currentPage == 0) "left" else "right"} to select ${if (pagerState.currentPage == 0) "date" else "time"}")
                 Icon(
@@ -607,31 +603,21 @@ fun Timesheets(
     ) {
         ProfileAvatar(initials = timeSheet.technicianName.first().toString())
         Text(
-            text = timeSheet.sheetTitle, modifier = Modifier
+            text = timeSheet.sheetTitle,
+            modifier = Modifier
                 .weight(2f)
-                .padding(start = 5.dp), color = Color.DarkGray
+                .padding(start = 5.dp),
+            color = Color.DarkGray
         )
-        Row(
-            modifier = Modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = if (currentDateTime == timeSheet.clockInDateAndTime.toLocalDate()) "${timeSheet.clockInDateAndTime.hour}:${timeSheet.clockInDateAndTime.minute} -"
-                else "${timeSheet.clockInDateAndTime} -",
-                color = Color.DarkGray
-            )
-            Text(
-                text = if (timeSheet.clockOutDateAndTime != null && currentDateTime == timeSheet.clockOutDateAndTime!!.toLocalDate()) " ${"${timeSheet.clockOutDateAndTime!!.hour}:${timeSheet.clockOutDateAndTime!!.minute}"}" else if (currentDateTime < timeSheet.clockOutDateAndTime!!.toLocalDate()) "${timeSheet.clockOutDateAndTime}" else " not entered",
-                color = Color.DarkGray
-            )
-        }
+        FormattedTimeDisplay(
+            clockIn = timeSheet.clockInDateAndTime,
+            clockOut = timeSheet.clockOutDateAndTime,
+            currentDate = currentDateTime
+        )
     }
 
     AnimatedVisibility(visible = timeSheetDialog) {
-        Dialog(
-            onDismissRequest = { timeSheetDialog = !timeSheetDialog }
-        ) {
+        Dialog(onDismissRequest = { timeSheetDialog = !timeSheetDialog }) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -653,25 +639,18 @@ fun Timesheets(
                     BodyTextItalic(text = "by ${timeSheet.technicianName}")
                 }
 
-                OutlinedTextField(
-                    value = timeSheet.sheetTitle,
+                OutlinedTextField(value = timeSheet.sheetTitle,
                     onValueChange = {},
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(text = "Title", color = Color.DarkGray) }
-                )
+                    label = { Text(text = "Title", color = Color.DarkGray) })
                 DateTimePickerTextField(
-                    value = timeSheet.clockInDateAndTime,
-                    onValueChange = {},
-                    label = "Start"
+                    value = timeSheet.clockInDateAndTime, onValueChange = {}, label = "Start"
                 )
 
                 DateTimePickerTextField(
-                    value = timeSheet.clockOutDateAndTime,
-                    onValueChange = {},
-                    label = "Stop"
+                    value = timeSheet.clockOutDateAndTime, onValueChange = {}, label = "Stop"
                 )
-                OutlinedTextField(
-                    value = timeSheet.report,
+                OutlinedTextField(value = timeSheet.report,
                     onValueChange = {},
                     label = { androidx.compose.material3.Text(text = "Timesheet report") },
                     modifier = Modifier
@@ -698,190 +677,50 @@ fun Timesheets(
     }
 }
 
-
-
-
 @Composable
-fun TeamDialog(
-    onDismiss: () -> Unit,
-    onAddNewTechnician: (UUID) -> Unit,
-    jobCard: JobCard,
-    employees: List<EmployeeListCategory>,
-    onUpdateServiceAdvisor: (UUID) -> Unit,
-    onUpdateSupervisor: (UUID) -> Unit
+fun FormattedTimeDisplay(
+    clockIn: LocalDateTime,
+    clockOut: LocalDateTime?,
+    currentDate: LocalDate = LocalDate.now()
 ) {
-    Dialog(
-        onDismissRequest = onDismiss
-    ) {
-        Column(
-            modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color.White)
-                .padding(20.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp)
-                    .drawBehind {
-                        drawLine(
-                            color = CardGrey,
-                            start = Offset(0F, 100f),
-                            end = Offset(size.maxDimension, 100f),
-                            strokeWidth = 6f
-                        )
-                    }
-            ) {
-                LargeTitleText(name = "Team")
+    val formattedText = remember(clockIn, clockOut) {
+        val dateFormatter = DateTimeFormatter.ofPattern("MMM dd")
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
+        val clockInText = when (clockIn.toLocalDate()) {
+            currentDate -> clockIn.format(timeFormatter)
+            else -> "${clockIn.format(dateFormatter)} ${clockIn.format(timeFormatter)}"
+        }
+
+        if (clockOut != null) {
+            val clockOutText = when (clockOut.toLocalDate()) {
+                currentDate -> clockOut.format(timeFormatter)
+                else -> "${clockOut.format(dateFormatter)} ${clockOut.format(timeFormatter)}"
             }
 
-            TeamDialogCard(title = "Service Advisor", employees = employees, initialEmployee = jobCard.serviceAdvisorName, onSelectNewEmployee = onUpdateServiceAdvisor)
-            TeamDialogCard(title = "Supervisor", employees = employees, initialEmployee = jobCard.supervisorName, onSelectNewEmployee = onUpdateSupervisor)
+            // Calculate duration
+            val duration = Duration.between(clockIn, clockOut)
+            val hours = duration.toHours()
+            val minutes = duration.toMinutes() % 60
 
-            TechnicianRow(employees = employees, onAddNewTechnician = onAddNewTechnician)
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(onClick = onDismiss) {
-                    androidx.compose.material3.Text(text = "close")
-                }
+            val durationText = when {
+                hours > 0 -> "${hours}h ${minutes}m"
+                else -> "${minutes}m"
             }
+
+            "$clockInText - $clockOutText : $durationText"
+        } else {
+            "$clockInText - Clock Out"
         }
     }
+
+    Text(
+        text = formattedText,
+        color = if (clockOut != null) Color.DarkGray else Orange,
+        fontWeight = if (clockOut != null) FontWeight.Normal else FontWeight.Bold
+    )
 }
 
 
-@Composable
-fun TeamDialogCard(
-    title: String,
-    employees: List<EmployeeListCategory>,
-    initialEmployee: String,
-    onSelectNewEmployee: (UUID) -> Unit
-) {
-    var dropdownMenu by remember {
-        mutableStateOf(false)
-    }
-
-    Column {
-        androidx.compose.material3.Text(
-            text = title,
-            //fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Start,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 10.dp),
-            color = Color.DarkGray
-        )
-        TextField(
-            value = initialEmployee,
-            onValueChange = {},
-            //label = { Text(text = "Service Advisor", color = Color.DarkGray) },
-            shape = RoundedCornerShape(10.dp),
-            colors = TextFieldDefaults.colors(
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-                disabledTextColor = Color.DarkGray,
-                disabledContainerColor = Blue50
-            ),
-            trailingIcon = {
-                TextButton(onClick = {dropdownMenu = true}) {
-                    Text(text = "Change", color = Color.Blue, fontWeight = FontWeight.SemiBold)
-                }
-            },
-            enabled = false,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize()) {
-            DropdownMenu(expanded = dropdownMenu, onDismissRequest = { dropdownMenu = false }, modifier = Modifier.padding(10.dp)) {
-                employees.forEach {
-                    Text(text = it.name, color = Color.DarkGray, fontWeight = FontWeight.Bold)
-                    it.items.forEach {
-                        DropdownMenuItem(
-                            text = { Text(text = "${it.employeeName} ${it.employeeSurname}", color = Color.DarkGray) },
-                            onClick = { onSelectNewEmployee(it.id)}
-                        )
-                    }
-
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun TechnicianRow(
-    employees: List<EmployeeListCategory>,
-    onAddNewTechnician: (UUID) -> Unit,
-){
-    var dropdownMenu by remember {
-        mutableStateOf(false)
-    }
-
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            MediumTitleText("Technicians: ")
-            TextButton(onClick = { dropdownMenu = true }) {
-                androidx.compose.material3.Text(text = "Add")
-            }
-        }
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize()) {
-            DropdownMenu(expanded = dropdownMenu, onDismissRequest = { dropdownMenu = false }, modifier = Modifier.padding(10.dp)) {
-                employees.forEach {
-                    Text(text = it.name, color = Color.DarkGray, fontWeight = FontWeight.Bold)
-                    it.items.forEach {
-                        DropdownMenuItem(
-                            text = { Text(text = "${it.employeeName} ${it.employeeSurname}", color = Color.DarkGray) },
-                            onClick = { onAddNewTechnician(it.id)}
-                        )
-                    }
-
-                }
-            }
-        }
-
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            //maxItemsInEachRow = 4,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            employees.forEach {
-                it.items.forEach {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(
-                                RoundedCornerShape(5.dp)
-                            )
-                            .background(Blue50)
-                            .padding(horizontal = 20.dp, vertical = 20.dp)
-                    ) {
-                        Text(text = it.employeeName, color = Color.DarkGray)
-                    }
-
-                }
-            }
-        }
-    }
-
-}
 
 
