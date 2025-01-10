@@ -6,12 +6,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.ControlChecklist
+import com.prodacc.data.remote.dao.NewControlChecklist
 import com.prodacc.data.remote.dao.User
 import com.prodacc.data.repositories.ControlChecklistRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.time.LocalDateTime
 import java.util.UUID
 
 class ControlChecklistViewModel(
@@ -24,6 +26,9 @@ class ControlChecklistViewModel(
 
     private val _loadingState = MutableStateFlow<ControlChecklistLoadingState>(ControlChecklistLoadingState.Idle)
     val loadingState = _loadingState.asStateFlow()
+
+    private val _savingState = MutableStateFlow<SaveState>(SaveState.Idle)
+    val savingState = _savingState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -50,6 +55,42 @@ class ControlChecklistViewModel(
                 else -> _loadingState.value = ControlChecklistLoadingState.Error("Unknown Error")
             }
         }
+    }
+
+    fun saveControlChecklist(checklistData: Map<String, String>) {
+        viewModelScope.launch {
+            _savingState.value = SaveState.Saving
+            try {
+                val checklist = NewControlChecklist(
+                    jobCardId = UUID.fromString(jobCardId),
+                    technicianId = signedInUser.employeeId,
+                    created = LocalDateTime.now(),
+                    checklist = checklistData
+                )
+
+                val result = controlChecklistRepository.addControlChecklist(checklist)
+                _savingState.value = when (result) {
+                    is ControlChecklistRepository.LoadingResult.Error -> SaveState.Error(result.message)
+                    is ControlChecklistRepository.LoadingResult.Loading -> SaveState.Saving
+                    is ControlChecklistRepository.LoadingResult.Success -> SaveState.Success
+                }
+            } catch (e: Exception) {
+                _savingState.value = SaveState.Error(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    fun refreshControlChecklist() {
+        viewModelScope.launch {
+            fetchControlChecklist()
+        }
+    }
+
+    sealed class SaveState {
+        object Idle : SaveState()
+        object Saving : SaveState()
+        object Success : SaveState()
+        data class Error(val message: String) : SaveState()
     }
 
 

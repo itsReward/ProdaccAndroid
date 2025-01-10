@@ -697,6 +697,15 @@ fun JobCardDetailScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
 
+                ControlChecklistSection(
+                    loadingState = controlChecklistViewModel.loadingState.collectAsState().value,
+                    controlChecklist = controlChecklistViewModel.controlChecklist.collectAsState().value,
+                    onRefreshChecklist = { controlChecklistViewModel.refreshControlChecklist() },
+                    onSaveControlChecklist = controlChecklistViewModel::saveControlChecklist,
+                ) {
+
+                }
+
                 jobCard?.jobCardName?.let {
                     ControlChecklist(
                         jobCardName = it,
