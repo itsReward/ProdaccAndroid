@@ -15,10 +15,6 @@ class EmployeeRepository {
         return try {
             val response = service.getAllEmployees()
             if (response.isSuccessful) {
-                println("Response Code: ${response.code()}")
-                println("Response Raw: ${response.raw()}")
-                println("Response Headers: ${response.headers()}")
-
                 LoadingResult.Success(response.body()!!)
             } else {
                 LoadingResult.Error(response.message())
@@ -35,10 +31,8 @@ class EmployeeRepository {
     suspend fun getEmployee(id: UUID): LoadingResult {
         return try {
             val response = service.getEmployeeById(id)
-            println(response.body())
             if (response.isSuccessful) {
 
-                println(response.body()!!)
                 if (response.body() != null) {
 
                     LoadingResult.EmployeeEntity(response.body()!!)
@@ -78,7 +72,6 @@ class EmployeeRepository {
     suspend fun deleteEmployee(id: UUID): LoadingResult {
         return try {
             val response = service.deleteEmployee(id.toString())
-            println(response.raw())
             if (response.isSuccessful) {
                 LoadingResult.Success()
             } else {

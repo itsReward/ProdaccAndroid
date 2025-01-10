@@ -338,7 +338,9 @@ fun JobCardsScreen(
                                                                     else -> 0f
                                                                 }
                                                             },
-                                                            modifier = Modifier.height(5.dp).clip(RoundedCornerShape(10.dp)),
+                                                            modifier = Modifier
+                                                                .height(5.dp)
+                                                                .clip(RoundedCornerShape(10.dp)),
                                                             color = when (status.response.status){
                                                                 "done" -> DarkGreen
                                                                 "frozen" -> Red
@@ -409,11 +411,12 @@ fun JobCardsScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(5.dp))
                             .background(Color.White)
+                            .padding(innerPadding)
                             .padding(horizontal = 20.dp, vertical = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        Text(text = "NetWork Error")
+                        Text(text = state.message)
                         Button(onClick = { viewModel.refreshJobCards() }) {
                             Text(text = "Refresh")
                         }

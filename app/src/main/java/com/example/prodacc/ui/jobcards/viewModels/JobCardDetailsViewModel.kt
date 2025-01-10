@@ -48,9 +48,6 @@ class JobCardDetailsViewModel(
     val jobCardStatusList = jobCardStatusRepository.generateJobCardStatus(UUID.randomUUID())
 
 
-
-    val timesheets = timeSheetRepository.getTimeSheets()
-
     val teamExpanded = mutableStateOf(false)
 
     fun onTeamExpandedToggle(){

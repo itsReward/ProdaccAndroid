@@ -58,13 +58,11 @@ class JobCardViewModel(
 
                 is JobCardRepository.LoadingResult.Error -> {
                     _jobCardLoadState.value = LoadingState.Error(loadingResult.message)
-                    //println(loadingResult.message)
                 }
 
-                else -> {
-                    _jobCardLoadState.value = LoadingState.Idle
-                }
-
+                is JobCardRepository.LoadingResult.ErrorSingleMessage ->_jobCardLoadState.value = LoadingState.Error(loadingResult.message)
+                is JobCardRepository.LoadingResult.NetworkError ->_jobCardLoadState.value = LoadingState.Error("Network Error")
+                is JobCardRepository.LoadingResult.SingleEntity ->_jobCardLoadState.value = LoadingState.Error("Returned Single Entity Instead of List")
             }
         }
 

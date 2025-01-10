@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiInstance {
     @Volatile
-    var BASE_URL = "http://10.153.91.123:5000"
+    var BASE_URL = "http://192.168.220.123:5000"
         set
 
     // Add a method to initialize with context

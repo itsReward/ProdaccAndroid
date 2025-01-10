@@ -25,12 +25,12 @@ interface JobCardReportService {
     @POST("/job-card-reports/new")
     suspend fun createReport(@Body reportRequest: NewJobCardReport): Response<JobCardReport>
 
-    @PUT("/job-cards-reports/update/{id}")
+    @PUT("/job-card-reports/update/{id}")
     suspend fun updateReport(
         @Path("id") id: UUID,
         @Body reportRequest: UpdateJobCardReport
     ): Response<JobCardReport>
 
-    @DELETE("/job-cards-reports/delete/{id}")
+    @DELETE("/job-card-reports/delete/{id}")
     suspend fun deleteReport(@Path("id") id: UUID): Response<String>
 }

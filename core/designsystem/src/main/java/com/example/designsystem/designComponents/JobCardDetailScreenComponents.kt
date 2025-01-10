@@ -84,8 +84,10 @@ import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Orange
+import com.prodacc.data.remote.dao.CreateTimesheet
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
+import com.prodacc.data.remote.dao.NewTimesheet
 import com.prodacc.data.remote.dao.Timesheet
 import java.time.DayOfWeek
 import java.time.Instant
@@ -697,49 +699,6 @@ fun Timesheets(
 }
 
 
-@Composable
-fun NewTimeSheet(
-    saveSheet: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(horizontal = 15.dp)
-    ) {
-        MediumTitleText(name = "New TimeSheet")
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(text = "Title", color = Color.DarkGray) }
-        )
-        DateTimePickerTextField(value = null, onValueChange = {}, label = "Start")
-
-        DateTimePickerTextField(value = null, onValueChange = {}, label = "Stop")
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            label = { androidx.compose.material3.Text(text = "Timesheet report") },
-            modifier = Modifier
-                .height(200.dp)
-                .fillMaxWidth()
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            TextButton(onClick = onDismiss) {
-                Text(text = "Cancel", color = BlueA700, fontWeight = FontWeight.SemiBold)
-            }
-            Button(onClick = saveSheet) {
-                Text(text = "Save")
-            }
-        }
-    }
-}
 
 
 @Composable
@@ -816,7 +775,9 @@ fun TeamDialogCard(
             //fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
             color = Color.DarkGray
         )
         TextField(
@@ -906,8 +867,12 @@ fun TechnicianRow(
                 it.items.forEach {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clip(
-                            RoundedCornerShape(5.dp)).background(Blue50).padding(horizontal = 20.dp, vertical = 20.dp)
+                        modifier = Modifier
+                            .clip(
+                                RoundedCornerShape(5.dp)
+                            )
+                            .background(Blue50)
+                            .padding(horizontal = 20.dp, vertical = 20.dp)
                     ) {
                         Text(text = it.employeeName, color = Color.DarkGray)
                     }

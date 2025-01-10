@@ -1,7 +1,6 @@
 package com.prodacc.data.remote.dao
 
 import com.google.gson.annotations.SerializedName
-import com.prodacc.data.local.entities.Timesheet
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -40,7 +39,7 @@ data class JobCard(
 
     @SerializedName("jobCardDeadline") val jobCardDeadline: LocalDateTime? = null,
 
-    @SerializedName("timesheets") val timesheets: List<Timesheet>,
+    @SerializedName("timesheets") val timesheets: List<UUID>,
 
     @SerializedName("stateChecklistId") val stateChecklistId: UUID?,
 

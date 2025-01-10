@@ -51,10 +51,10 @@ class JobCardReportRepository {
         }
     }
 
-    suspend fun updateJobCardReport(report: JobCardReport): LoadingResult {
+    suspend fun updateJobCardReport(id: UUID, report: JobCardReport): LoadingResult {
         return try {
             val response = service.updateReport(
-                report.reportId,
+                id,
                 UpdateJobCardReport(
                     jobReport = report.jobReport,
                     jobCardId = report.jobCardId,
@@ -62,12 +62,17 @@ class JobCardReportRepository {
                     reportType = report.reportType
                 )
             )
+            println(report)
+            println(response)
             if (response.isSuccessful) {
+                println(response.body()!!)
                 LoadingResult.SingleEntitySuccess(response.body()!!)
+
             } else {
                 LoadingResult.Error(response.message())
             }
         } catch (e: Exception) {
+            println(e)
             when (e) {
                 is IOException -> LoadingResult.Error("Network Error")
                 else -> LoadingResult.Error(e.message ?: "Unknown Error")

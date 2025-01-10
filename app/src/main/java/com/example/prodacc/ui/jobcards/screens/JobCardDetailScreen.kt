@@ -31,17 +31,21 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -61,18 +66,21 @@ import com.example.designsystem.designComponents.DateTimePickerTextField
 import com.example.designsystem.designComponents.DisabledTextField
 import com.example.designsystem.designComponents.EmployeeListCategory
 import com.example.designsystem.designComponents.ErrorStateColumn
+import com.example.designsystem.designComponents.IdleStateColumn
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
-import com.example.designsystem.designComponents.NewTimeSheet
 import com.example.designsystem.designComponents.ServiceChecklist
 import com.example.designsystem.designComponents.StateChecklist
 import com.example.designsystem.designComponents.StepIndicator
 import com.example.designsystem.designComponents.TeamDialog
 import com.example.designsystem.designComponents.Timesheets
 import com.example.designsystem.designComponents.TopBar
+import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGrey
+import com.example.designsystem.theme.Red
 import com.example.designsystem.theme.checklistIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
@@ -80,8 +88,15 @@ import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModelFactory
+import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel
+import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModelFactory
+import com.prodacc.data.remote.dao.CreateTimesheet
 import com.prodacc.data.remote.dao.JobCardReport
+import kotlinx.coroutines.Delay
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.sql.Time
+import java.time.LocalDateTime
 
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -94,6 +109,9 @@ fun JobCardDetailScreen(
     ),
     reportsViewModel: JobCardReportsViewModel = viewModel(
         factory = JobCardReportsViewModelFactory(jobCardId)
+    ),
+    timeSheetViewModel: TimeSheetsViewModel = viewModel(
+        factory = TimeSheetsViewModelFactory(jobCardId)
     )
 ) {
     val employeesViewModel = EmployeesViewModel()
@@ -358,7 +376,8 @@ fun JobCardDetailScreen(
                             label = if (reportsViewModel.serviceAdvisorReport.collectAsState().value != null)"Service Advisor Report" else "New Service Advisor Report",
                             isEdited = reportsViewModel.isServiceAdvisorReportEdited.collectAsState().value,
                             onSave = { reportsViewModel.saveServiceAdvisorReport() },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            loadingState = reportsViewModel.serviceAdvisorReportLoadingState.collectAsState().value
                         )
 
                         ReportTextField(
@@ -367,7 +386,8 @@ fun JobCardDetailScreen(
                             label = if (reportsViewModel.diagnosticsReport.collectAsState().value != null)"Diagnostics Report" else "New Diagnostics Report",
                             isEdited = reportsViewModel.isDiagnosticsReportEdited.collectAsState().value,
                             onSave = { reportsViewModel.saveDiagnosticsReport() },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            loadingState = reportsViewModel.diagnosticsReportLoadingState.collectAsState().value
                         )
 
                         DateTimePickerTextField(
@@ -402,11 +422,56 @@ fun JobCardDetailScreen(
                             }
                         }
 
-                        viewModel.timesheets.forEach {
-                            Timesheets(
-                                it
-                            )
+                        when (val timeSheetsLoadingState = timeSheetViewModel.loadingState.collectAsState().value) {
+                            is TimeSheetsViewModel.LoadingState.Error -> {
+                                Column (
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 20.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = timeSheetsLoadingState.message, color = Color.Red)
+                                    TextButton(onClick = { timeSheetViewModel.refreshTimeSheets() }) {
+                                        Text(text = "Reload")
+                                    }
+
+                                }
+                            }
+                            is TimeSheetsViewModel.LoadingState.Idle -> {
+                                IdleStateColumn(
+                                    title = "Load TimeSheets",
+                                    buttonOnClick = { timeSheetViewModel.refreshTimeSheets() },
+                                    buttonText = "Load TimeSheets"
+                                )
+                            }
+                            is TimeSheetsViewModel.LoadingState.Loading -> {
+                                LoadingStateColumn(title = "Loading Timesheets")
+                            }
+                            is TimeSheetsViewModel.LoadingState.Success -> {
+                                if (timeSheetViewModel.timeSheets.collectAsState().value.isEmpty()){
+                                    Column (
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 20.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(text = "Add Timesheet")
+
+                                    }
+                                } else {
+                                    timeSheetViewModel.timeSheets.collectAsState().value.forEach {
+                                        Timesheets(
+                                            it
+                                        )
+                                    }
+                                }
+
+
+                            }
                         }
+
+
                     }
 
 
@@ -466,7 +531,8 @@ fun JobCardDetailScreen(
                         label = if (reportsViewModel.controlReport.collectAsState().value != null)"Control Report" else "New Control Report",
                         isEdited = reportsViewModel.isControlReportEdited.collectAsState().value,
                         onSave = { reportsViewModel.saveControlReport() },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        loadingState = reportsViewModel.controlReportLoadingState.collectAsState().value
                     )
 
                     DateTimePickerTextField(
@@ -498,7 +564,6 @@ fun JobCardDetailScreen(
             containerColor = Color.White
         ) {
             // Sheet content
-
             NewTimeSheet(
                 onDismiss = {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -507,8 +572,16 @@ fun JobCardDetailScreen(
                         }
                     }
                 },
-                saveSheet = {}
+                saveSheet = {timeSheetViewModel.saveTimesheet()},
+                newTimesheet = timeSheetViewModel.newTimeSheet.collectAsState().value,
+                onTitleChange = timeSheetViewModel::onTitleChange,
+                onReportChange = timeSheetViewModel::onReportChange,
+                onClockInChange = timeSheetViewModel::clockIn,
+                onClockOutChange = timeSheetViewModel::clockOut,
+                saveState = timeSheetViewModel.newTimeSheetLoadState.collectAsState().value,
+                resetState = timeSheetViewModel::resetNewTimeSheetLoadState
             )
+
         }
     }
 
@@ -624,9 +697,50 @@ fun ReportTextField(
     label: String,
     isEdited: Boolean,
     onSave: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    loadingState: JobCardReportsViewModel.LoadingState
 ) {
+    var successText by remember {
+        mutableStateOf(false)
+    }
+
     Column(modifier = modifier) {
+        /*when (loadingState) {
+            is JobCardReportsViewModel.LoadingState.Loading -> {
+                LoadingStateColumn(title = "Loading Report")
+            }
+            is JobCardReportsViewModel.LoadingState.Success -> {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    label = { Text(text = label) }
+                )
+
+                AnimatedVisibility(
+                    visible = isEdited,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Button(
+                        onClick = onSave,
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(top = 8.dp)
+                    ) {
+                        Text("Save Changes")
+                    }
+                }
+            }
+            is JobCardReportsViewModel.LoadingState.Error -> {
+            }
+            is JobCardReportsViewModel.LoadingState.Idle -> {
+                Text(text = "$label not loaded")
+            }
+        }*/
+
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -635,7 +749,46 @@ fun ReportTextField(
                 .height(200.dp),
             label = { Text(text = label) }
         )
+        when (loadingState) {
+            is JobCardReportsViewModel.LoadingState.Loading -> {
+                //LoadingStateColumn(title = "Loading Report")
+                LinearProgressIndicator(
+                    color = BlueA700,
+                    trackColor = Color.Transparent,
+                    modifier = Modifier
+                        .height(4.dp)
+                        .fillMaxWidth()
+                )
+            }
+            is JobCardReportsViewModel.LoadingState.Success -> {
+                LaunchedEffect (Unit) {
+                    successText = true
+                    delay(1000)
+                    successText = false
+                }
 
+                AnimatedVisibility(
+                    visible = successText,
+                    enter = slideInVertically() + expandVertically(),
+                    exit = slideOutVertically() + shrinkVertically()
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Check, contentDescription = "Check", tint = DarkGreen)
+                        Text(text = "Done", modifier = Modifier.padding(vertical = 10.dp))
+                    }
+
+                }
+            }
+            is JobCardReportsViewModel.LoadingState.Error -> {
+                Text(text = loadingState.message, color = Color.Red)
+            }
+            is JobCardReportsViewModel.LoadingState.Idle -> {
+            }
+        }
         AnimatedVisibility(
             visible = isEdited,
             enter = fadeIn() + expandVertically(),
@@ -650,6 +803,107 @@ fun ReportTextField(
                 Text("Save Changes")
             }
         }
+
+
+
     }
+}
+
+
+
+@Composable
+fun NewTimeSheet(
+    saveSheet: () -> Unit,
+    onDismiss: () -> Unit,
+    resetState: () -> Unit,
+    newTimesheet: CreateTimesheet,
+    onTitleChange : (String) -> Unit,
+    onClockInChange: (LocalDateTime) -> Unit,
+    onClockOutChange: (LocalDateTime) -> Unit,
+    onReportChange: (String) -> Unit,
+    saveState: TimeSheetsViewModel.LoadingState
+) {
+
+    when (saveState) {
+        is TimeSheetsViewModel.LoadingState.Loading -> {
+            Row(modifier = Modifier.height(200.dp)){
+                LoadingStateColumn(title = "Saving Timesheet")
+            }
+
+        }
+
+        is TimeSheetsViewModel.LoadingState.Success -> {
+            Text(text = "Timesheet Saved")
+            LaunchedEffect(Unit) {
+                delay(1000L)
+                onDismiss()
+            }
+        }
+
+        is TimeSheetsViewModel.LoadingState.Idle -> {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(horizontal = 15.dp)
+            ) {
+                MediumTitleText(name = "New TimeSheet")
+                OutlinedTextField(
+                    value = newTimesheet.sheetTitle?: "",
+                    onValueChange = onTitleChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = {
+                        Text(
+                            text = "Title",
+                            color = Color.DarkGray
+                        )
+                    }
+                )
+                DateTimePickerTextField(value = newTimesheet.clockInDateAndTime, onValueChange = { onClockInChange(it) }, label = "Start")
+
+                DateTimePickerTextField(value = newTimesheet.clockOutDateAndTime, onValueChange = { onClockOutChange(it) }, label = "Stop")
+
+                OutlinedTextField(
+                    value = newTimesheet.report?: "",
+                    onValueChange = onReportChange,
+                    label = { Text(text = "Timesheet report") },
+                    modifier = Modifier
+                        .height(200.dp)
+                        .fillMaxWidth()
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp)
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(text = "Cancel", color = BlueA700, fontWeight = FontWeight.SemiBold)
+                    }
+                    Button(onClick = saveSheet) {
+                        Text(text = "Save")
+                    }
+                }
+
+
+
+            }
+
+        }
+
+        is TimeSheetsViewModel.LoadingState.Error -> {
+            Row(modifier = Modifier.height(200.dp)){
+                ErrorStateColumn(
+                    title = "Error",
+                    buttonOnClick = { resetState() },
+                    buttonText = "Reset"
+                )
+            }
+
+        }
+
+    }
+
 }
 

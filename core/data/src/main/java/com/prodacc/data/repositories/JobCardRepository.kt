@@ -71,8 +71,10 @@ class JobCardRepository {
 
     suspend fun getJobCards(): LoadingResult {
         return try {
+
             val jobCards = jobCardService.getJobCards()
             if (jobCards.isSuccessful){
+                println(jobCards.body())
                 LoadingResult.Success(jobCards.body()?: emptyList())
             } else {
                 println(jobCards.errorBody())
@@ -81,7 +83,10 @@ class JobCardRepository {
         } catch (e: Exception) {
             when (e) {
                 is IOException -> LoadingResult.NetworkError
-                else -> LoadingResult.ErrorSingleMessage(e.message ?: "Unknown error occurred")
+                else -> {
+                    throw e
+                    LoadingResult.ErrorSingleMessage(e.message ?: "Unknown error occurred")
+                }
             }
         }
 
