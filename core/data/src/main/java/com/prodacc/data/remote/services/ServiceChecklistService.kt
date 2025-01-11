@@ -10,7 +10,7 @@ interface ServiceChecklistService {
     @GET("/service-checklist/all")
     suspend fun getAllServiceChecklists(): Response<List<ServiceChecklist>>
 
-    @GET("/service-checklist/get-by-jobCard/{id}")
+    @GET("/service-checklist/get/jobCard/{id}")
     suspend fun getServiceChecklistByJobCard(@Path("id") jobCardId: UUID): Response<ServiceChecklist>
 
     @GET("/service-checklist/get-by-id/{id}")

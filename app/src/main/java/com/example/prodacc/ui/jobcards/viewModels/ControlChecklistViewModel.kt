@@ -52,7 +52,7 @@ class ControlChecklistViewModel(
         } catch (e: Exception){
             when (e){
                 is IOException -> _loadingState.value = ControlChecklistLoadingState.Error("Network Error")
-                else -> _loadingState.value = ControlChecklistLoadingState.Error("Unknown Error")
+                else -> _loadingState.value = ControlChecklistLoadingState.Error(e.message?:"Unknown Error")
             }
         }
     }
@@ -80,6 +80,11 @@ class ControlChecklistViewModel(
                     is ControlChecklistRepository.LoadingResult.Loading -> SaveState.Saving
                     is ControlChecklistRepository.LoadingResult.Success -> SaveState.Success
                 }
+                when(_savingState.value){
+                    is SaveState.Success -> fetchControlChecklist()
+                    else -> {}
+                }
+
             } catch (e: Exception) {
                 _savingState.value = SaveState.Error(e.message ?: "Unknown error occurred")
             }
@@ -90,6 +95,10 @@ class ControlChecklistViewModel(
         viewModelScope.launch {
             fetchControlChecklist()
         }
+    }
+
+    fun resetSaveState() {
+        _savingState.value = SaveState.Idle
     }
 
     sealed class SaveState {

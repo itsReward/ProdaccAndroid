@@ -17,7 +17,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,7 +60,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.BodyText
-import com.example.designsystem.designComponents.ControlChecklist
 import com.example.designsystem.designComponents.DateTimePickerTextField
 import com.example.designsystem.designComponents.DisabledTextField
 import com.example.designsystem.designComponents.EmployeeListCategory
@@ -69,8 +67,6 @@ import com.example.designsystem.designComponents.ErrorStateColumn
 import com.example.designsystem.designComponents.IdleStateColumn
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
-import com.example.designsystem.designComponents.ServiceChecklist
-import com.example.designsystem.designComponents.StateChecklist
 import com.example.designsystem.designComponents.StepIndicator
 import com.example.designsystem.designComponents.Timesheets
 import com.example.designsystem.designComponents.TopBar
@@ -79,7 +75,6 @@ import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGrey
-import com.example.designsystem.theme.Red
 import com.example.designsystem.theme.checklistIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
@@ -92,18 +87,19 @@ import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.JobCardTechnicianViewModel
 import com.example.prodacc.ui.jobcards.viewModels.JobCardTechnicianViewModelFactory
+import com.example.prodacc.ui.jobcards.viewModels.ServiceChecklistViewModel
+import com.example.prodacc.ui.jobcards.viewModels.ServiceChecklistViewModelFactory
+import com.example.prodacc.ui.jobcards.viewModels.StateChecklistViewModel
+import com.example.prodacc.ui.jobcards.viewModels.StateChecklistViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModelFactory
 import com.prodacc.data.remote.dao.CreateTimesheet
-import com.prodacc.data.remote.dao.JobCardReport
-import kotlinx.coroutines.Delay
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.sql.Time
 import java.time.LocalDateTime
 
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JobCardDetailScreen(
     navController: NavController,
@@ -125,6 +121,12 @@ fun JobCardDetailScreen(
     ),
     controlChecklistViewModel: ControlChecklistViewModel = viewModel(
         factory = ControlChecklistViewModelFactory(jobCardId)
+    ),
+    serviceChecklistViewModel: ServiceChecklistViewModel = viewModel(
+        factory = ServiceChecklistViewModelFactory(jobCardId)
+    ),
+    stateChecklistViewModel: StateChecklistViewModel = viewModel(
+        factory = StateChecklistViewModelFactory(jobCardId)
     )
 ) {
     val jobCard = viewModel.jobCard.collectAsState().value
@@ -204,7 +206,7 @@ fun JobCardDetailScreen(
                     )
                 }
 
-                if (viewModel.deleteJobCardConfirmation.collectAsState().value){
+                if (viewModel.deleteJobCardConfirmation.collectAsState().value) {
                     AlertDialog(
                         onDismissRequest = { viewModel.setDeleteJobCardConfirmation(false) },
                         confirmButton = {
@@ -222,8 +224,8 @@ fun JobCardDetailScreen(
                             }
 
                         },
-                        title = {Text(text = "Delete JobCard?")},
-                        text = { Text(text = "Are you sure you want to delete this job card?")}
+                        title = { Text(text = "Delete JobCard?") },
+                        text = { Text(text = "Are you sure you want to delete this job card?") }
 
                     )
                 }
@@ -386,9 +388,10 @@ fun JobCardDetailScreen(
 
                     Column {
                         ReportTextField(
-                            value = reportsViewModel.serviceAdvisorReport.collectAsState().value?.jobReport ?: "",
+                            value = reportsViewModel.serviceAdvisorReport.collectAsState().value?.jobReport
+                                ?: "",
                             onValueChange = { reportsViewModel.editServiceAdvisorReport(it) },
-                            label = if (reportsViewModel.serviceAdvisorReport.collectAsState().value != null)"Service Advisor Report" else "New Service Advisor Report",
+                            label = if (reportsViewModel.serviceAdvisorReport.collectAsState().value != null) "Service Advisor Report" else "New Service Advisor Report",
                             isEdited = reportsViewModel.isServiceAdvisorReportEdited.collectAsState().value,
                             onSave = { reportsViewModel.saveServiceAdvisorReport() },
                             modifier = Modifier.fillMaxWidth(),
@@ -396,9 +399,10 @@ fun JobCardDetailScreen(
                         )
 
                         ReportTextField(
-                            value = reportsViewModel.diagnosticsReport.collectAsState().value?.jobReport ?: "",
+                            value = reportsViewModel.diagnosticsReport.collectAsState().value?.jobReport
+                                ?: "",
                             onValueChange = { reportsViewModel.editDiagnosticsReport(it) },
-                            label = if (reportsViewModel.diagnosticsReport.collectAsState().value != null)"Diagnostics Report" else "New Diagnostics Report",
+                            label = if (reportsViewModel.diagnosticsReport.collectAsState().value != null) "Diagnostics Report" else "New Diagnostics Report",
                             isEdited = reportsViewModel.isDiagnosticsReportEdited.collectAsState().value,
                             onSave = { reportsViewModel.saveDiagnosticsReport() },
                             modifier = Modifier.fillMaxWidth(),
@@ -437,9 +441,10 @@ fun JobCardDetailScreen(
                             }
                         }
 
-                        when (val timeSheetsLoadingState = timeSheetViewModel.loadingState.collectAsState().value) {
+                        when (val timeSheetsLoadingState =
+                            timeSheetViewModel.loadingState.collectAsState().value) {
                             is TimeSheetsViewModel.LoadingState.Error -> {
-                                Column (
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 20.dp),
@@ -453,6 +458,7 @@ fun JobCardDetailScreen(
 
                                 }
                             }
+
                             is TimeSheetsViewModel.LoadingState.Idle -> {
                                 IdleStateColumn(
                                     title = "Load TimeSheets",
@@ -460,12 +466,14 @@ fun JobCardDetailScreen(
                                     buttonText = "Load TimeSheets"
                                 )
                             }
+
                             is TimeSheetsViewModel.LoadingState.Loading -> {
                                 LoadingStateColumn(title = "Loading Timesheets")
                             }
+
                             is TimeSheetsViewModel.LoadingState.Success -> {
-                                if (timeSheetViewModel.timeSheets.collectAsState().value.isEmpty()){
-                                    Column (
+                                if (timeSheetViewModel.timeSheets.collectAsState().value.isEmpty()) {
+                                    Column(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(vertical = 20.dp),
@@ -541,9 +549,10 @@ fun JobCardDetailScreen(
                     }
 
                     ReportTextField(
-                        value = reportsViewModel.controlReport.collectAsState().value?.jobReport ?: "",
+                        value = reportsViewModel.controlReport.collectAsState().value?.jobReport
+                            ?: "",
                         onValueChange = { reportsViewModel.editControlReport(it) },
-                        label = if (reportsViewModel.controlReport.collectAsState().value != null)"Control Report" else "New Control Report",
+                        label = if (reportsViewModel.controlReport.collectAsState().value != null) "Control Report" else "New Control Report",
                         isEdited = reportsViewModel.isControlReportEdited.collectAsState().value,
                         onSave = { reportsViewModel.saveControlReport() },
                         modifier = Modifier.fillMaxWidth(),
@@ -595,7 +604,7 @@ fun JobCardDetailScreen(
                         }
                     }
                 },
-                saveSheet = {timeSheetViewModel.saveTimesheet()},
+                saveSheet = { timeSheetViewModel.saveTimesheet() },
                 newTimesheet = timeSheetViewModel.newTimeSheet.collectAsState().value,
                 onTitleChange = timeSheetViewModel::onTitleChange,
                 onReportChange = timeSheetViewModel::onReportChange,
@@ -610,7 +619,7 @@ fun JobCardDetailScreen(
 
     AnimatedVisibility(
         visible = showStateChecklistDialog,
-        enter = androidx.compose.animation.slideInVertically(),
+        enter = slideInVertically(),
         exit = slideOutVertically()
     ) {
 
@@ -628,11 +637,24 @@ fun JobCardDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
-                jobCard?.jobCardName?.let {
-                    StateChecklist(
-                        jobCardName = it,
-                        onClose = { showStateChecklistDialog = false })
-                }
+
+                StateChecklistSection(
+                    loadingState = stateChecklistViewModel.loadingState.collectAsState().value,
+                    savingState = stateChecklistViewModel.savingState.collectAsState().value,
+                    stateChecklist = stateChecklistViewModel.stateChecklist.collectAsState().value,
+                    onRefreshChecklist = stateChecklistViewModel::refreshStateChecklist,
+                    onSaveStateChecklist = stateChecklistViewModel::saveStateChecklist,
+                    resetSaveState = stateChecklistViewModel::resetSaveState,
+                    fuelLevelIn = stateChecklistViewModel.fuelLevelIn.collectAsState().value,
+                    fuelLevelOut = stateChecklistViewModel.fuelLevelOut.collectAsState().value,
+                    onClose = { showStateChecklistDialog = false },
+                    millageIn = stateChecklistViewModel.millageIn.collectAsState().value,
+                    millageOut = stateChecklistViewModel.millageOut.collectAsState().value,
+                    onFuelLevelInChange = stateChecklistViewModel::updateFuelLevelIn,
+                    onFuelLevelOutChange = stateChecklistViewModel::updateFuelLevelOut,
+                    onMillageInChange = stateChecklistViewModel::updateMillageIn,
+                    onMillageOutChange = stateChecklistViewModel::updateMillageOut
+                )
 
             }
 
@@ -644,7 +666,7 @@ fun JobCardDetailScreen(
 
     AnimatedVisibility(
         visible = showServiceChecklistDialog,
-        enter = androidx.compose.animation.slideInVertically(),
+        enter = slideInVertically(),
         exit = slideOutVertically()
     ) {
 
@@ -663,11 +685,15 @@ fun JobCardDetailScreen(
                 horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
 
-                jobCard?.jobCardName?.let {
-                    ServiceChecklist(
-                        jobCardName = it,
-                        onClose = { showServiceChecklistDialog = false })
-                }
+                ServiceChecklistSection(
+                    loadingState = serviceChecklistViewModel.loadingState.collectAsState().value,
+                    savingState = serviceChecklistViewModel.savingState.collectAsState().value,
+                    serviceChecklist = serviceChecklistViewModel.serviceChecklist.collectAsState().value,
+                    onRefreshChecklist = serviceChecklistViewModel::refreshServiceChecklist,
+                    onSaveServiceChecklist = serviceChecklistViewModel::saveServiceChecklist,
+                    resetSaveState = serviceChecklistViewModel::resetSaveState,
+                    onClose = { showServiceChecklistDialog = false }
+                )
 
             }
 
@@ -699,18 +725,14 @@ fun JobCardDetailScreen(
 
                 ControlChecklistSection(
                     loadingState = controlChecklistViewModel.loadingState.collectAsState().value,
+                    savingState = controlChecklistViewModel.savingState.collectAsState().value,
                     controlChecklist = controlChecklistViewModel.controlChecklist.collectAsState().value,
                     onRefreshChecklist = { controlChecklistViewModel.refreshControlChecklist() },
                     onSaveControlChecklist = controlChecklistViewModel::saveControlChecklist,
+                    resetSaveState = controlChecklistViewModel::resetSaveState,
                     onClose = { showControlChecklistDialog = false }
                 )
 
-                /*jobCard?.jobCardName?.let {
-                    ControlChecklist(
-                        jobCardName = it,
-                        onClose = { showControlChecklistDialog = false }
-                    )
-                }*/
 
             }
 
@@ -792,8 +814,9 @@ fun ReportTextField(
                         .fillMaxWidth()
                 )
             }
+
             is JobCardReportsViewModel.LoadingState.Success -> {
-                LaunchedEffect (Unit) {
+                LaunchedEffect(Unit) {
                     successText = true
                     delay(1000)
                     successText = false
@@ -809,15 +832,21 @@ fun ReportTextField(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Check, contentDescription = "Check", tint = DarkGreen)
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Check",
+                            tint = DarkGreen
+                        )
                         Text(text = "Done", modifier = Modifier.padding(vertical = 10.dp))
                     }
 
                 }
             }
+
             is JobCardReportsViewModel.LoadingState.Error -> {
                 Text(text = loadingState.message, color = Color.Red)
             }
+
             is JobCardReportsViewModel.LoadingState.Idle -> {
             }
         }
@@ -837,10 +866,8 @@ fun ReportTextField(
         }
 
 
-
     }
 }
-
 
 
 @Composable
@@ -849,7 +876,7 @@ fun NewTimeSheet(
     onDismiss: () -> Unit,
     resetState: () -> Unit,
     newTimesheet: CreateTimesheet,
-    onTitleChange : (String) -> Unit,
+    onTitleChange: (String) -> Unit,
     onClockInChange: (LocalDateTime) -> Unit,
     onClockOutChange: (LocalDateTime) -> Unit,
     onReportChange: (String) -> Unit,
@@ -859,7 +886,7 @@ fun NewTimeSheet(
 
     when (saveState) {
         is TimeSheetsViewModel.LoadingState.Loading -> {
-            Row(modifier = Modifier.height(200.dp)){
+            Row(modifier = Modifier.height(200.dp)) {
                 LoadingStateColumn(title = "Saving Timesheet")
             }
 
@@ -873,7 +900,11 @@ fun NewTimeSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                Icon(imageVector = Icons.Default.Check, contentDescription = "Check", tint = DarkGreen)
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Check",
+                    tint = DarkGreen
+                )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(text = "Timesheet Saved")
             }
@@ -897,7 +928,7 @@ fun NewTimeSheet(
             ) {
                 MediumTitleText(name = "New TimeSheet")
                 OutlinedTextField(
-                    value = newTimesheet.sheetTitle?: "",
+                    value = newTimesheet.sheetTitle ?: "",
                     onValueChange = onTitleChange,
                     modifier = Modifier.fillMaxWidth(),
                     label = {
@@ -907,12 +938,20 @@ fun NewTimeSheet(
                         )
                     }
                 )
-                DateTimePickerTextField(value = newTimesheet.clockInDateAndTime, onValueChange = { onClockInChange(it) }, label = "Start")
+                DateTimePickerTextField(
+                    value = newTimesheet.clockInDateAndTime,
+                    onValueChange = { onClockInChange(it) },
+                    label = "Start"
+                )
 
-                DateTimePickerTextField(value = newTimesheet.clockOutDateAndTime, onValueChange = { onClockOutChange(it) }, label = "Stop")
+                DateTimePickerTextField(
+                    value = newTimesheet.clockOutDateAndTime,
+                    onValueChange = { onClockOutChange(it) },
+                    label = "Stop"
+                )
 
                 OutlinedTextField(
-                    value = newTimesheet.report?: "",
+                    value = newTimesheet.report ?: "",
                     onValueChange = onReportChange,
                     label = { Text(text = "Timesheet report") },
                     modifier = Modifier
@@ -943,13 +982,12 @@ fun NewTimeSheet(
                 }
 
 
-
             }
 
         }
 
         is TimeSheetsViewModel.LoadingState.Error -> {
-            Row(modifier = Modifier.height(200.dp)){
+            Row(modifier = Modifier.height(200.dp)) {
                 ErrorStateColumn(
                     title = "Error",
                     buttonOnClick = { resetState() },

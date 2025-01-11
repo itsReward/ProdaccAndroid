@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.designComponents.ErrorStateColumn
 import com.example.designsystem.designComponents.IconButton
+import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.OptionDropdown
 import com.example.prodacc.ui.jobcards.viewModels.ControlChecklistViewModel
 import com.prodacc.data.remote.dao.ControlChecklist
@@ -39,36 +40,48 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ControlChecklistSection(
     loadingState: ControlChecklistViewModel.ControlChecklistLoadingState,
+    savingState: ControlChecklistViewModel.SaveState,
     controlChecklist: ControlChecklist?,
     onRefreshChecklist: () -> Unit,
     onSaveControlChecklist: (Map<String, String>) -> Unit,
+    resetSaveState: () -> Unit,
     onClose: () -> Unit
 ) {
     when (loadingState) {
         is ControlChecklistViewModel.ControlChecklistLoadingState.Loading -> {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .wrapContentSize(Alignment.Center)
-            )
+            LoadingStateColumn(title = "Loading Checklist")
         }
         is ControlChecklistViewModel.ControlChecklistLoadingState.Error -> {
             ErrorStateColumn(
-                title = (loadingState as ControlChecklistViewModel.ControlChecklistLoadingState.Error).message,
-                buttonOnClick = { onRefreshChecklist },
+                title = loadingState.message,
+                buttonOnClick = onRefreshChecklist,
                 buttonText = "Refresh"
             )
         }
         else -> {
-            ControlChecklistSectionContent(
-                existingChecklist = controlChecklist,
-                onClose = onClose,
-                onSave = { checklist -> onSaveControlChecklist(checklist) }
-            )
+            when (savingState){
+                is ControlChecklistViewModel.SaveState.Error -> {
+                    ErrorStateColumn(
+                        title = savingState.message,
+                        buttonOnClick = resetSaveState,
+                        buttonText = "Refresh"
+                    )
+                }
+                ControlChecklistViewModel.SaveState.Saving -> {
+                    LoadingStateColumn(title = "Saving Checklist")
+                }
+                else -> {
+                    ControlChecklistSectionContent(
+                        existingChecklist = controlChecklist,
+                        onClose = onClose,
+                        onSave = { checklist -> onSaveControlChecklist(checklist) }
+                    )
+                }
+            }
+
         }
     }
 }
@@ -211,7 +224,7 @@ private fun ControlChecklistSectionContent(
 }
 
 @Composable
-private fun ChecklistSection(
+fun ChecklistSection(
     title: String,
     items: Map<String, MutableState<String>>,
     options: List<String>
