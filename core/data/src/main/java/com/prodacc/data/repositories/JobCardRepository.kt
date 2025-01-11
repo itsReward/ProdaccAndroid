@@ -73,18 +73,18 @@ class JobCardRepository {
         return try {
 
             val jobCards = jobCardService.getJobCards()
+
+
+
             if (jobCards.isSuccessful){
-                println(jobCards.body())
                 LoadingResult.Success(jobCards.body()?: emptyList())
             } else {
-                println(jobCards.errorBody())
                 return LoadingResult.Error(jobCards.message())
             }
         } catch (e: Exception) {
             when (e) {
                 is IOException -> LoadingResult.NetworkError
                 else -> {
-                    throw e
                     LoadingResult.ErrorSingleMessage(e.message ?: "Unknown error occurred")
                 }
             }

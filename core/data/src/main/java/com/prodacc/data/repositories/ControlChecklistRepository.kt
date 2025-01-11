@@ -13,13 +13,24 @@ class ControlChecklistRepository {
     suspend fun getControlChecklist(jobCardId: UUID): LoadingResult {
         return try {
             val response = service.getControlChecklistByJobCard(jobCardId = jobCardId)
+
             if (response.isSuccessful){
+                println("response body: ${response.body()}")
+
                 LoadingResult.Success(response.body()!!)
-            }else {
+            }else if(
+                response.code() == 404
+            ){
+                LoadingResult.Success(null)
+            } else {
+                println("Error: rarara" + response.raw().message())
+
                 LoadingResult.Error(response.message())
             }
 
         } catch (e: Exception){
+            println(e.message)
+
             when (e){
                 is IOException -> LoadingResult.Error("Network Error")
                 else -> LoadingResult.Error(e.message ?: "Unknown Error")
@@ -62,7 +73,7 @@ class ControlChecklistRepository {
 
     sealed class LoadingResult{
         data object Loading : LoadingResult()
-        data class Success(val data: ControlChecklist) : LoadingResult()
+        data class Success(val data: ControlChecklist?) : LoadingResult()
         data class Error(val message: String) : LoadingResult()
     }
 }

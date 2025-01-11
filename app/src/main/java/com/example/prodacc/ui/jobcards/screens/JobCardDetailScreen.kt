@@ -702,16 +702,15 @@ fun JobCardDetailScreen(
                     controlChecklist = controlChecklistViewModel.controlChecklist.collectAsState().value,
                     onRefreshChecklist = { controlChecklistViewModel.refreshControlChecklist() },
                     onSaveControlChecklist = controlChecklistViewModel::saveControlChecklist,
-                ) {
+                    onClose = { showControlChecklistDialog = false }
+                )
 
-                }
-
-                jobCard?.jobCardName?.let {
+                /*jobCard?.jobCardName?.let {
                     ControlChecklist(
                         jobCardName = it,
                         onClose = { showControlChecklistDialog = false }
                     )
-                }
+                }*/
 
             }
 

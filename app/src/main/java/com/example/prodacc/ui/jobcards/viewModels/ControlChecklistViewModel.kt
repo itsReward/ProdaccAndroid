@@ -68,7 +68,13 @@ class ControlChecklistViewModel(
                     checklist = checklistData
                 )
 
-                val result = controlChecklistRepository.addControlChecklist(checklist)
+                val result = if (_controlChecklist.value == null) {
+                    println("adding new control checklist: ${_controlChecklist.value} must be null")
+                    controlChecklistRepository.addControlChecklist(checklist)
+                } else {
+                    controlChecklistRepository.updateControlChecklist(_controlChecklist.value!!.id, checklist)
+                }
+
                 _savingState.value = when (result) {
                     is ControlChecklistRepository.LoadingResult.Error -> SaveState.Error(result.message)
                     is ControlChecklistRepository.LoadingResult.Loading -> SaveState.Saving

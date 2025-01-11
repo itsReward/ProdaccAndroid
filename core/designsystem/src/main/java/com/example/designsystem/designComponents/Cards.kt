@@ -632,7 +632,7 @@ fun ErrorStateColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(text = title)
+            Text(text = title, color = Color.DarkGray)
             Button(onClick = buttonOnClick) {
                 Text(text = buttonText)
             }
