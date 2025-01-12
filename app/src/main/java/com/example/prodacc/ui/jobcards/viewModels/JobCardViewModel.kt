@@ -42,6 +42,43 @@ class JobCardViewModel(
     val pastJobCards: StateFlow<List<JobCard>> = _pastJobCards.asStateFlow()
 
 
+
+    private val _jobCardsFilter = MutableStateFlow<JobCardsFilter>(JobCardsFilter.All())
+    val jobCardsFilter = _jobCardsFilter.asStateFlow()
+
+    fun onToggleAllFilterChip(){
+        _jobCardsFilter.value = JobCardsFilter.All()
+    }
+
+    fun onToggleOpenFilterChip(){
+        _jobCardsFilter.value = JobCardsFilter.All()
+    }
+
+    fun onToggleDiagnosticsFilterChip(){
+        _jobCardsFilter.value = JobCardsFilter.Diagnostics()
+    }
+
+    fun onToggleWorkInProgressChip(){
+        _jobCardsFilter.value = JobCardsFilter.WorkInProgress()
+    }
+
+    fun onToggleApprovalChip(){
+        _jobCardsFilter.value = JobCardsFilter.Approval()
+    }
+
+    fun onToggleDoneChip(){
+        _jobCardsFilter.value = JobCardsFilter.Done()
+    }
+
+    fun onToggleFrozenChip(){
+        _jobCardsFilter.value = JobCardsFilter.Frozen()
+    }
+
+    fun onToggleTesting(){
+        _jobCardsFilter.value = JobCardsFilter.Testing()
+    }
+
+
     init {
         viewModelScope.launch {
            fetchJobCards()
@@ -167,7 +204,16 @@ class JobCardViewModel(
         }
     }
 
-
+    sealed class JobCardsFilter(){
+        data class All(val name: String = "all"): JobCardsFilter()
+        data class Open(val name: String = "open"): JobCardsFilter()
+        data class Approval(val name: String = "approval"): JobCardsFilter()
+        data class Diagnostics(val name: String = "diagnostics"): JobCardsFilter()
+        data class WorkInProgress(val name: String = "workInProgess"): JobCardsFilter()
+        data class Testing(val name: String = "testing"): JobCardsFilter()
+        data class Done(val name: String = "done"): JobCardsFilter()
+        data class Frozen(val name: String = "frozen"): JobCardsFilter()
+    }
 
 
 }
@@ -195,3 +241,4 @@ sealed class StatusLoadingState {
     data class Error(val message: String) : StatusLoadingState()
 
 }
+

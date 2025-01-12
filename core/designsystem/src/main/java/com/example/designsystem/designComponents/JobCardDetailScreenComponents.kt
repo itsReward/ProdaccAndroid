@@ -235,7 +235,7 @@ fun StepIndicator(
                             "open" -> BlueA700
                             "diagnostics" -> Orange
                             "approval" -> Orange
-                            "work in progress" -> DarkGreen
+                            "work_in_progress" -> DarkGreen
                             "testing" -> DarkGreen
                             "done" -> DarkGreen
                             else -> Color.Red
@@ -248,7 +248,7 @@ fun StepIndicator(
                             "open" -> 0.1f
                             "diagnostics" -> 0.2f
                             "approval" -> 0.3f
-                            "work in progress" -> 0.5f
+                            "work_in_progress" -> 0.5f
                             "testing" -> 0.8f
                             "done" -> 1f
                             else -> 0.1f

@@ -49,7 +49,6 @@ import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.BodyTextItalic
 import com.example.designsystem.designComponents.FormattedTime
 import com.example.designsystem.designComponents.HistorySection
-import com.example.designsystem.designComponents.JobStatusFilters
 import com.example.designsystem.designComponents.LargeJobCard
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
@@ -190,7 +189,17 @@ fun JobCardsScreen(
                             textAlign = TextAlign.Center
                         )
 
-                        JobStatusFilters()
+                        JobStatusFilters(
+                            viewModel::onToggleOpenFilterChip,
+                            viewModel::onToggleOpenFilterChip,
+                            viewModel::onToggleOpenFilterChip,
+                            viewModel::onToggleOpenFilterChip,
+                            viewModel::onToggleOpenFilterChip,
+                            viewModel::onToggleOpenFilterChip,
+                            viewModel::onToggleOpenFilterChip,
+                            viewModel::onToggleOpenFilterChip,
+                            viewModel.jobCardsFilter.collectAsState().value
+                        )
 
 
 
@@ -337,7 +346,7 @@ fun JobCardsScreen(
                                                                     "opened" -> 0.15f / 6f
                                                                     "diagnostics" -> 2f / 6f
                                                                     "approval" -> 3f / 6f
-                                                                    "work in progress" -> 4f / 6f
+                                                                    "work_in_progress" -> 4f / 6f
                                                                     "testing" -> 5f / 6f
                                                                     "done" -> 6f / 6f
                                                                     "frozen" -> 0f
