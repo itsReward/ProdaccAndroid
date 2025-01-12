@@ -721,6 +721,25 @@ fun FormattedTimeDisplay(
     )
 }
 
+@Composable
+fun FormattedTime(
+    color: Color = Color.DarkGray,
+    time: LocalDateTime
+){
+
+    val dateFormatter = DateTimeFormatter.ofPattern("MMM dd")
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+    val timeDisplay = when (time.toLocalDate()) {
+        LocalDate.now() -> time.format(timeFormatter)
+        else -> "${time.format(dateFormatter)} ${time.format(timeFormatter)}"
+    }
+
+    BodyText(
+        text = timeDisplay
+    )
+}
+
 
 
 

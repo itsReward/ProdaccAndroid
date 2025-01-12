@@ -3,13 +3,17 @@ package com.example.prodacc.ui.jobcards.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -21,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateMapOf
@@ -30,11 +35,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.ErrorStateColumn
+import com.example.designsystem.designComponents.FormattedTime
 import com.example.designsystem.designComponents.IconButton
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.OptionDropdown
 import com.example.prodacc.ui.jobcards.viewModels.ControlChecklistViewModel
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.ControlChecklist
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -156,10 +164,17 @@ private fun ControlChecklistSectionContent(
                         color = Color.DarkGray
                     )
                 },
-                actions = {
-                    IconButton(onClick = onClose, icon = Icons.Default.Close, color = Color.DarkGray )
+                navigationIcon = {
+                    IconButton(
+                        onClick = onClose,
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        color = Color.DarkGray
+                    )
 
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
             )
         }
     ) { paddingValues ->
@@ -168,25 +183,39 @@ private fun ControlChecklistSectionContent(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
             // Header Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = "Checklist ${if (existingChecklist != null) "updated" else "created"} on " +
-                                "${date.value.truncatedTo(ChronoUnit.MINUTES)} by ${existingChecklist?.technicianName ?: ""}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (existingChecklist!= null){
+                        Row(
+                            verticalAlignment = Alignment.Bottom,
+                        ) {
+                            BodyText(text = "Updated on: ")
+                            FormattedTime(time = existingChecklist.created)
+                        }
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            BodyText(text = "Created on: ")
+                            FormattedTime(time = LocalDateTime.now())
+                            BodyText(text = " by ${existingChecklist?.technicianName ?: SignedInUser.user!!.employeeName } ${SignedInUser.user!!.employeeSurname}")
+                        }
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Inspection Items Section
             ChecklistSection(
@@ -204,17 +233,19 @@ private fun ControlChecklistSectionContent(
 
             // Action Buttons
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onClose) {
+                /*TextButton(onClick = onClose) {
                     Text("Cancel")
-                }
+                }*/
                 Button(
                     onClick = {
                         val checklistData = checklistItems.mapValues { it.value.value }
                         onSave(checklistData)
-                    }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
                 ) {
                     Text("Save")
                 }

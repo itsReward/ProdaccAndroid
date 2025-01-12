@@ -35,6 +35,8 @@ class JobCardViewModel(
     private val _jobCardLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val jobCardLoadState = _jobCardLoadState
 
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing = _refreshing.asStateFlow()
 
     private val _pastJobCards = MutableStateFlow<List<JobCard>>(emptyList())
     val pastJobCards: StateFlow<List<JobCard>> = _pastJobCards.asStateFlow()

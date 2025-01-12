@@ -31,16 +31,16 @@ class StateChecklistViewModel(
     private val _savingState = MutableStateFlow<SaveState>(SaveState.Idle)
     val savingState = _savingState.asStateFlow()
 
-    private val _fuelLevelIn = MutableStateFlow("------")
+    private val _fuelLevelIn = MutableStateFlow(_stateChecklist.value?.fuelLevelIn.let { "Select" })
     val fuelLevelIn = _fuelLevelIn.asStateFlow()
 
-    private val _fuelLevelOut = MutableStateFlow("------")
+    private val _fuelLevelOut = MutableStateFlow(_stateChecklist.value?.fuelLevelOut.let { "Select" })
     val fuelLevelOut = _fuelLevelOut.asStateFlow()
 
-    private val _millageIn = MutableStateFlow("------")
+    private val _millageIn = MutableStateFlow(_stateChecklist.value?.millageIn.let { "" })
     val millageIn = _millageIn.asStateFlow()
 
-    private val _millageOut = MutableStateFlow("------")
+    private val _millageOut = MutableStateFlow(_stateChecklist.value?.millageOut.let { "" })
     val millageOut = _millageOut.asStateFlow()
 
 
@@ -62,7 +62,16 @@ class StateChecklistViewModel(
                     StateChecklistLoadingState.Loading
 
                 is StateChecklistRepository.LoadingResults.Success -> {
-                    _stateChecklist.value = response.stateChecklist
+                    println(response.stateChecklist)
+                    if (response.stateChecklist != null){
+                        _stateChecklist.value = response.stateChecklist
+                        _fuelLevelIn.value = _stateChecklist.value!!.fuelLevelIn
+                        _fuelLevelOut.value = _stateChecklist.value!!.fuelLevelOut
+                        _millageIn.value = _stateChecklist.value!!.millageIn
+                        _millageOut.value = _stateChecklist.value!!.millageOut
+                    } else {
+                        _stateChecklist.value = null
+                    }
                     _loadingState.value = StateChecklistLoadingState.Success
                 }
             }

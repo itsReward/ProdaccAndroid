@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.BlueA700
+import com.example.designsystem.theme.Red
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -60,20 +62,23 @@ fun OptionDropdown(label: String, initialOption: String?, options: List<String>,
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            androidx.wear.compose.material.Text(
+            Text(
                 text = label,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray
             )
             Box {
-                androidx.wear.compose.material.Text(
+
+                Text(
                     text = selectedOption,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.clickable { expanded = true }
+                    modifier = Modifier
+                        .clickable { expanded = !expanded }
                         .padding(8.dp)
                         .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(4.dp)),
                     color = Color.DarkGray
                 )
+
                 DropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
@@ -84,7 +89,7 @@ fun OptionDropdown(label: String, initialOption: String?, options: List<String>,
                                 selectedOption = option
                                 expanded = false
                             },
-                            text = { androidx.wear.compose.material.Text(option, color = Color.DarkGray) }
+                            text = { Text(option, color = Color.DarkGray) }
                         )
                     }
                 }

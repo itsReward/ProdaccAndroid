@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -21,17 +23,22 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.ErrorStateColumn
+import com.example.designsystem.designComponents.FormattedTime
 import com.example.designsystem.designComponents.IconButton
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.prodacc.ui.jobcards.viewModels.ServiceChecklistViewModel
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.ServiceChecklist
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -139,14 +146,17 @@ fun ServiceChecklistSectionContent(
                         color = Color.DarkGray
                     )
                 },
-                actions = {
+                navigationIcon = {
                     IconButton(
                         onClick = onClose,
-                        icon = Icons.Default.Close,
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
                         color = Color.DarkGray
                     )
 
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
             )
         }
     ) { paddingValues ->
@@ -155,49 +165,66 @@ fun ServiceChecklistSectionContent(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+            Column {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 ) {
-                    Text(
-                        text = "Checklist ${if (existingChecklist != null) "updated" else "created"} on " +
-                                "${date.value.truncatedTo(ChronoUnit.MINUTES)} by ${existingChecklist?.technicianName ?: ""}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (existingChecklist!= null){
+                            Row(
+                                verticalAlignment = Alignment.Bottom,
+                            ) {
+                                BodyText(text = "Updated on: ")
+                                FormattedTime(time = existingChecklist.created)
+                            }
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                BodyText(text = "Created on: ")
+                                FormattedTime(time = LocalDateTime.now())
+                                BodyText(text = " by ${existingChecklist?.technicianName ?: SignedInUser.user!!.employeeName } ${SignedInUser.user!!.employeeSurname}")
+                            }
+                        }
+                    }
                 }
+
+                Spacer(Modifier.height(16.dp))
+
+                // Inspection Items Section
+                ChecklistSection(
+                    title = "Inspection Items",
+                    items = checklistItems.filterKeys { it in inspectionItems },
+                    options = options
+                )
             }
 
-            Spacer(Modifier.height(16.dp))
-
-            // Inspection Items Section
-            ChecklistSection(
-                title = "Inspection Items",
-                items = checklistItems.filterKeys { it in inspectionItems },
-                options = options
-            )
 
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onClose) {
+                /*TextButton(onClick = onClose) {
                     Text("Cancel")
-                }
+                }*/
                 Button(
                     onClick = {
                         val checklistData = checklistItems.mapValues { it.value.value }
                         onSave(checklistData)
-                    }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Save")
+                    Text(if (existingChecklist==null)"Save" else "Update")
                 }
             }
         }

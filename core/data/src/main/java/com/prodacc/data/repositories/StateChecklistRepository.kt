@@ -13,12 +13,13 @@ class StateChecklistRepository {
     suspend fun getStateChecklist(id: UUID): LoadingResults {
         return try {
             val response = service.getStateChecklistByJobCard(id)
+
             if (response.isSuccessful){
                 LoadingResults.Success(response.body()!!)
             } else if (response.code() == 500){
                 LoadingResults.Success(null)
             } else {
-                LoadingResults.Error(response.message())
+                LoadingResults.Success(null)
             }
         } catch (e: Exception) {
             when (e){

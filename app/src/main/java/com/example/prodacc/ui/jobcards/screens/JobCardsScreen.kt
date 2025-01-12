@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +47,7 @@ import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.BodyTextItalic
+import com.example.designsystem.designComponents.FormattedTime
 import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.JobStatusFilters
 import com.example.designsystem.designComponents.LargeJobCard
@@ -117,6 +119,7 @@ fun JobCardsScreen(
             }
         }
     ) { innerPadding ->
+
 
 
 
@@ -234,13 +237,16 @@ fun JobCardsScreen(
                                             LargeTitleText(name = jobCard.jobCardName)
                                             if (jobCard.jobCardDeadline != null){
 
-                                                BodyText(
-                                                    text = "Due: ${
-                                                        jobCard.jobCardDeadline!!.dayOfWeek.toString().lowercase()
-                                                            .replaceFirstChar { it.uppercase() }
-                                                    } ${jobCard.jobCardDeadline!!.hour}:${jobCard.jobCardDeadline!!.minute}",
-                                                    modifier = Modifier.padding(top = 2.dp)
-                                                )
+                                                Row(
+                                                    verticalAlignment = Alignment.Bottom
+                                                ) {
+                                                    BodyText(
+                                                        text = "Due: "
+                                                    )
+
+                                                    FormattedTime(time = jobCard.jobCardDeadline!!)
+                                                }
+
                                             } else {
                                                 Row (
                                                     horizontalArrangement = Arrangement.spacedBy(5.dp),

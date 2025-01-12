@@ -3,12 +3,19 @@ package com.example.prodacc.ui.jobcards.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -19,18 +26,32 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.ErrorStateColumn
+import com.example.designsystem.designComponents.FormattedTime
 import com.example.designsystem.designComponents.IconButton
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.OptionDropdown
+import com.example.designsystem.theme.DarkRed
+import com.example.designsystem.theme.Orange
+import com.example.designsystem.theme.Red
 import com.example.prodacc.ui.jobcards.viewModels.StateChecklistViewModel
 import com.prodacc.data.remote.dao.StateChecklist
 import java.time.LocalDateTime
@@ -223,16 +244,23 @@ fun StateChecklistSectionContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "${existingChecklist?.jobCardName ?: "New"} State Checklist",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.DarkGray
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onClose, icon = Icons.Default.Close, color = Color.DarkGray )
+                    Column {
+                        Text(
+                            "${existingChecklist?.jobCardName ?: "New"} State Checklist",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.DarkGray
+                        )
 
-                }
+                    }
+
+                },
+                navigationIcon = {
+                    IconButton(onClick = onClose, icon = Icons.AutoMirrored.Filled.ArrowBack, color = Color.DarkGray )
+
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
             )
         }
     ) { paddingValues ->
@@ -246,44 +274,130 @@ fun StateChecklistSectionContent(
             // Header Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(vertical = 16.dp).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "Checklist ${if (existingChecklist != null) "updated" else "created"} on " +
-                                "${if (existingChecklist != null) "$existingChecklist.created" else date.value.truncatedTo(ChronoUnit.MINUTES)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (existingChecklist!= null){
+                        Row(
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            BodyText(text = "Updated on: ")
+                            FormattedTime(time = existingChecklist.created)
+                        }
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            BodyText(text = "Created on: ")
+                            FormattedTime(time = LocalDateTime.now())
+                        }
+                    }
+
                 }
             }
 
-
-            TextField(value = millageIn, onValueChange = { onMillageInChange(it) })
-            TextField(value = millageOut, onValueChange = { onMillageOutChange(it) })
-
-            OptionDropdown(
-                label = "Fuel Level In",
-                initialOption = fuelLevelIn,
-                options = fuelLevelOptions
-            ) { onFuelLevelInChange(it) }
-
-            OptionDropdown(
-                label = "Fuel Level Out",
-                initialOption = fuelLevelOut,
-                options = fuelLevelOptions
-            ) { onFuelLevelOutChange(it) }
+            Spacer(modifier = Modifier.height(20.dp))
 
 
-            // Mileage and Fuel Level
-            ChecklistSection(
-                title = "Mileage and Fuel Level",
-                items = checklistItems.filterKeys { it in mileageAndFuelLevelItems },
-                options = fuelLevelOptions
+
+            Text(
+                text = "Millage and Fuel Level",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color.DarkGray
             )
+            Column (
+                modifier = Modifier.fillMaxWidth()
+            ){
+                Row (
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    TextField(
+                        value = millageIn,
+                        onValueChange = { onMillageInChange(it) },
+                        leadingIcon = {
+                            Text(
+                                text = "Millage In:",
+                                color = if (millageIn == "") Red else Color.DarkGray,
+                                fontWeight = if (millageIn == "") FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.weight(2f),
+                        placeholder = { Text(text = "- - - - - -", textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth())},
+                        singleLine = true,
+                        textStyle = TextStyle(textAlign = TextAlign.End),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardActions = KeyboardActions(
+                            onDone = KeyboardActions.Default.onDone
+                        )
+                    )
+
+                    Column (
+                        modifier = Modifier.weight(2f),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ){
+                        OptionDropdown(
+                            label = "Fuel Level In",
+                            initialOption = fuelLevelIn,
+                            options = fuelLevelOptions
+                        ).also { newValue -> onFuelLevelInChange(newValue) }
+                    }
+                }
+
+                Row (
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    TextField(
+                        value = millageOut,
+                        onValueChange = { onMillageOutChange(it) },
+                        leadingIcon = {
+                            Text(
+                                text = "Millage Out: ",
+                                color = if (millageOut == "") Red else Color.DarkGray,
+                                fontWeight = if (millageOut == "") FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.weight(2f),
+                        placeholder = { Text(text = "- - - - - -", textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth())},
+                        singleLine = true,
+                        textStyle = TextStyle(textAlign = TextAlign.End),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    Column (
+                        modifier = Modifier.weight(2f),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ){
+
+                        OptionDropdown(
+                            label = "Fuel Level Out",
+                            initialOption = fuelLevelOut,
+                            options = fuelLevelOptions
+                        ).also { newValue -> onFuelLevelOutChange(newValue) }
+                    }
+                }
+
+
+
+            }
+
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Tools
             ChecklistSection(
@@ -291,13 +405,15 @@ fun StateChecklistSectionContent(
                 items = checklistItems.filterKeys { it in toolsItems },
                 options = options
             )
-
+            Spacer(modifier = Modifier.height(20.dp))
             // Wheels and Tires
             ChecklistSection(
                 title = "Wheels and Tires",
                 items = checklistItems.filterKeys { it in wheelsAndTiresItems },
                 options = options
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Audio Equipment
             ChecklistSection(
@@ -306,12 +422,16 @@ fun StateChecklistSectionContent(
                 options = options
             )
 
+            Spacer(modifier = Modifier.height(20.dp))
+
             // Lights
             ChecklistSection(
                 title = "Lights",
                 items = checklistItems.filterKeys { it in lightsItems },
                 options = options
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Additional
             ChecklistSection(
@@ -320,12 +440,16 @@ fun StateChecklistSectionContent(
                 options = options
             )
 
+            Spacer(modifier = Modifier.height(20.dp))
+
             // Roller Blinds
             ChecklistSection(
                 title = "Roller Blinds",
                 items = checklistItems.filterKeys { it in rollerBlindsItems },
                 options = options
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Glass
             ChecklistSection(
@@ -334,12 +458,16 @@ fun StateChecklistSectionContent(
                 options = options
             )
 
+            Spacer(modifier = Modifier.height(20.dp))
+
             // Interior
             ChecklistSection(
                 title = "Interior",
                 items = checklistItems.filterKeys { it in interiorItems },
                 options = options
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Star
             ChecklistSection(
@@ -348,19 +476,21 @@ fun StateChecklistSectionContent(
                 options = options
             )
 
+            Spacer(modifier = Modifier.height(50.dp))
+
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onClose) {
-                    Text("Cancel")
-                }
+
                 Button(
                     onClick = {
                         val checklistData = checklistItems.mapValues { it.value.value }
                         onSave(checklistData)
-                    }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
                 ) {
                     Text("Save")
                 }
@@ -372,10 +502,7 @@ fun StateChecklistSectionContent(
 
 
 
-// Mileage and Fuel Level
-private val mileageAndFuelLevelItems = setOf(
-    "millageIn", "millageOut", "fuelLevelIn", "fuelLevelOut"
-)
+
 
 // Tools
 private val toolsItems = setOf(
