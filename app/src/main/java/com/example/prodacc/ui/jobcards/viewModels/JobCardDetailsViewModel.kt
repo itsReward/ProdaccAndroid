@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardReport
+import com.prodacc.data.remote.dao.JobCardStatus
 import com.prodacc.data.repositories.JobCardReportRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardStatusRepository
@@ -22,18 +24,48 @@ import java.util.UUID
 class JobCardDetailsViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
-    private val timeSheetRepository: TimeSheetRepository = TimeSheetRepository(),
     private val jobId: String
 ):ViewModel() {
     private val _jobCard = MutableStateFlow<JobCard?>(null)
     val jobCard = _jobCard.asStateFlow()
 
+    private val _jobCardStatusList = MutableStateFlow<List<JobCardStatus>>(emptyList())
+    val jobCardStatusList = _jobCardStatusList.asStateFlow()
+
     private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val loadingState = _loadingState.asStateFlow()
+
+    private val _savingState = MutableStateFlow<SaveState>(SaveState.Idle)
+    val savingState = _savingState.asStateFlow()
+
+
+    private val _statusLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val statusLoadingState = _statusLoadingState.asStateFlow()
 
     init {
         viewModelScope.launch {
             fetchJobCard()
+            fetchJobCardCardStatus()
+        }
+    }
+
+    private suspend fun fetchJobCardCardStatus() {
+        _statusLoadingState.value = LoadingState.Loading
+        try {
+            when(val response = jobCardStatusRepository.getJobCardStatusesByJobId(UUID.fromString(jobId))){
+                is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value = LoadingState.Error(response.message)
+                is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value = LoadingState.Loading
+                is JobCardStatusRepository.LoadingResult.Success -> {
+                    _jobCardStatusList.value = response.status
+                    _statusLoadingState.value = LoadingState.Success
+                }
+            }
+
+        }catch (e: Exception){
+            when (e){
+                is IOException -> LoadingState.Error("Network Error")
+                else -> LoadingState.Error(e.message?:"Unknown Error")
+            }
         }
     }
 
@@ -45,7 +77,6 @@ class JobCardDetailsViewModel(
     }
 
 
-    val jobCardStatusList = jobCardStatusRepository.generateJobCardStatus(UUID.randomUUID())
 
 
     val teamExpanded = mutableStateOf(false)
@@ -62,6 +93,7 @@ class JobCardDetailsViewModel(
 
     fun updateJobCard(update: JobCard.() -> JobCard){
         _jobCard.value = _jobCard.value?.update()
+        saveJobCard()
     }
 
     fun updateDateAndTimeIn(newDateTime: LocalDateTime) {
@@ -129,7 +161,29 @@ class JobCardDetailsViewModel(
     }
 
 
-    fun updateJobCardStatus(status: String){
+    fun saveJobCard(){
+        viewModelScope.launch {
+            _savingState.value = SaveState.Saving
+            try {
+                when (val response = jobCardRepository.updateJobCard(_jobCard.value!!.id, _jobCard.value!!)){
+                    is JobCardRepository.LoadingResult.Error -> _savingState.value = SaveState.Error(response.message)
+                    is JobCardRepository.LoadingResult.ErrorSingleMessage -> _savingState.value = SaveState.Error(response.message)
+                    is JobCardRepository.LoadingResult.NetworkError -> _savingState.value = SaveState.Error("Network Error")
+                    is JobCardRepository.LoadingResult.SingleEntity -> {
+                        _jobCard.value = response.jobCard
+                        _savingState.value = SaveState.Success
+                    }
+                    is JobCardRepository.LoadingResult.Success -> _savingState.value = SaveState.Error("Returned list instead of single entity")
+                }
+
+            } catch (e: Exception){
+                when (e){
+                    is IOException -> _savingState.value = SaveState.Error("Network Error")
+                    else -> _savingState.value = SaveState.Error(e.message?:"Unknown Error")
+                }
+            }
+
+        }
 
     }
 
@@ -138,6 +192,23 @@ class JobCardDetailsViewModel(
             jobCardRepository.deleteJobCard(jobCard.value!!.id)
         }
 
+    }
+
+    fun resetSaveState() {
+        _savingState.value = SaveState.Idle
+    }
+
+    fun refreshStatusList() {
+        viewModelScope.launch {
+            fetchJobCardCardStatus()
+        }
+    }
+
+    sealed class SaveState{
+        data object Idle: SaveState()
+        data object Saving: SaveState()
+        data object Success: SaveState()
+        data class Error(val message: String): SaveState()
     }
 
     sealed class LoadingState{

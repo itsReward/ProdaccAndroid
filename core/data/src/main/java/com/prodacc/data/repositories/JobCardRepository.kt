@@ -110,6 +110,26 @@ class JobCardRepository {
 
     }
 
+    suspend fun updateJobCard(id: UUID, jobCard: JobCard): LoadingResult{
+        return try {
+            val response = jobCardService.updateJobCard(id, jobCard)
+            println(response.code())
+            println(response.body())
+
+            if (response.isSuccessful){
+
+                response.body()?.let { LoadingResult.SingleEntity(it) }?: LoadingResult.Error("Server returned null")
+            } else {
+                LoadingResult.Error("Unknown Error")
+            }
+        } catch (e: Exception){
+            when (e){
+                is IOException -> LoadingResult.NetworkError
+                else -> LoadingResult.Error(e.message?:"Unknown Error" )
+            }
+        }
+    }
+
     suspend fun deleteJobCard(id: UUID) : String {
         return try {
             val response = jobCardService.deleteJobCard(id)

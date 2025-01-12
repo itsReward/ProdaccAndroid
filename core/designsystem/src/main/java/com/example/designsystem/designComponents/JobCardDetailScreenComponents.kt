@@ -339,65 +339,6 @@ fun StepIndicator(
 }
 
 
-@Composable
-fun TopBar(
-    jobCardName: String,
-    navController: NavController,
-    onClickPeople: () -> Unit,
-    onClickDelete: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .shadow(
-                elevation = 4.dp,
-                shape = RectangleShape,
-                clip = false,
-                ambientColor = Color.Black,
-                spotColor = Color.Black
-            )
-            .background(Color.White)
-            .wrapContentSize()
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(top = 20.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-
-    ) {
-        Row(
-            modifier = Modifier.weight(3f), verticalAlignment = Alignment.CenterVertically
-        ) {
-
-
-            IconButton(
-                onClick = { navController.navigateUp() },
-                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                color = DarkGrey
-            )
-            MediumTitleText(
-                name = jobCardName, color = DarkGrey
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
-        ) {
-
-            IconButton(
-                onClick = onClickPeople, icon = Icons.Default.People, color = DarkGrey
-            )
-            IconButton(
-                onClick = onClickDelete, icon = Icons.Filled.Delete, color = DarkGrey
-            )
-        }
-
-
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 object SelectableDates : SelectableDates {

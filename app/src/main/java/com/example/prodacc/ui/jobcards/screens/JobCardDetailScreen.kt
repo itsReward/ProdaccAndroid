@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -183,7 +185,8 @@ fun JobCardDetailScreen(
                     jobCardName = jobCard!!.jobCardName,
                     navController = navController,
                     onClickPeople = { showDialog = !showDialog },
-                    onClickDelete = { viewModel.setDeleteJobCardConfirmation(true) }
+                    onClickDelete = { viewModel.setDeleteJobCardConfirmation(true) },
+                    saveState = viewModel.savingState.collectAsState().value
                 )
 
                 if (showDialog) {
@@ -251,9 +254,40 @@ fun JobCardDetailScreen(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        StepIndicator(
-                            jobCardStatuses = viewModel.jobCardStatusList.subList(0, 4)
-                        )
+                        when(val list = viewModel.statusLoadingState.collectAsState().value){
+                            is JobCardDetailsViewModel.LoadingState.Error -> {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 20.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = list.message, color = Color.Red)
+                                    TextButton(onClick = { viewModel.refreshStatusList() }) {
+                                        Text(text = "Reload")
+                                    }
+
+                                }
+                            }
+                            JobCardDetailsViewModel.LoadingState.Loading -> {
+                                Row {
+                                    Text(text = "Loading Statuses")
+                                   CircularProgressIndicator(color = BlueA700, trackColor = Color.Transparent, modifier = Modifier.size(25.dp))
+                                }
+                            }
+                            else -> {
+                                if (viewModel.jobCardStatusList.collectAsState().value.isNotEmpty()){
+                                    StepIndicator(
+                                        jobCardStatuses = viewModel.jobCardStatusList.collectAsState().value
+                                    )
+                                } else {
+                                    Text(text = "No Status Entry")
+                                }
+
+                            }
+                        }
+
 
                     }
 
@@ -579,7 +613,6 @@ fun JobCardDetailScreen(
     }
 
 
-
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = {
@@ -739,6 +772,27 @@ fun JobCardDetailScreen(
 
         }
 
+    }
+
+    when (val saveState = viewModel.savingState.collectAsState().value){
+        is JobCardDetailsViewModel.SaveState.Error -> {
+            AlertDialog(
+                onDismissRequest = viewModel::resetSaveState,
+                confirmButton = {
+                    Button(onClick = viewModel::saveJobCard) {
+                        Text(text = "Try Again")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = viewModel::resetSaveState) {
+                        Text(text = "Discard Changes")
+                    }
+                },
+                title = { Text(text = "Failed to save changes")},
+                text = { Text(text = saveState.message)}
+            )
+        }
+        else -> {}
     }
 
 }
