@@ -42,15 +42,10 @@ class TimeSheetsViewModel(
     val newTimeSheetLoadState = _newTimeSheetLoadState.asStateFlow()
 
     private var newTimeSheetCount = 0
-
-    private val _newDiagnosticsTimeSheetLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
-    val newDiagnosticsTimeSheetLoadState = _newDiagnosticsTimeSheetLoadState.asStateFlow()
-
-    private val _updatingDiagnosticsTimeSheetLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
-    val updatingDiagnosticsTimeSheetLoadState = _updatingDiagnosticsTimeSheetLoadState.asStateFlow()
-
+    
     private val _isSavingNewTimeSheet = AtomicBoolean(false)
 
+    //Diagnostics time sheet
     private val _diagnosticsClockIn = MutableStateFlow<LocalDateTime?>(null)
     val diagnosticsClockIn = _diagnosticsClockIn.asStateFlow()
 
@@ -65,6 +60,30 @@ class TimeSheetsViewModel(
 
     private val _diagnosticsTimeSheet = MutableStateFlow<Timesheet?>(null)
     val diagnosticsTimeSheet = _diagnosticsTimeSheet.asStateFlow()
+
+    private val _newDiagnosticsTimeSheetLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val newDiagnosticsTimeSheetLoadState = _newDiagnosticsTimeSheetLoadState.asStateFlow()
+
+    private val _updatingDiagnosticsTimeSheetLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val updatingDiagnosticsTimeSheetLoadState = _updatingDiagnosticsTimeSheetLoadState.asStateFlow()
+
+    //Control Report time sheet
+    private val _controlClockIn = MutableStateFlow<LocalDateTime?>(null)
+    val controlClockIn = _controlClockIn.asStateFlow()
+
+    private val _controlClockOut = MutableStateFlow<LocalDateTime?>(null)
+    val controlClockOut = _controlClockOut.asStateFlow()
+
+    private val _controlReport = MutableStateFlow<String>("")
+    val controlReport = _controlReport.asStateFlow()
+
+    private val _isControlReportEdited = MutableStateFlow(false)
+    val isControlReportEdited = _isControlReportEdited.asStateFlow()
+
+    private val _controlTimeSheet = MutableStateFlow<Timesheet?>(null)
+    val controlTimeSheet = _controlTimeSheet.asStateFlow()
+
+
 
     //New TimeSheet
     private val _newTimeSheet = MutableStateFlow<CreateTimesheet>(

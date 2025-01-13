@@ -58,85 +58,86 @@ fun JobCardsScreen(
     val isRefreshing = viewModel.refreshing.collectAsState().value
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
 
-    Scaffold(topBar = {
-        TopBar(title = "Job Cards", onSearchClick = {
-            navController.navigate(
-                Route.Search.path.replace(
-                    "{title}", "Job Cards"
-                )
-            )
-        }, logOut = {
-            TokenManager.saveToken(null)
-            navController.navigate(Route.LogIn.path)
-        })
-    }, bottomBar = { NavigationBar(navController) }, floatingActionButton = {
-        FloatingActionButton(
-            onClick = {
+    SwipeRefresh(
+        state = swipeRefreshState,
+        onRefresh = { viewModel.refreshJobCards() }
+    ) {
+        Scaffold(topBar = {
+            TopBar(title = "Job Cards", onSearchClick = {
                 navController.navigate(
-                    Route.NewJobCard.path
+                    Route.Search.path.replace(
+                        "{title}", "Job Cards"
+                    )
                 )
-            }, shape = CircleShape, containerColor = Color.White
-        ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
-        }
-    }) { innerPadding ->
+            }, logOut = {
+                TokenManager.saveToken(null)
+                navController.navigate(Route.LogIn.path)
+            })
+        }, bottomBar = { NavigationBar(navController) }, floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    navController.navigate(
+                        Route.NewJobCard.path
+                    )
+                }, shape = CircleShape, containerColor = Color.White
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
+            }
+        }) { innerPadding ->
 
 
-        viewModel.jobCardLoadState.collectAsState().value.let { state ->
-            when (state) {
-                is LoadingState.Idle -> {
-                    Column(
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+            viewModel.jobCardLoadState.collectAsState().value.let { state ->
+                when (state) {
+                    is LoadingState.Idle -> {
                         Column(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(5.dp))
-                                .background(Color.White)
-                                .padding(horizontal = 20.dp, vertical = 10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                                .padding(innerPadding)
+                                .fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(text = "Weak Signal, Refresh")
-                            Button(onClick = { viewModel.refreshJobCards() }) {
-                                Text(text = "Refresh")
+                            Column(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(5.dp))
+                                    .background(Color.White)
+                                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(20.dp)
+                            ) {
+                                Text(text = "Weak Signal, Refresh")
+                                Button(onClick = { viewModel.refreshJobCards() }) {
+                                    Text(text = "Refresh")
+                                }
                             }
                         }
                     }
-                }
 
-                is LoadingState.Loading -> {
-                    Column(
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    is LoadingState.Loading -> {
                         Column(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(5.dp))
-                                .background(Color.White)
-                                .padding(horizontal = 20.dp, vertical = 10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                                .padding(innerPadding)
+                                .fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            CircularProgressIndicator(
-                                color = BlueA700, trackColor = Color.Transparent
-                            )
-                            Text(text = "Loading JobCards...")
+                            Column(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(5.dp))
+                                    .background(Color.White)
+                                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(20.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    color = BlueA700, trackColor = Color.Transparent
+                                )
+                                Text(text = "Loading JobCards...")
+                            }
                         }
                     }
-                }
 
-                is LoadingState.Success -> {
+                    is LoadingState.Success -> {
 
-                    SwipeRefresh(
-                        state = swipeRefreshState,
-                        onRefresh = { viewModel.refreshJobCards() }) {
                         Column(
                             modifier = Modifier
                                 .padding(innerPadding)
@@ -220,31 +221,33 @@ fun JobCardsScreen(
                                 }
                             }
                         }
+
                     }
 
-
-                }
-
-                is LoadingState.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(innerPadding)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        Text(text = state.message)
-                        Button(onClick = { viewModel.refreshJobCards() }) {
-                            Text(text = "Refresh")
+                    is LoadingState.Error -> {
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(innerPadding)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            Text(text = state.message)
+                            Button(onClick = { viewModel.refreshJobCards() }) {
+                                Text(text = "Refresh")
+                            }
                         }
-                    }
 
+                    }
                 }
             }
+
         }
     }
+
+
 }
 
 

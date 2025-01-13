@@ -596,6 +596,14 @@ fun JobCardDetailScreen(
 
                     }
 
+                    DateTimePickerTextField(
+                        value = jobCard.estimatedTimeOfCompletion,
+                        onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
+                        label = "Quality control clock in",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+
                     ReportTextField(
                         value = reportsViewModel.controlReport.collectAsState().value?.jobReport
                             ?: "",
@@ -605,6 +613,14 @@ fun JobCardDetailScreen(
                         onSave = { reportsViewModel.saveControlReport() },
                         modifier = Modifier.fillMaxWidth(),
                         loadingState = reportsViewModel.controlReportLoadingState.collectAsState().value
+                    )
+
+                    DateTimePickerTextField(
+                        value = jobCard.estimatedTimeOfCompletion,
+                        onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
+                        label = "Quality control clock out",
+                        modifier = Modifier
+                            .fillMaxWidth()
                     )
 
                     DateTimePickerTextField(
