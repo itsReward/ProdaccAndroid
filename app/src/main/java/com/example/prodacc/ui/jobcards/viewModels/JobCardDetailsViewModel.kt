@@ -69,6 +69,27 @@ class JobCardDetailsViewModel(
         }
     }
 
+    private suspend fun updateJobCardsStatus(newStatus: String){
+        _statusLoadingState.value = LoadingState.Loading
+        try {
+            when(val response = jobCardStatusRepository.addNewJobCardStatus(UUID.fromString(jobId), newStatus)){
+                is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value = LoadingState.Error(response.message)
+                is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value = LoadingState.Loading
+                is JobCardStatusRepository.LoadingResult.Success -> {
+                    _jobCardStatusList.value = response.status
+                    _statusLoadingState.value = LoadingState.Success
+                }
+            }
+        } catch (e: Exception){
+            when (e){
+                is IOException -> LoadingState.Error("Network Error")
+                else -> LoadingState.Error(e.message?:"Unknown Error")
+            }
+        } finally {
+            fetchJobCardCardStatus()
+        }
+    }
+
     private val _deleteJobCardConfirmation = MutableStateFlow(false)
     val deleteJobCardConfirmation = _deleteJobCardConfirmation.asStateFlow()
 
@@ -98,10 +119,18 @@ class JobCardDetailsViewModel(
 
     fun updateDateAndTimeIn(newDateTime: LocalDateTime) {
         updateJobCard { copy(dateAndTimeIn = newDateTime) }
+        viewModelScope.launch {
+            updateJobCardsStatus("opened")
+        }
     }
 
     fun updateEstimatedTimeOfCompletion(newDateTime: LocalDateTime) {
-        updateJobCard { copy(estimatedTimeOfCompletion = newDateTime) }
+        if (_jobCard.value?.jobCardDeadline == null){
+            updateJobCard { copy(estimatedTimeOfCompletion = newDateTime, jobCardDeadline = newDateTime) }
+        } else {
+            updateJobCard { copy(estimatedTimeOfCompletion = newDateTime) }
+        }
+
     }
 
     fun updateJobCardDeadline(newDateTime: LocalDateTime) {
@@ -110,10 +139,16 @@ class JobCardDetailsViewModel(
 
     fun updateDateAndTimeClosed(newDateTime: LocalDateTime) {
         updateJobCard { copy(dateAndTimeClosed = newDateTime) }
+        viewModelScope.launch {
+            updateJobCardsStatus("done")
+        }
     }
 
     fun updateDateAndTimeFrozen(newDateTime: LocalDateTime) {
         updateJobCard { copy(dateAndTimeFrozen = newDateTime) }
+        viewModelScope.launch {
+            updateJobCardsStatus("onhold")
+        }
     }
 
     fun updateSupervisor(id : UUID){

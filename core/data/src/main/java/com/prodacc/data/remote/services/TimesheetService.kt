@@ -28,7 +28,7 @@ interface TimesheetService {
     @PUT("timesheets/update/{id}")
     suspend fun updateTimesheet(
         @Path("id") timesheetId: UUID,
-        @Body timesheetRequest: UpdateTimesheet
+        @Body timesheetRequest: Timesheet
     ): Response<Timesheet>
 
     @DELETE("timesheets/delete/{id}")

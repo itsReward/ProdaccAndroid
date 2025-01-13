@@ -31,9 +31,7 @@ data class UpdateTimesheet(
     @SerializedName("clockInDateAndTime") val clockInDateAndTime: LocalDateTime? = null,
     @SerializedName("clockOutDateAndTime") val clockOutDateAndTime: LocalDateTime? = null,
     @SerializedName("jobCardId") val jobCardId: UUID,
-    @SerializedName("jobCardName") val jobCardName: String,
-    @SerializedName("technicianId") val technicianId: UUID,
-    @SerializedName("technicianName") val technicianName: String
+    @SerializedName("technicianId") val technicianId: UUID
 )
 
 data class CreateTimesheet(

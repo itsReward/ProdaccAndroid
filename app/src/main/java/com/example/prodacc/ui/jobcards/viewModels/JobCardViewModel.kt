@@ -22,9 +22,10 @@ class JobCardViewModel(
     private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository()
 ): ViewModel(){
     private val _jobCards = MutableStateFlow<List<JobCard>>(emptyList())
-    val jobCards: StateFlow<List<JobCard>> = _jobCards.asStateFlow()
+    private val jobCards: StateFlow<List<JobCard>> = _jobCards.asStateFlow()
 
-
+    private val _filteredJobCards = MutableStateFlow<List<JobCard>>(emptyList())
+    val filteredJobCards: StateFlow<List<JobCard>> = _filteredJobCards.asStateFlow()
 
     private val _reportsMap = MutableStateFlow<Map<UUID, ReportLoadingState>>(emptyMap())
     val reportsMap: StateFlow<Map<UUID, ReportLoadingState>> = _reportsMap.asStateFlow()
@@ -48,40 +49,100 @@ class JobCardViewModel(
 
     fun onToggleAllFilterChip(){
         _jobCardsFilter.value = JobCardsFilter.All()
+        filterJobCards()
     }
 
     fun onToggleOpenFilterChip(){
-        _jobCardsFilter.value = JobCardsFilter.All()
+        _jobCardsFilter.value = JobCardsFilter.Open()
+        filterJobCards()
     }
 
     fun onToggleDiagnosticsFilterChip(){
         _jobCardsFilter.value = JobCardsFilter.Diagnostics()
+        filterJobCards()
     }
 
     fun onToggleWorkInProgressChip(){
         _jobCardsFilter.value = JobCardsFilter.WorkInProgress()
+        filterJobCards()
     }
 
     fun onToggleApprovalChip(){
         _jobCardsFilter.value = JobCardsFilter.Approval()
+        filterJobCards()
     }
 
     fun onToggleDoneChip(){
         _jobCardsFilter.value = JobCardsFilter.Done()
+        filterJobCards()
     }
 
     fun onToggleFrozenChip(){
         _jobCardsFilter.value = JobCardsFilter.Frozen()
+        filterJobCards()
     }
 
     fun onToggleTesting(){
         _jobCardsFilter.value = JobCardsFilter.Testing()
+        filterJobCards()
     }
 
 
     init {
         viewModelScope.launch {
            fetchJobCards()
+        }
+    }
+
+    private fun filterJobCards() {
+        viewModelScope.launch {
+            val currentCards = _jobCards.value
+            _filteredJobCards.value = when (_jobCardsFilter.value) {
+                is JobCardsFilter.All -> currentCards
+                is JobCardsFilter.Open -> currentCards.filter {
+                    statusMap.value[it.id]?.let { state ->
+                        state is StatusLoadingState.Success &&
+                                state.response?.status == "opened"
+                    } ?: false
+                }
+                is JobCardsFilter.Approval -> currentCards.filter {
+                    statusMap.value[it.id]?.let { state ->
+                        state is StatusLoadingState.Success &&
+                                state.response?.status == "approval"
+                    } ?: false
+                }
+
+                is JobCardsFilter.Diagnostics -> currentCards.filter {
+                    statusMap.value[it.id]?.let { state ->
+                        state is StatusLoadingState.Success &&
+                                state.response?.status == "diagnostics"
+                    } ?: false
+                }
+                is JobCardsFilter.Done -> currentCards.filter {
+                    statusMap.value[it.id]?.let { state ->
+                        state is StatusLoadingState.Success &&
+                                state.response?.status == "done"
+                    } ?: false
+                }
+                is JobCardsFilter.Frozen -> currentCards.filter {
+                    statusMap.value[it.id]?.let { state ->
+                        state is StatusLoadingState.Success &&
+                                state.response?.status == "onhold"
+                    } ?: false
+                }
+                is JobCardsFilter.Testing -> currentCards.filter {
+                    statusMap.value[it.id]?.let { state ->
+                        state is StatusLoadingState.Success &&
+                                state.response?.status == "testing"
+                    } ?: false
+                }
+                is JobCardsFilter.WorkInProgress -> currentCards.filter {
+                    statusMap.value[it.id]?.let { state ->
+                        state is StatusLoadingState.Success &&
+                                state.response?.status == "work_in_progress"
+                    } ?: false
+                }
+            }
         }
     }
 
@@ -93,6 +154,7 @@ class JobCardViewModel(
                 is JobCardRepository.LoadingResult.Success -> {
                     _jobCardLoadState.value = LoadingState.Success(loadingResult.jobCards)
                     _jobCards.value = loadingResult.jobCards.sortedByDescending { it.dateAndTimeIn }
+                    filterJobCards()
                 }
 
                 is JobCardRepository.LoadingResult.Error -> {
@@ -200,7 +262,14 @@ class JobCardViewModel(
 
     fun refreshJobCards(){
         viewModelScope.launch {
-            fetchJobCards()
+            try {
+                _refreshing.value = true
+                _jobCards.value = emptyList()
+                fetchJobCards()
+            } finally {
+                _refreshing.value = false
+            }
+
         }
     }
 

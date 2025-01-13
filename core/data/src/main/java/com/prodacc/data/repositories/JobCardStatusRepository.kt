@@ -23,6 +23,14 @@ class JobCardStatusRepository {
                 LocalDateTime.now()
             )
             val response = service.addNewJobCardStatus(jobCardStatus)
+
+
+            println("URL:" + response.raw().request().url())
+            println("Request Body:" + response.raw().request().body())
+            println("Response Code:" + response.code())
+            println("Response Body:" +response.body())
+            println("Response Error Body:" + (response.errorBody()?: response.message()) )
+
             if (response.isSuccessful){
                 when (val list = getJobCardStatusesByJobId(jobCardId)){
                     is LoadingResult.Error -> LoadingResult.Error(list.message)

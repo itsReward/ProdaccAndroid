@@ -64,6 +64,8 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.32.0")
+
     implementation("com.google.dagger:hilt-android:2.51")
     implementation("com.google.android.libraries.mapsplatform.transportation:transportation-consumer:2.2.0")
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")

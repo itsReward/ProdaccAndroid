@@ -43,15 +43,6 @@ fun JobStatusFilters(
     onClickFrozen: () -> Unit,
     jobCardFilterState: JobCardViewModel.JobCardsFilter
 ) {
-    var all by remember { mutableStateOf(true) }
-    var open by remember { mutableStateOf(false) }
-    var approval by remember { mutableStateOf(false) }
-    var diagnostics by remember { mutableStateOf(false) }
-    var workInProgress by remember { mutableStateOf(false) }
-    var testing by remember { mutableStateOf(false) }
-    var done by remember { mutableStateOf(false) }
-    var frozen by remember { mutableStateOf(false) }
-
     val jobCardsStatus = listOf(
         "all",
         "open",
@@ -60,7 +51,7 @@ fun JobStatusFilters(
         "workInProgress",
         "testing",
         "done",
-        "frozen"
+        "onhold"
     )
 
     LazyRow(
@@ -87,7 +78,7 @@ fun JobStatusFilters(
                         onClickTesting()
                     } else if (it == "done") {
                         onClickDone()
-                    } else if (it == "frozen") {
+                    } else if (it == "onhold") {
                         onClickFrozen()
                     }
 
@@ -108,24 +99,23 @@ fun JobStatusFilters(
                             "Testing"
                         } else if (it == "done") {
                             "Done"
-                        } else if (it == "frozen") {
+                        } else if (it == "onhold") {
                             "Frozen"
                         } else {
                             ""
                         }
                     )
                 },
-                selected = all,
-                leadingIcon = if (all) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
+                selected =  when (it) {
+                    "all" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.All
+                    "open" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Open
+                    "approval" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Approval
+                    "diagnostics" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Diagnostics
+                    "workInProgress" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.WorkInProgress
+                    "testing" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Testing
+                    "done" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Done
+                    "onhold" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Frozen
+                    else -> false
                 },
                 shape = RoundedCornerShape(50.dp),
                 colors = FilterChipDefaults.filterChipColors(
@@ -134,287 +124,9 @@ fun JobStatusFilters(
                     selectedLabelColor = Color.White,
                     selectedLeadingIconColor = Color.White
 
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = all,
-                    borderColor = Grey
                 )
             )
 
-        }
-
-        item {
-            FilterChip(
-                onClick = { all = !all },
-                label = {
-                    Text("All")
-                },
-                selected = all,
-                leadingIcon = if (all) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                },
-                shape = RoundedCornerShape(50.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = BlueA700,
-                    containerColor = Color.White,
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
-
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = all,
-                    borderColor = Grey
-                )
-            )
-        }
-
-        item {
-            FilterChip(
-                onClick = { open = !open },
-                label = {
-                    Text("Open")
-                },
-                selected = open,
-                leadingIcon = if (open) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                },
-                shape = RoundedCornerShape(50.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = BlueA700,
-                    containerColor = Color.White,
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
-
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = open,
-                    borderColor = Grey
-                )
-            )
-        }
-
-        item {
-            FilterChip(
-                onClick = { diagnostics = !diagnostics },
-                label = {
-                    Text("Diagnostics")
-                },
-                selected = diagnostics,
-                leadingIcon = if (diagnostics) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                },
-                shape = RoundedCornerShape(50.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = LightOrange,
-                    containerColor = Color.White,
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
-
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = diagnostics,
-                    borderColor = Grey
-                )
-            )
-
-        }
-
-        item {
-            FilterChip(
-                onClick = { approval = !approval },
-                label = {
-                    Text("Waiting for Approval")
-                },
-                selected = approval,
-                leadingIcon = if (approval) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                },
-                shape = RoundedCornerShape(50.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = DarkOrange,
-                    containerColor = Color.White,
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
-
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = approval,
-                    borderColor = Grey
-                )
-            )
-        }
-
-        item {
-            FilterChip(
-                onClick = { workInProgress = !workInProgress },
-                label = {
-                    Text("Work In Progress")
-                },
-                selected = workInProgress,
-                leadingIcon = if (workInProgress) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                },
-                shape = RoundedCornerShape(50.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = DarkGreen,
-                    containerColor = Color.White,
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
-
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = workInProgress,
-                    borderColor = Grey
-                )
-            )
-        }
-
-        item {
-            FilterChip(
-                onClick = { testing = !testing },
-                label = {
-                    Text("Testing")
-                },
-                selected = testing,
-                leadingIcon = if (testing) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                },
-                shape = RoundedCornerShape(50.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = LightGreen,
-                    containerColor = Color.White,
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
-
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = testing,
-                    borderColor = Grey
-                )
-            )
-        }
-
-        item {
-            FilterChip(
-                onClick = { done = !done },
-                label = {
-                    Text("Done")
-                },
-                selected = done,
-                leadingIcon = if (done) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                },
-                shape = RoundedCornerShape(50.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Green,
-                    containerColor = Color.White,
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
-
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = done,
-                    borderColor = Grey
-                )
-            )
-        }
-
-        item {
-            FilterChip(
-                onClick = { frozen = !frozen },
-                label = {
-                    Text("Frozen")
-                },
-                selected = frozen,
-                leadingIcon = if (frozen) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Done,
-                            contentDescription = "Done icon",
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else {
-                    null
-                },
-                shape = RoundedCornerShape(50.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Red,
-                    containerColor = Color.White,
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
-
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = frozen,
-                    borderColor = Grey
-                )
-            )
         }
 
     }

@@ -1,6 +1,7 @@
 package com.example.designsystem.designComponents
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,7 +53,10 @@ fun TopBar(title: String, onSearchClick: () -> Unit, logOut: ()-> Unit) {
             actions = {
                 IconButton(onClick = logOut, icon = logOutIcon, color = Color.DarkGray)
 
-            }
+            },
+            colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent
+            )
         )
         Column (
             modifier = Modifier.padding(horizontal = 10.dp)

@@ -432,15 +432,30 @@ fun JobCardDetailScreen(
                             loadingState = reportsViewModel.serviceAdvisorReportLoadingState.collectAsState().value
                         )
 
-                        ReportTextField(
-                            value = reportsViewModel.diagnosticsReport.collectAsState().value?.jobReport
-                                ?: "",
-                            onValueChange = { reportsViewModel.editDiagnosticsReport(it) },
-                            label = if (reportsViewModel.diagnosticsReport.collectAsState().value != null) "Diagnostics Report" else "New Diagnostics Report",
-                            isEdited = reportsViewModel.isDiagnosticsReportEdited.collectAsState().value,
-                            onSave = { reportsViewModel.saveDiagnosticsReport() },
+                        DateTimePickerTextField(
+                            value = timeSheetViewModel.diagnosticsClockIn.collectAsState().value,
+                            onValueChange = { timeSheetViewModel.updateDiagnosticsClockIn(it) },
+                            label = "Diagnostics clock in",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 20.dp)
+                        )
+                        DiagnosticsReportTextField(
+                            value = timeSheetViewModel.diagnosticsReport.collectAsState().value,
+                            onValueChange = { timeSheetViewModel.updateDiagnosticsReport(it) },
+                            label = if (timeSheetViewModel.diagnosticsReport.collectAsState().value != "") "Diagnostics Report" else "New Diagnostics Report",
+                            isEdited = timeSheetViewModel.isDiagnosticsReportEdited.collectAsState().value,
+                            onSave = { timeSheetViewModel.onSaveDiagnosticsReport() },
                             modifier = Modifier.fillMaxWidth(),
-                            loadingState = reportsViewModel.diagnosticsReportLoadingState.collectAsState().value
+                            loadingState = timeSheetViewModel.updateLoadingState.collectAsState().value
+                        )
+                        DateTimePickerTextField(
+                            value = timeSheetViewModel.diagnosticsClockOut.collectAsState().value,
+                            onValueChange = { timeSheetViewModel.updateDiagnosticsClockOut(it) },
+                            label = "Diagnostics clock out",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp, top = 10.dp)
                         )
 
                         DateTimePickerTextField(
@@ -449,7 +464,6 @@ fun JobCardDetailScreen(
                             label = "E.T.C.",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 10.dp)
                         )
                     }
 
@@ -813,42 +827,6 @@ fun ReportTextField(
     }
 
     Column(modifier = modifier) {
-        /*when (loadingState) {
-            is JobCardReportsViewModel.LoadingState.Loading -> {
-                LoadingStateColumn(title = "Loading Report")
-            }
-            is JobCardReportsViewModel.LoadingState.Success -> {
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    label = { Text(text = label) }
-                )
-
-                AnimatedVisibility(
-                    visible = isEdited,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    Button(
-                        onClick = onSave,
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .padding(top = 8.dp)
-                    ) {
-                        Text("Save Changes")
-                    }
-                }
-            }
-            is JobCardReportsViewModel.LoadingState.Error -> {
-            }
-            is JobCardReportsViewModel.LoadingState.Idle -> {
-                Text(text = "$label not loaded")
-            }
-        }*/
-
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -902,6 +880,94 @@ fun ReportTextField(
             }
 
             is JobCardReportsViewModel.LoadingState.Idle -> {
+            }
+        }
+        AnimatedVisibility(
+            visible = isEdited,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Button(
+                onClick = onSave,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(top = 8.dp)
+            ) {
+                Text("Save Changes")
+            }
+        }
+
+
+    }
+}
+@Composable
+fun DiagnosticsReportTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    isEdited: Boolean,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier,
+    loadingState: TimeSheetsViewModel.LoadingState
+) {
+    var successText by remember {
+        mutableStateOf(false)
+    }
+
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            label = { Text(text = label) }
+        )
+        when (loadingState) {
+            is TimeSheetsViewModel.LoadingState.Loading -> {
+                //LoadingStateColumn(title = "Loading Report")
+                LinearProgressIndicator(
+                    color = BlueA700,
+                    trackColor = Color.Transparent,
+                    modifier = Modifier
+                        .height(4.dp)
+                        .fillMaxWidth()
+                )
+            }
+
+            is TimeSheetsViewModel.LoadingState.Success -> {
+                LaunchedEffect(Unit) {
+                    successText = true
+                    delay(1000)
+                    successText = false
+                }
+
+                AnimatedVisibility(
+                    visible = successText,
+                    enter = slideInVertically() + expandVertically(),
+                    exit = slideOutVertically() + shrinkVertically()
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Check",
+                            tint = DarkGreen
+                        )
+                        Text(text = "Done", modifier = Modifier.padding(vertical = 10.dp))
+                    }
+
+                }
+            }
+
+            is TimeSheetsViewModel.LoadingState.Error -> {
+                Text(text = loadingState.message, color = Color.Red)
+            }
+
+            is TimeSheetsViewModel.LoadingState.Idle -> {
             }
         }
         AnimatedVisibility(

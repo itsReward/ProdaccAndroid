@@ -85,7 +85,7 @@ class TimeSheetRepository {
         }
     }
 
-    suspend fun updateTimesheet(id: UUID, timesheet: UpdateTimesheet): LoadingResult {
+    suspend fun updateTimesheet(id: UUID, timesheet: Timesheet): LoadingResult {
         return try {
             val response = service.updateTimesheet(id, timesheet)
             if (response.isSuccessful) {
