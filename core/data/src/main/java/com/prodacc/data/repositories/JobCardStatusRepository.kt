@@ -11,10 +11,6 @@ import java.util.UUID
 class JobCardStatusRepository {
     private val service = ApiInstance.jobCardStatusService
 
-    private val status =
-        listOf("opened", "diagnostics", "approval", "work in progress", "testing", "done", "frozen")
-
-
     suspend fun addNewJobCardStatus(jobCardId: UUID, status: String): LoadingResult{
         return try {
             val jobCardStatus = NewJobCardStatus(
@@ -23,13 +19,6 @@ class JobCardStatusRepository {
                 LocalDateTime.now()
             )
             val response = service.addNewJobCardStatus(jobCardStatus)
-
-
-            println("URL:" + response.raw().request().url())
-            println("Request Body:" + response.raw().request().body())
-            println("Response Code:" + response.code())
-            println("Response Body:" +response.body())
-            println("Response Error Body:" + (response.errorBody()?: response.message()) )
 
             if (response.isSuccessful){
                 when (val list = getJobCardStatusesByJobId(jobCardId)){

@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiInstance {
     @Volatile
-    var BASE_URL = "http://10.124.241.123:5000"
+    var BASE_URL = "http://192.168.122.123:5000"
         set
 
     //WebSocket
@@ -76,7 +76,10 @@ object ApiInstance {
     }
 
     private fun setupWebSocket() {
-        val wsUrl = BASE_URL.replace("http", "ws") + "/websocket"
+        // Get the current token
+        val token = TokenManager.getToken()?.accessToken ?: return
+
+        val wsUrl = "${BASE_URL.replace("http", "ws")}/websocket?token=$token"
 
         val client = OkHttpClient.Builder()
             .pingInterval(30, TimeUnit.SECONDS) // Keep connection alive

@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardReport
 import com.prodacc.data.remote.dao.JobCardStatus
@@ -25,7 +27,7 @@ class JobCardDetailsViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
     private val jobId: String
-):ViewModel() {
+):ViewModel(), ApiInstance.WebSocketEventListener {
     private val _jobCard = MutableStateFlow<JobCard?>(null)
     val jobCard = _jobCard.asStateFlow()
 
@@ -45,6 +47,7 @@ class JobCardDetailsViewModel(
     val statusLoadingState = _statusLoadingState.asStateFlow()
 
     init {
+        ApiInstance.addWebSocketListener(this)
         viewModelScope.launch {
             fetchJobCard()
             fetchJobCardCardStatus()
@@ -256,6 +259,20 @@ class JobCardDetailsViewModel(
         data object Loading: LoadingState()
         data object Success: LoadingState()
         data class Error(val message: String): LoadingState()
+    }
+
+    override fun onJobCardUpdate(update: WebSocketUpdate) {
+        viewModelScope.launch {
+            when(update){
+                is WebSocketUpdate.JobCardCreated -> refreshJobCard()
+                is WebSocketUpdate.JobCardUpdated -> refreshJobCard()
+                is WebSocketUpdate.StatusChanged -> refreshStatusList()
+            }
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+        _loadingState.value = LoadingState.Error(error.message?:"Unknown Error")
     }
 }
 
