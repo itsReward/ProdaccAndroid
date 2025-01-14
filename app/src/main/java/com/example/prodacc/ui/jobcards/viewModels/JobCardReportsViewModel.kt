@@ -30,31 +30,18 @@ class JobCardReportsViewModel(
     private val _serviceAdvisorReport = MutableStateFlow<JobCardReport?>(null)
     val serviceAdvisorReport = _serviceAdvisorReport.asStateFlow()
 
-    private val _diagnosticsReport = MutableStateFlow<JobCardReport?>(null)
-    val diagnosticsReport = _diagnosticsReport.asStateFlow()
-
-    private val _controlReport = MutableStateFlow<JobCardReport?>(null)
-    val controlReport = _controlReport.asStateFlow()
 
     //Reports Loading State
     private val _serviceAdvisorReportLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val serviceAdvisorReportLoadingState = _serviceAdvisorReportLoadingState.asStateFlow()
 
-    private val _diagnosticsLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
-    val diagnosticsReportLoadingState = _diagnosticsLoadingState.asStateFlow()
 
-    private val _controlReportLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
-    val controlReportLoadingState = _controlReportLoadingState
 
     // Report editing states
     private val _isServiceAdvisorReportEdited = MutableStateFlow(false)
     val isServiceAdvisorReportEdited = _isServiceAdvisorReportEdited.asStateFlow()
 
-    private val _isDiagnosticsReportEdited = MutableStateFlow(false)
-    val isDiagnosticsReportEdited = _isDiagnosticsReportEdited.asStateFlow()
 
-    private val _isControlReportEdited = MutableStateFlow(false)
-    val isControlReportEdited = _isControlReportEdited.asStateFlow()
 
     private fun fetchJobCardReports() {
         viewModelScope.launch {
@@ -70,45 +57,25 @@ class JobCardReportsViewModel(
 
                     _serviceAdvisorReportLoadingState.value = LoadingState.Success
 
-                    _diagnosticsReport.value = reports.find { it.reportType == "diagnosticsReport" }
-                    _diagnosticsLoadingState.value = LoadingState.Success
-
-                    _controlReport.value = reports.find { it.reportType == "controlReport" }
-                    _controlReportLoadingState.value = LoadingState.Success
                 }
 
                 else -> { /* Handle errors */
                     _serviceAdvisorReportLoadingState.value = LoadingState.Error("Error")
-                    _diagnosticsLoadingState.value = LoadingState.Error("Error")
-                    _controlReportLoadingState.value = LoadingState.Error("Error")
                 }
             }
         }
     }
 
-    fun editDiagnosticsReport(newReport: String){
-        _diagnosticsReport.value = _diagnosticsReport.value?.copy(jobReport = newReport)?:
-            JobCardReport(
-                reportId = UUID.randomUUID(),
-                jobCardId = UUID.fromString(jobId),
-                employeeId = SignedInUser.user!!.employeeId,
-                jobReport = newReport,
-                reportType = "diagnosticsReport"
-            )
-        _isDiagnosticsReportEdited.value = true
+    fun refreshReports(){
+        _serviceAdvisorReportLoadingState.value  = LoadingState.Loading
+        _jobCardReports.value = emptyList()
+        _serviceAdvisorReport.value = null
+        viewModelScope.launch {
+            fetchJobCardReports()
+        }
     }
 
-    fun editControlReport(newReport: String){
-        _controlReport.value = _controlReport.value?.copy(jobReport = newReport)?:
-            JobCardReport(
-                reportId = UUID.randomUUID(),
-                jobCardId = UUID.fromString(jobId),
-                employeeId = SignedInUser.user!!.employeeId,
-                jobReport = newReport,
-                reportType = "controlReport"
-            )
-        _isControlReportEdited.value = true
-    }
+
 
     fun editServiceAdvisorReport(newReport: String){
         _serviceAdvisorReport.value = _serviceAdvisorReport.value?.copy(jobReport = newReport)?:
@@ -130,21 +97,6 @@ class JobCardReportsViewModel(
         }
     }
 
-    fun saveDiagnosticsReport() {
-        _diagnosticsReport.value?.let { report ->
-            _diagnosticsLoadingState.value = LoadingState.Loading
-            saveReport(report)
-            _isDiagnosticsReportEdited.value = false
-        }
-    }
-
-    fun saveControlReport() {
-        _controlReport.value?.let { report ->
-            _controlReportLoadingState.value = LoadingState.Loading
-            saveReport(report)
-            _isControlReportEdited.value = false
-        }
-    }
 
     private fun saveReport(report: JobCardReport) {
         viewModelScope.launch {

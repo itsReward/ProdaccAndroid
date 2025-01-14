@@ -20,6 +20,9 @@ class EmployeesViewModel(
     private val _employees = MutableStateFlow<List<Employee>>(emptyList())
     val employees = _employees.asStateFlow()
 
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing = _refreshing.asStateFlow()
+
     private val _loadState = MutableStateFlow<LoadState>(LoadState.Idle)
     val loadState = _loadState.asStateFlow()
 

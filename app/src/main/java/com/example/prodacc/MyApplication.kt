@@ -11,4 +11,10 @@ class MyApplication : Application() {
 
         ApiInstance.initialize(applicationContext)
     }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        ApiInstance.cleanup()
+
+    }
 }

@@ -35,6 +35,8 @@ import com.example.designsystem.theme.BlueA700
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.prodacc.data.remote.TokenManager
 
 
@@ -49,118 +51,130 @@ fun EmployeesScreen(
         .groupBy { it.employeeName.first() }.toSortedMap()
         .map { EmployeeListCategory(name = it.key.toString(), items = it.value) }
 
-    Scaffold(topBar = {
-        TopBar(title = "Employees", onSearchClick = {
-            navController.navigate(
-                Route.Search.path.replace(
-                    "{title}", "Employees"
-                )
-            )
-        }, logOut = {
-            TokenManager.saveToken(null)
-            navController.navigate(Route.LogIn.path)
-        })
-    }, bottomBar = { NavigationBar(navController) }, floatingActionButton = {
-        FloatingActionButton(
-            onClick = { navController.navigate(Route.NewEmployee.path) },
-            shape = CircleShape,
-            containerColor = Color.White
-        ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
-        }
-    }) { innerPadding ->
+    val refreshing = rememberSwipeRefreshState(isRefreshing = viewModel.refreshing.collectAsState().value)
 
-        when (viewModel.loadState.collectAsState().value) {
-            is EmployeesViewModel.LoadState.Error -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        Text(text = (viewModel.loadState.collectAsState().value as EmployeesViewModel.LoadState.Error).message)
-                        Button(onClick = { viewModel.refreshEmployees() }) {
-                            Text(text = "Load")
-                        }
-                    }
-                }
-            }
-
-            is EmployeesViewModel.LoadState.Idle -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        Text(text = "Load Employees")
-                        Button(onClick = { viewModel.refreshEmployees() }) {
-                            Text(text = "Load")
-                        }
-                    }
-                }
-            }
-
-            is EmployeesViewModel.LoadState.Loading -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        CircularProgressIndicator(
-                            color = BlueA700, trackColor = Color.Transparent
+    SwipeRefresh(state = refreshing, onRefresh = viewModel::refreshEmployees) {
+        Scaffold(
+            topBar = {
+                TopBar(
+                    title = "Employees",
+                    onSearchClick = {
+                        navController.navigate(
+                            Route.Search.path.replace(
+                                "{title}", "Employees"
+                            )
                         )
-                        Text(text = "Loading Employees...")
+                    },
+                    logOut = {
+                        TokenManager.saveToken(null)
+                        navController.navigate(Route.LogIn.path)
                     }
+                )
+            },
+            bottomBar = { NavigationBar(navController) },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Route.NewEmployee.path) },
+                    shape = CircleShape,
+                    containerColor = Color.White
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
                 }
             }
+        ) { innerPadding ->
 
-            is EmployeesViewModel.LoadState.Success -> {
-                Box(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .padding(horizontal = 10.dp)
-                ) {
-                    LazyColumn(
+            when (viewModel.loadState.collectAsState().value) {
+                is EmployeesViewModel.LoadState.Error -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        println(employees)
-                        employees.forEach { category ->
-                            stickyHeader {
-                                EmployeeCategoryHeader(text = category.name)
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            Text(text = (viewModel.loadState.collectAsState().value as EmployeesViewModel.LoadState.Error).message)
+                            Button(onClick = { viewModel.refreshEmployees() }) {
+                                Text(text = "Load")
                             }
-                            items(category.items) { employee ->
-                                EmployeeListCard(
-                                    employee = employee,
-                                    onClick = {
-                                        navController.navigate(
-                                            Route.EmployeeDetails.path.replace(
-                                                "{employeeId}", employee.id.toString()
+                        }
+                    }
+                }
+
+                is EmployeesViewModel.LoadState.Idle -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            Text(text = "Load Employees")
+                            Button(onClick = { viewModel.refreshEmployees() }) {
+                                Text(text = "Load")
+                            }
+                        }
+                    }
+                }
+
+                is EmployeesViewModel.LoadState.Loading -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                color = BlueA700, trackColor = Color.Transparent
+                            )
+                            Text(text = "Loading Employees...")
+                        }
+                    }
+                }
+
+                is EmployeesViewModel.LoadState.Success -> {
+                    Box(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .padding(horizontal = 10.dp)
+                    ) {
+                        LazyColumn(
+                        ) {
+                            println(employees)
+                            employees.forEach { category ->
+                                stickyHeader {
+                                    EmployeeCategoryHeader(text = category.name)
+                                }
+                                items(category.items) { employee ->
+                                    EmployeeListCard(
+                                        employee = employee,
+                                        onClick = {
+                                            navController.navigate(
+                                                Route.EmployeeDetails.path.replace(
+                                                    "{employeeId}", employee.id.toString()
+                                                )
                                             )
-                                        )
-                                    }
-                                )
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -168,4 +182,6 @@ fun EmployeesScreen(
             }
         }
     }
+
+
 }

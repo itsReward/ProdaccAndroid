@@ -110,6 +110,8 @@ class ServiceChecklistViewModel(
     }
 
     fun refreshServiceChecklist() {
+        _loadingState.value = ServiceChecklistLoadingState.Loading
+        _serviceChecklist.value = null
         viewModelScope.launch {
             fetchServiceChecklist()
         }

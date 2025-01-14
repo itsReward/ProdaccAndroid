@@ -19,6 +19,9 @@ class ClientsViewModel(
         clients.value.sortedBy { it.clientName.first() }.groupBy { it.clientName.first() }
             .map { ListCategory(name = it.key.toString(), items = it.value) }
 
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing = _refreshing.asStateFlow()
+
     private val _loadState = MutableStateFlow<LoadState>(LoadState.Idle)
     val loadState = _loadState.asStateFlow()
 

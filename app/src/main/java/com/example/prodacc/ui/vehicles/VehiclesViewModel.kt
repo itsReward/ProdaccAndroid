@@ -19,6 +19,9 @@ class VehiclesViewModel (
     private val _vehicles: MutableStateFlow<List<Vehicle>> = MutableStateFlow(emptyList())
     val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
 
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing = _refreshing.asStateFlow()
+
     private val _vehicleLoadState = MutableStateFlow<VehicleLoadState>(VehicleLoadState.Idle)
     val vehicleLoadState = _vehicleLoadState.asStateFlow()
 

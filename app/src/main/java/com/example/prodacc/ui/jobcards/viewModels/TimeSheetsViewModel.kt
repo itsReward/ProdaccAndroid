@@ -44,20 +44,22 @@ class TimeSheetsViewModel(
     private val _isSavingNewTimeSheet = AtomicBoolean(false)
 
     //Diagnostics time sheet
-    private val _diagnosticsClockIn = MutableStateFlow<LocalDateTime?>(null)
+    private val _diagnosticsTimeSheet = MutableStateFlow<Timesheet?>(null)
+    val diagnosticsTimeSheet = _diagnosticsTimeSheet.asStateFlow()
+
+    private val _diagnosticsClockIn = MutableStateFlow<LocalDateTime?>(_diagnosticsTimeSheet.asStateFlow().value?.clockInDateAndTime)
     val diagnosticsClockIn = _diagnosticsClockIn.asStateFlow()
 
-    private val _diagnosticsClockOut = MutableStateFlow<LocalDateTime?>(null)
+    private val _diagnosticsClockOut = MutableStateFlow<LocalDateTime?>(_diagnosticsTimeSheet.asStateFlow().value?.clockOutDateAndTime)
     val diagnosticsClockOut = _diagnosticsClockOut.asStateFlow()
 
-    private val _diagnosticsReport = MutableStateFlow<String>("")
+    private val _diagnosticsReport = MutableStateFlow<String>(_diagnosticsTimeSheet.asStateFlow().value?.report ?: "")
     val diagnosticsReport = _diagnosticsReport.asStateFlow()
 
     private val _isDiagnosticsReportEdited = MutableStateFlow(false)
     val isDiagnosticsReportEdited = _isDiagnosticsReportEdited.asStateFlow()
 
-    private val _diagnosticsTimeSheet = MutableStateFlow<Timesheet?>(null)
-    val diagnosticsTimeSheet = _diagnosticsTimeSheet.asStateFlow()
+
 
     private val _newDiagnosticsTimeSheetLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val newDiagnosticsTimeSheetLoadState = _newDiagnosticsTimeSheetLoadState.asStateFlow()
@@ -267,6 +269,7 @@ class TimeSheetsViewModel(
             viewModelScope.launch {
                 try {
                     addTimesheets()
+                    refreshTimeSheets()
                 } finally {
                     _isSavingNewTimeSheet.set(false)
                 }
@@ -400,7 +403,7 @@ class TimeSheetsViewModel(
             newTimeSheetCount += 1
         }
 
-        if (_newTimeSheet.value.sheetTitle == null || _newTimeSheet.value.report == null || _newTimeSheet.value.clockInDateAndTime == null) {
+        if (_newTimeSheet.value.sheetTitle == null || _newTimeSheet.value.clockInDateAndTime == null) {
             _newTimeSheetLoadState.value = LoadingState.Error("Missing required fields")
         } else {
             _newTimeSheetLoadState.value = LoadingState.Loading
@@ -448,6 +451,7 @@ class TimeSheetsViewModel(
 
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
                 _diagnosticsTimeSheet.value = response.timesheet
+                _diagnosticsClockOut.value = _diagnosticsTimeSheet.value!!.clockOutDateAndTime
                 _updateLoadingState.value =
                     LoadingState.Success
             }
@@ -531,6 +535,11 @@ class TimeSheetsViewModel(
     }
 
     fun refreshTimeSheets() {
+        _loadingState.value = LoadingState.Loading
+        _timeSheets.value = emptyList()
+        _controlTimeSheet.value = null
+        _diagnosticsTimeSheet.value = null
+        _timesheet.value = null
         viewModelScope.launch {
             fetchTimeSheets()
         }

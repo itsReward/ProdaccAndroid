@@ -108,7 +108,7 @@ fun StepIndicator(
     var expanded by remember { mutableStateOf(false) }
 
     val currentStep = jobCardStatuses.size - 1
-    val maxSteps = 6
+    val maxSteps = jobCardStatuses.size
 
 
     AnimatedVisibility(

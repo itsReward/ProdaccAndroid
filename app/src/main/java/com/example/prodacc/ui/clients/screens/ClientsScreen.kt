@@ -31,6 +31,8 @@ import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.clients.viewModels.ClientsViewModel
 import com.example.prodacc.ui.vehicles.VehiclesViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.prodacc.data.remote.TokenManager
 
 
@@ -42,117 +44,123 @@ fun ClientsScreen(
     val clients = viewModel.clients.collectAsState().value.sortedBy { it.clientName.first() }.groupBy { it.clientName.first() }
         .map { ListCategory(name = it.key.toString(), items = it.value) }
 
-    Scaffold(
-        topBar = {
-            TopBar(
-                title = "Clients",
-                onSearchClick = {
-                    navController.navigate(
-                        Route.Search.path.replace(
-                            "{title}",
-                            "Clients"
-                        )
-                    )
-                },
-                logOut = {
-                    TokenManager.saveToken(null)
-                    navController.navigate(Route.LogIn.path)
-                }
-            )
-        },
-        bottomBar = { NavigationBar(navController) },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Route.NewClient.path) },
-                shape = CircleShape,
-                containerColor = Color.White
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
-            }
-        }
-    ) { innerPadding ->
+    val refresh = rememberSwipeRefreshState(isRefreshing = viewModel.refreshing.collectAsState().value)
 
-        when (viewModel.loadState.collectAsState().value){
-            is ClientsViewModel.LoadState.Error -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+    SwipeRefresh(state = refresh, onRefresh = viewModel::refreshClients){
+        Scaffold(
+            topBar = {
+                TopBar(
+                    title = "Clients",
+                    onSearchClick = {
+                        navController.navigate(
+                            Route.Search.path.replace(
+                                "{title}",
+                                "Clients"
+                            )
+                        )
+                    },
+                    logOut = {
+                        TokenManager.saveToken(null)
+                        navController.navigate(Route.LogIn.path)
+                    }
+                )
+            },
+            bottomBar = { NavigationBar(navController) },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Route.NewClient.path) },
+                    shape = CircleShape,
+                    containerColor = Color.White
                 ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
+                }
+            }
+        ) { innerPadding ->
+
+            when (viewModel.loadState.collectAsState().value){
+                is ClientsViewModel.LoadState.Error -> {
                     Column(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = (viewModel.loadState.collectAsState().value as ClientsViewModel.LoadState.Error).message)
-                        Button(onClick = { viewModel.refreshClients() }) {
-                            Text(text = "Refresh")
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            Text(text = (viewModel.loadState.collectAsState().value as ClientsViewModel.LoadState.Error).message)
+                            Button(onClick = { viewModel.refreshClients() }) {
+                                Text(text = "Refresh")
+                            }
                         }
                     }
                 }
-            }
-            ClientsViewModel.LoadState.Idle -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                ClientsViewModel.LoadState.Idle -> {
                     Column(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "Could not load clients, try again")
-                        Button(onClick = { viewModel.refreshClients() }) {
-                            Text(text = "Refresh")
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            Text(text = "Could not load clients, try again")
+                            Button(onClick = { viewModel.refreshClients() }) {
+                                Text(text = "Refresh")
+                            }
                         }
                     }
                 }
-            }
-            ClientsViewModel.LoadState.Loading -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                ClientsViewModel.LoadState.Loading -> {
                     Column(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(
-                            color = BlueA700,
-                            trackColor = Color.Transparent
-                        )
-                        Text(text = "Loading Clients...")
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                color = BlueA700,
+                                trackColor = Color.Transparent
+                            )
+                            Text(text = "Loading Clients...")
+                        }
+                    }
+                }
+                ClientsViewModel.LoadState.Success -> {
+                    Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .padding(horizontal = 10.dp)
+                    ) {
+                        CategorisedList(categories = clients, navController = navController)
                     }
                 }
             }
-            ClientsViewModel.LoadState.Success -> {
-                Column(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .padding(horizontal = 10.dp)
-                ) {
-                    CategorisedList(categories = clients, navController = navController)
-                }
-            }
+
+
+
         }
-
-
-
     }
+
+
 
 }

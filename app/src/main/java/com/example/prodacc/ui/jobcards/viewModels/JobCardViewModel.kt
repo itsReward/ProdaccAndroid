@@ -2,6 +2,9 @@ package com.example.prodacc.ui.jobcards.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardReport
 import com.prodacc.data.remote.dao.JobCardStatus
@@ -20,7 +23,7 @@ class JobCardViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val jobCardReportRepository: JobCardReportRepository = JobCardReportRepository(),
     private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository()
-): ViewModel(){
+): ViewModel(), ApiInstance.WebSocketEventListener{
     private val _jobCards = MutableStateFlow<List<JobCard>>(emptyList())
     private val jobCards: StateFlow<List<JobCard>> = _jobCards.asStateFlow()
 
@@ -89,6 +92,7 @@ class JobCardViewModel(
 
 
     init {
+        ApiInstance.addWebSocketListener(this)
         _jobCardLoadState.value = LoadingState.Loading
         viewModelScope.launch {
            fetchJobCards()
@@ -285,10 +289,29 @@ class JobCardViewModel(
         data class Open(val name: String = "open"): JobCardsFilter()
         data class Approval(val name: String = "approval"): JobCardsFilter()
         data class Diagnostics(val name: String = "diagnostics"): JobCardsFilter()
-        data class WorkInProgress(val name: String = "workInProgess"): JobCardsFilter()
+        data class WorkInProgress(val name: String = "workInProgress"): JobCardsFilter()
         data class Testing(val name: String = "testing"): JobCardsFilter()
         data class Done(val name: String = "done"): JobCardsFilter()
         data class Frozen(val name: String = "frozen"): JobCardsFilter()
+    }
+
+    override fun onJobCardUpdate(update: WebSocketUpdate) {
+        viewModelScope.launch {
+            when(update){
+                is WebSocketUpdate.JobCardCreated -> refreshJobCards()
+                is WebSocketUpdate.JobCardUpdated -> refreshJobCards()
+                is WebSocketUpdate.StatusChanged -> refreshJobCards()
+            }
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+        _jobCardLoadState.value = LoadingState.Error("Connection Error: ${error.message}")
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        ApiInstance.removeWebSocketListener(this)
     }
 
 

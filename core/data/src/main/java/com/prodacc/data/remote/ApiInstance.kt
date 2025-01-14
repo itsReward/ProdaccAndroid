@@ -1,6 +1,9 @@
 package com.prodacc.data.remote
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
@@ -20,18 +23,33 @@ import com.prodacc.data.remote.services.UserService
 import com.prodacc.data.remote.services.VehicleService
 import okhttp3.Cache
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 
 object ApiInstance {
     @Volatile
-    var BASE_URL = "http://10.42.0.144:5000"
+    var BASE_URL = "http://10.124.241.123:5000"
         set
+
+    //WebSocket
+    private var webSocket: WebSocket? = null
+    private val webSocketListeners = mutableListOf<WebSocketEventListener>()
+
+    // Interface for WebSocket events
+    interface WebSocketEventListener {
+        fun onJobCardUpdate(update: WebSocketUpdate)
+        fun onWebSocketError(error: Throwable)
+    }
 
     // Add a method to initialize with context
     fun initialize(context: Context, baseUrl: String = BASE_URL) {
@@ -54,7 +72,71 @@ object ApiInstance {
         _stateChecklistService = _retrofitBuilder.create(StateChecklistService::class.java)
         _timesheetService = _retrofitBuilder.create(TimesheetService::class.java)
 
+        setupWebSocket()
     }
+
+    private fun setupWebSocket() {
+        val wsUrl = BASE_URL.replace("http", "ws") + "/websocket"
+
+        val client = OkHttpClient.Builder()
+            .pingInterval(30, TimeUnit.SECONDS) // Keep connection alive
+            .build()
+
+        val request = Request.Builder()
+            .url(wsUrl)
+            .build()
+
+        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                Log.d("WebSocket", "Connection established")
+            }
+
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                try {
+                    val update = gson.fromJson(text, WebSocketUpdate::class.java)
+                    webSocketListeners.forEach { listener ->
+                        listener.onJobCardUpdate(update)
+                    }
+                } catch (e: Exception) {
+                    Log.e("WebSocket", "Error parsing message", e)
+                }
+            }
+
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                Log.e("WebSocket", "WebSocket failure", t)
+                webSocketListeners.forEach { listener ->
+                    listener.onWebSocketError(t)
+                }
+                // Attempt to reconnect after delay
+                Handler(Looper.getMainLooper()).postDelayed({
+                    setupWebSocket()
+                }, 5000)
+            }
+
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                Log.d("WebSocket", "WebSocket closed: $reason")
+            }
+        })
+    }
+
+    // Methods to manage WebSocket listeners
+    fun addWebSocketListener(listener: WebSocketEventListener) {
+        webSocketListeners.add(listener)
+    }
+
+    fun removeWebSocketListener(listener: WebSocketEventListener) {
+        webSocketListeners.remove(listener)
+    }
+
+    // Clean up method
+    fun cleanup() {
+        webSocket?.close(1000, "App closing")
+        webSocket = null
+        webSocketListeners.clear()
+    }
+
+
+
 
     val gson = GsonBuilder()
         .registerTypeAdapter(LocalDateTime::class.java,
@@ -172,7 +254,7 @@ object ApiInstance {
 
                 // Add caching headers
                 requestBuilder.addHeader(
-                    "Cache-Control", "public, max-age=60"// Cache for 60 seconds
+                    "Cache-Control", "public, max-age=2"// Cache for 60 seconds
                 ).addHeader("Content-Type", "application/json")
 
                 chain.proceed(requestBuilder.build())
@@ -188,3 +270,10 @@ object ApiInstance {
     }
 }
 
+
+// Define your WebSocket update data class
+sealed class WebSocketUpdate {
+    data class JobCardCreated(val jobCardId: UUID) : WebSocketUpdate()
+    data class JobCardUpdated(val jobCardId: UUID) : WebSocketUpdate()
+    data class StatusChanged(val jobCardId: UUID, val newStatus: String) : WebSocketUpdate()
+}

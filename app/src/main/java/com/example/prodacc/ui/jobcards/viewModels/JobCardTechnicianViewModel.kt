@@ -123,6 +123,14 @@ class JobCardTechnicianViewModel(
         }
     }
 
+    fun refreshJobCardTechnicians() {
+        _jobCardTechnicians.value = emptyList()
+        _technicians.value = emptyList()
+        viewModelScope.launch {
+            fetchJobCardTechnicians()
+        }
+    }
+
     open class LoadingState{
         data object Idle: LoadingState()
         data object Loading: LoadingState()

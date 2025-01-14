@@ -38,6 +38,8 @@ class JobCardDetailsViewModel(
     private val _savingState = MutableStateFlow<SaveState>(SaveState.Idle)
     val savingState = _savingState.asStateFlow()
 
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing = _refreshing.asStateFlow()
 
     private val _statusLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val statusLoadingState = _statusLoadingState.asStateFlow()
@@ -107,12 +109,17 @@ class JobCardDetailsViewModel(
     }
 
     fun refreshJobCard() {
+        _loadingState.value = LoadingState.Loading
+        _statusLoadingState.value = LoadingState.Loading
+        _jobCard.value = null
+        _jobCardStatusList.value = emptyList()
         viewModelScope.launch {
             fetchJobCard()
+            fetchJobCardCardStatus()
         }
     }
 
-    fun updateJobCard(update: JobCard.() -> JobCard){
+    private fun updateJobCard(update: JobCard.() -> JobCard){
         _jobCard.value = _jobCard.value?.update()
         saveJobCard()
     }
@@ -164,9 +171,7 @@ class JobCardDetailsViewModel(
     private suspend fun fetchJobCard(){
         _loadingState.value = LoadingState.Loading
         try {
-            val id = UUID.fromString(jobId)
-            val response = jobCardRepository.getJobCard(id)
-            when (response){
+            when (val response = jobCardRepository.getJobCard(UUID.fromString(jobId))){
                 is JobCardRepository.LoadingResult.Error -> {
                     _loadingState.value = LoadingState.Error(response.message)
                 }

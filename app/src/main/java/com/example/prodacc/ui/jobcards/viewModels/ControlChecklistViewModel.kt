@@ -92,6 +92,8 @@ class ControlChecklistViewModel(
     }
 
     fun refreshControlChecklist() {
+        _loadingState.value = ControlChecklistLoadingState.Loading
+        _controlChecklist.value = null
         viewModelScope.launch {
             fetchControlChecklist()
         }

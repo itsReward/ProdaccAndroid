@@ -147,6 +147,8 @@ class StateChecklistViewModel(
     }
 
     fun refreshStateChecklist() {
+        _loadingState.value = StateChecklistLoadingState.Loading
+        _stateChecklist.value = null
         viewModelScope.launch {
             fetchStateChecklist()
         }
