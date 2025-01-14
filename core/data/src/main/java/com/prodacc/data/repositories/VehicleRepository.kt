@@ -116,7 +116,7 @@ class VehicleRepository {
         }
     }
 
-    suspend fun getVehicles(size: Int = 20): LoadingResult {
+    suspend fun getVehicles(): LoadingResult {
         return try {
             val response = vehicleService.getVehicles()
             if (response.isSuccessful) {

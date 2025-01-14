@@ -89,6 +89,7 @@ class JobCardViewModel(
 
 
     init {
+        _jobCardLoadState.value = LoadingState.Loading
         viewModelScope.launch {
            fetchJobCards()
         }
@@ -147,7 +148,6 @@ class JobCardViewModel(
     }
 
     private suspend fun fetchJobCards(){
-        _jobCardLoadState.value = LoadingState.Loading
 
         jobCardRepository.getJobCards().let { loadingResult ->
             when (loadingResult) {
@@ -261,6 +261,7 @@ class JobCardViewModel(
     }
 
     fun refreshJobCards(){
+        _jobCardLoadState.value = LoadingState.Loading
         viewModelScope.launch {
             try {
                 _refreshing.value = true

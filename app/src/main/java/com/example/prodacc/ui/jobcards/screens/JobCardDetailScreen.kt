@@ -70,8 +70,6 @@ import com.example.designsystem.designComponents.IdleStateColumn
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.StepIndicator
-import com.example.designsystem.designComponents.Timesheets
-import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
@@ -532,10 +530,25 @@ fun JobCardDetailScreen(
                                     }
                                 } else {
                                     timeSheetViewModel.timeSheets.collectAsState().value.forEach {
+
                                         Timesheets(
-                                            it
+                                            timeSheet = it,
+                                            onClick = timeSheetViewModel::onClickTimesheet
                                         )
+
                                     }
+                                }
+
+                                if (timeSheetViewModel.onClickTimesheet.collectAsState().value) {
+                                    TimeSheetDialog(
+                                        timeSheet = timeSheetViewModel.timesheet.collectAsState().value!!,
+                                        timeSheetDialogVisibility = timeSheetViewModel.showTimesheetDialog.collectAsState().value,
+                                        isTimesheetEdited = timeSheetViewModel.isTimesheetEdited.collectAsState().value,
+                                        clockOut = timeSheetViewModel::updateTimeSheetClockOut,
+                                        onReportChange = timeSheetViewModel::updateTimesheetReport,
+                                        onDialogDismiss = timeSheetViewModel::timeSheetDialogDismissRequest,
+                                        onSave = timeSheetViewModel::saveUpdatedTimesheet
+                                    )
                                 }
 
 
@@ -597,27 +610,26 @@ fun JobCardDetailScreen(
                     }
 
                     DateTimePickerTextField(
-                        value = jobCard.estimatedTimeOfCompletion,
-                        onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
+                        value = timeSheetViewModel.controlClockIn.collectAsState().value,
+                        onValueChange = { timeSheetViewModel.updateControlClockIn(it) },
                         label = "Quality control clock in",
                         modifier = Modifier
                             .fillMaxWidth()
                     )
 
-                    ReportTextField(
-                        value = reportsViewModel.controlReport.collectAsState().value?.jobReport
-                            ?: "",
-                        onValueChange = { reportsViewModel.editControlReport(it) },
-                        label = if (reportsViewModel.controlReport.collectAsState().value != null) "Control Report" else "New Control Report",
-                        isEdited = reportsViewModel.isControlReportEdited.collectAsState().value,
-                        onSave = { reportsViewModel.saveControlReport() },
+                    DiagnosticsReportTextField(
+                        value = timeSheetViewModel.controlReport.collectAsState().value,
+                        onValueChange = { timeSheetViewModel.updateControlReport(it) },
+                        label = if (timeSheetViewModel.controlReport.collectAsState().value != "") "Control Report" else "New Control Report",
+                        isEdited = timeSheetViewModel.isControlReportEdited.collectAsState().value,
+                        onSave = { timeSheetViewModel.onSaveControlReport() },
                         modifier = Modifier.fillMaxWidth(),
-                        loadingState = reportsViewModel.controlReportLoadingState.collectAsState().value
+                        loadingState = timeSheetViewModel.updateLoadingState.collectAsState().value
                     )
 
                     DateTimePickerTextField(
-                        value = jobCard.estimatedTimeOfCompletion,
-                        onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
+                        value = timeSheetViewModel.controlClockOut.collectAsState().value,
+                        onValueChange = { timeSheetViewModel.updateControlClockOut(it) },
                         label = "Quality control clock out",
                         modifier = Modifier
                             .fillMaxWidth()

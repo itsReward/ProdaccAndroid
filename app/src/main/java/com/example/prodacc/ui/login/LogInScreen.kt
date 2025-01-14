@@ -47,6 +47,7 @@ import androidx.navigation.NavController
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.PasswordTextField
+import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
@@ -235,8 +236,7 @@ fun LogInScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        LargeTitleText(name = "Welcome")
-                        MediumTitleText(name = SignedInUser.user?.employeeName?: "Loading")
+                        LargeTitleText(name = "Welcome Back ${SignedInUser.user?.employeeName}")
 
                     }
                     LaunchedEffect(Unit) {

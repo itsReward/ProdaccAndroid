@@ -22,9 +22,6 @@ class VehiclesViewModel (
     private val _vehicleLoadState = MutableStateFlow<VehicleLoadState>(VehicleLoadState.Idle)
     val vehicleLoadState = _vehicleLoadState.asStateFlow()
 
-    private val _vehicleState = MutableStateFlow<Vehicle?>(null)
-    val vehicleState = _vehicleState.asStateFlow()
-
     private val _activeVehicles = _vehicles.asStateFlow()
     val activeVehicles: StateFlow<List<Vehicle>> = _activeVehicles
 
@@ -41,7 +38,7 @@ class VehiclesViewModel (
         }
     }
 
-    suspend fun getVehicles(){
+    private suspend fun getVehicles(){
         _vehicleLoadState.value = VehicleLoadState.Loading
 
         vehicleRepository.getVehicles().let { loadingResult ->
@@ -78,10 +75,6 @@ class VehiclesViewModel (
     fun onWorkshopVehiclesClick() {
         allVehicles.value = false
         workshopVehicles.value = true
-    }
-
-    fun updateVehicle(vehicle: Vehicle){
-        _vehicleState.value = vehicle
     }
 
 

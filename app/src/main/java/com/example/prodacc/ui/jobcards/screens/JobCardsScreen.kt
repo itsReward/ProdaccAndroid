@@ -197,7 +197,11 @@ fun JobCardsScreen(
 
                             }
 
-                            HistorySection(heading = "History", buttonOnClick = {})
+                            HistorySection(heading = "History", buttonOnClick = {navController.navigate(
+                                Route.Search.path.replace(
+                                    "{title}", "Job Cards"
+                                )
+                            )})
 
                             LazyColumn(
                                 //verticalArrangement = Arrangement.spacedBy(10.dp),

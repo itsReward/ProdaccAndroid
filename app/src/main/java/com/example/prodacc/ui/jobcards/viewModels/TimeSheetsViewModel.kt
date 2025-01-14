@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel.LoadingState
 import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.CreateTimesheet
 import com.prodacc.data.remote.dao.NewTimesheet
@@ -42,7 +40,7 @@ class TimeSheetsViewModel(
     val newTimeSheetLoadState = _newTimeSheetLoadState.asStateFlow()
 
     private var newTimeSheetCount = 0
-    
+
     private val _isSavingNewTimeSheet = AtomicBoolean(false)
 
     //Diagnostics time sheet
@@ -83,6 +81,9 @@ class TimeSheetsViewModel(
     private val _controlTimeSheet = MutableStateFlow<Timesheet?>(null)
     val controlTimeSheet = _controlTimeSheet.asStateFlow()
 
+    private val _newControlTimesheetLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val newControlTimesheetLoadState = _newControlTimesheetLoadState.asStateFlow()
+
 
 
     //New TimeSheet
@@ -93,6 +94,22 @@ class TimeSheetsViewModel(
         )
     )
     val newTimeSheet = _newTimeSheet.asStateFlow()
+
+    //Update Existing Timesheet
+    private val _timesheet = MutableStateFlow<Timesheet?>(null)
+    val timesheet = _timesheet.asStateFlow()
+
+    private val _fetchingTimesheet = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val fetchingTimesheet = _fetchingTimesheet.asStateFlow()
+
+    private val _showTimesheetDialog = MutableStateFlow(false)
+    val showTimesheetDialog = _showTimesheetDialog.asStateFlow()
+
+    private val _onClickTimesheet = MutableStateFlow(false)
+    val onClickTimesheet = _onClickTimesheet.asStateFlow()
+
+    private val _isTimesheetEdited = MutableStateFlow(false)
+    val isTimesheetEdited= _isTimesheetEdited.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -115,6 +132,27 @@ class TimeSheetsViewModel(
     fun clockOut(date: LocalDateTime) {
         _newTimeSheet.value = _newTimeSheet.value.copy(clockOutDateAndTime = date)
     }
+
+    fun updateTimeSheetClockOut(date: LocalDateTime){
+        _timesheet.value = _timesheet.value!!.copy(clockOutDateAndTime = date)
+        _isTimesheetEdited.value = true
+    }
+
+    fun updateTimesheetReport(report: String){
+        _timesheet.value = _timesheet.value!!.copy(report = report)
+        _isTimesheetEdited.value = true
+    }
+
+    fun saveUpdatedTimesheet(){
+        viewModelScope.launch{
+            try{
+                updateTimeSheet()
+            } finally {
+                _isTimesheetEdited.value = false
+            }
+        }
+    }
+
 
     fun updateDiagnosticsClockIn(date: LocalDateTime){
         _diagnosticsClockIn.value = date
@@ -139,6 +177,7 @@ class TimeSheetsViewModel(
         }
 
     }
+
     fun updateDiagnosticsClockOut(date: LocalDateTime){
         _diagnosticsClockOut.value = date
         _diagnosticsTimeSheet.value = _diagnosticsTimeSheet.value!!.copy(clockOutDateAndTime = date)
@@ -154,6 +193,7 @@ class TimeSheetsViewModel(
         }
 
     }
+
     fun updateDiagnosticsReport(report: String){
         _isDiagnosticsReportEdited.value = true
         _diagnosticsReport.value = report
@@ -171,6 +211,56 @@ class TimeSheetsViewModel(
         }
     }
 
+    fun updateControlClockIn(date: LocalDateTime){
+        _controlClockIn.value = date
+        viewModelScope.launch {
+            try{
+                addControlTimesheet(
+                    NewTimesheet(
+                        sheetTitle = "Quality Control Test",
+                        report = "",
+                        clockInDateAndTime = date,
+                        clockOutDateAndTime = null,
+                        jobCardId = UUID.fromString(jobCardId),
+                        employeeId = signedInUser.user!!.employeeId
+                    )
+                )
+                fetchTimeSheets()
+            } finally {
+                updateJobCardsStatus("testing")
+            }
+        }
+    }
+
+    fun updateControlClockOut(date: LocalDateTime){
+        _controlClockOut.value = date
+        _controlTimeSheet.value = _controlTimeSheet.value!!.copy(clockOutDateAndTime = date)
+        viewModelScope.launch {
+            try {
+                updateControlTimeSheet(_controlTimeSheet.value!!)
+            } finally {
+                fetchTimeSheets()
+            }
+        }
+
+    }
+
+    fun updateControlReport(report: String){
+        _isControlReportEdited.value = true
+        _controlReport.value = report
+    }
+
+    fun onSaveControlReport(){
+        _controlTimeSheet.value = _controlTimeSheet.value!!.copy(report = _controlReport.value)
+        viewModelScope.launch {
+            try {
+                updateControlTimeSheet(_controlTimeSheet.value!!)
+            } finally {
+                _isControlReportEdited.value = false
+                fetchTimeSheets()
+            }
+        }
+    }
 
     fun saveTimesheet() {
         if (_isSavingNewTimeSheet.compareAndSet(false, true)) {
@@ -208,7 +298,16 @@ class TimeSheetsViewModel(
                                 _diagnosticsClockIn.value = it.clockInDateAndTime
                                 _diagnosticsClockOut.value = it.clockOutDateAndTime
                                 _diagnosticsReport.value = it.report
-                                it
+                            } else {
+                                null
+                            }
+                        }
+                        response.timesheets.find { it.sheetTitle == "Quality Control Test" }.let {
+                            if (it != null) {
+                                _controlTimeSheet.value = it
+                                _controlClockIn.value = it.clockInDateAndTime
+                                _controlClockOut.value = it.clockOutDateAndTime
+                                _controlReport.value = it.report
                             } else {
                                 null
                             }
@@ -233,6 +332,14 @@ class TimeSheetsViewModel(
         }
     }
 
+    fun onClickTimesheet(timeSheet: Timesheet) {
+        _timesheet.value = timeSheet
+        _showTimesheetDialog.value = true
+        _onClickTimesheet.value = true
+
+    }
+
+
     private suspend fun addDiagnosticsTimesheet(diagnosticsTimesheet: NewTimesheet) {
 
         _newTimeSheetLoadState.value = LoadingState.Loading
@@ -256,6 +363,33 @@ class TimeSheetsViewModel(
                 _newDiagnosticsTimeSheetLoadState.value = LoadingState.Success
                 _diagnosticsTimeSheet.value = response.timesheet
                 fetchTimeSheets()
+            }
+        }
+    }
+
+    private suspend fun addControlTimesheet(controlTimesheet: NewTimesheet) {
+
+        _newTimeSheetLoadState.value = LoadingState.Loading
+        when (val response = timeSheetRepository.addTimeSheet(controlTimesheet)) {
+            is TimeSheetRepository.LoadingResult.Error -> {
+                println(response.message)
+                _newControlTimesheetLoadState.value = LoadingState.Error(response.message)
+            }
+
+            is TimeSheetRepository.LoadingResult.Message -> {
+                println(response.message)
+                _newControlTimesheetLoadState.value = LoadingState.Error(response.message)
+            }
+
+            is TimeSheetRepository.LoadingResult.Success -> {
+                _newControlTimesheetLoadState.value =
+                    LoadingState.Error("Returned list instead of Timesheet")
+            }
+
+            is TimeSheetRepository.LoadingResult.TimeSheet -> {
+                _controlTimeSheet.value = response.timesheet
+                fetchTimeSheets()
+                _newControlTimesheetLoadState.value = LoadingState.Success
             }
         }
     }
@@ -320,6 +454,64 @@ class TimeSheetsViewModel(
         }
     }
 
+    private suspend fun updateControlTimeSheet(timeSheet: Timesheet){
+        _updateLoadingState.value = LoadingState.Loading
+        when (val response =
+            timeSheetRepository.updateTimesheet(timeSheet.id, timeSheet)) {
+            is TimeSheetRepository.LoadingResult.Error -> {
+                println(response.message)
+                _updateLoadingState.value = LoadingState.Error(response.message)
+            }
+
+            is TimeSheetRepository.LoadingResult.Message -> {
+                println(response.message)
+                _updateLoadingState.value = LoadingState.Error("Returned Message")
+            }
+
+            is TimeSheetRepository.LoadingResult.Success -> {
+                _updateLoadingState.value =
+                    LoadingState.Error("Returned list instead of Timesheet")
+            }
+
+            is TimeSheetRepository.LoadingResult.TimeSheet -> {
+                _controlTimeSheet.value = response.timesheet
+                _updateLoadingState.value =
+                    LoadingState.Success
+            }
+        }
+    }
+
+    private suspend fun updateTimeSheet(){
+        _updateLoadingState.value = LoadingState.Loading
+        try {
+            when (val response =
+                timeSheetRepository.updateTimesheet(_timesheet.value!!.id, _timesheet.value!!)) {
+                is TimeSheetRepository.LoadingResult.Error -> {
+                    println(response.message)
+                    _updateLoadingState.value = LoadingState.Error(response.message)
+                }
+
+                is TimeSheetRepository.LoadingResult.Message -> {
+                    println(response.message)
+                    _updateLoadingState.value = LoadingState.Error("Returned Message")
+                }
+
+                is TimeSheetRepository.LoadingResult.Success -> {
+                    _updateLoadingState.value =
+                        LoadingState.Error("Returned list instead of Timesheet")
+                }
+
+                is TimeSheetRepository.LoadingResult.TimeSheet -> {
+                    _timesheet.value = response.timesheet
+                    _updateLoadingState.value = LoadingState.Success
+                }
+            }
+        } finally {
+            fetchTimeSheets()
+        }
+
+    }
+
     private suspend fun updateJobCardsStatus(newStatus: String){
         _statusLoadingState.value = LoadingState.Loading
         try {
@@ -338,11 +530,15 @@ class TimeSheetsViewModel(
         }
     }
 
-
     fun refreshTimeSheets() {
         viewModelScope.launch {
             fetchTimeSheets()
         }
+    }
+
+    fun timeSheetDialogDismissRequest(){
+        _showTimesheetDialog.value = false
+        _onClickTimesheet.value = false
     }
 
 
@@ -354,7 +550,7 @@ class TimeSheetsViewModel(
 
     }
 
-    fun CreateTimesheet.toNewTimesheet(): NewTimesheet {
+    private fun CreateTimesheet.toNewTimesheet(): NewTimesheet {
         return NewTimesheet(
             sheetTitle = this.sheetTitle ?: "__",
             report = this.report ?: "",

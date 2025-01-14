@@ -205,75 +205,70 @@ fun VehicleDetailsScreen(
                     ) {
                         MediumTitleText(name = "Service History")
                     }
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        when (jobCardsLoadState.value) {
-                            is VehicleDetailsViewModel.JobCardsLoadState.Error -> {
-                                item {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize(),
-                                        verticalArrangement = Arrangement.Center,
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(5.dp))
-                                                .background(Color.White)
-                                                .padding(horizontal = 20.dp, vertical = 10.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(20.dp)
-                                        ) {
-                                            Text(text = (jobCardsLoadState.value as VehicleDetailsViewModel.JobCardsLoadState.Error).message)
-                                            Button(onClick = { viewModel.refreshJobCards() }) {
-                                                Text(text = "Refresh")
-                                            }
-                                        }
-                                    }
 
+                    when (jobCardsLoadState.value) {
+                        is VehicleDetailsViewModel.JobCardsLoadState.Error -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(5.dp))
+                                        .background(Color.White)
+                                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                                ) {
+                                    Text(text = (jobCardsLoadState.value as VehicleDetailsViewModel.JobCardsLoadState.Error).message)
+                                    Button(onClick = { viewModel.refreshJobCards() }) {
+                                        Text(text = "Refresh")
+                                    }
                                 }
                             }
 
-                            is VehicleDetailsViewModel.JobCardsLoadState.Idle -> {
 
-                                item {
-                                    IdleStateColumn(
-                                        title = "Load Vehicle JobCards",
-                                        buttonOnClick = viewModel::refreshJobCards,
-                                        buttonText = "Load"
+                        }
+
+                        is VehicleDetailsViewModel.JobCardsLoadState.Idle -> {
+                            IdleStateColumn(
+                                title = "Load Vehicle JobCards",
+                                buttonOnClick = viewModel::refreshJobCards,
+                                buttonText = "Load"
+                            )
+                        }
+
+                        is VehicleDetailsViewModel.JobCardsLoadState.Loading -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(5.dp))
+                                        .background(Color.White)
+                                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = BlueA700,
+                                        trackColor = Color.Transparent
                                     )
-
+                                    Text(text = "Loading JobCards...")
                                 }
                             }
 
-                            is VehicleDetailsViewModel.JobCardsLoadState.Loading -> {
-                                item {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize(),
-                                        verticalArrangement = Arrangement.Center,
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(5.dp))
-                                                .background(Color.White)
-                                                .padding(horizontal = 20.dp, vertical = 10.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(20.dp)
-                                        ) {
-                                            CircularProgressIndicator(
-                                                color = BlueA700,
-                                                trackColor = Color.Transparent
-                                            )
-                                            Text(text = "Loading JobCards...")
-                                        }
-                                    }
-                                }
-                            }
+                        }
 
-                            is VehicleDetailsViewModel.JobCardsLoadState.Success -> {
+                        is VehicleDetailsViewModel.JobCardsLoadState.Success -> {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
                                 items((jobCardsLoadState.value as VehicleDetailsViewModel.JobCardsLoadState.Success).jobCards) {
                                     AllJobCardListItem(
                                         jobCardName = it.jobCardName,
@@ -288,10 +283,11 @@ fun VehicleDetailsScreen(
                                         },
                                     )
                                 }
+
                             }
                         }
-
                     }
+
 
                 }
 

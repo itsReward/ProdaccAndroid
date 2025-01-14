@@ -1,9 +1,12 @@
 package com.example.prodacc.ui.jobcards.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,10 +26,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGreen
+import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.DarkOrange
 import com.example.designsystem.theme.Green
 import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGreen
+import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.LightOrange
 import com.example.designsystem.theme.Red
 import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
@@ -58,8 +63,12 @@ fun JobStatusFilters(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, bottom = 5.dp, end = 20.dp)
+            .padding(bottom = 5.dp)
     ) {
+        item {
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+
         items(jobCardsStatus) {
             FilterChip(
                 onClick =
@@ -122,9 +131,11 @@ fun JobStatusFilters(
                     selectedContainerColor = BlueA700,
                     containerColor = Color.White,
                     selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
+                    selectedLeadingIconColor = Color.White,
+                    disabledContainerColor = DarkGrey
 
-                )
+                ),
+                border = FilterChipDefaults.filterChipBorder(enabled = false, selected = false)
             )
 
         }

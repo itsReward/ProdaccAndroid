@@ -120,9 +120,11 @@ class VehicleDetailsViewModel(
                 }
 
                 is JobCardRepository.LoadingResult.Success -> {
-                    _vehicleJobCards.value = JobCardsLoadState.Success(response.jobCards.filter {
-                        it.vehicleId == UUID.fromString(vehicleId)
-                    })
+                    _vehicleJobCards.value = JobCardsLoadState.Success(
+                        response.jobCards.filter {
+                            it.vehicleId == UUID.fromString(vehicleId)
+                        }.sortedByDescending { it.dateAndTimeClosed }
+                    )
                 }
 
                 is JobCardRepository.LoadingResult.SingleEntity -> {
