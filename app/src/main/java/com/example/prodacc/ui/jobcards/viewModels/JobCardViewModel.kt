@@ -267,6 +267,12 @@ class JobCardViewModel(
                 _refreshing.value = true
                 _jobCards.value = emptyList()
                 fetchJobCards()
+                _jobCards.value.let {
+                    it.forEach { jobCard ->
+                        fetchJobCardStatus(jobCard.id)
+                        fetchJobCardStatus(jobCard.id)
+                    }
+                }
             } finally {
                 _refreshing.value = false
             }
