@@ -44,6 +44,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -286,9 +287,15 @@ fun JobCardDetailScreen(
                                     }
                                 }
                                 JobCardDetailsViewModel.LoadingState.Loading -> {
-                                    Row {
+                                    Row(
+                                        modifier = Modifier.padding(start = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+
+                                    ) {
+                                        CircularProgressIndicator(color = BlueA700, trackColor = Color.Transparent, modifier = Modifier.size(25.dp), strokeWidth = 2.dp)
                                         Text(text = "Loading Statuses")
-                                        CircularProgressIndicator(color = BlueA700, trackColor = Color.Transparent, modifier = Modifier.size(25.dp))
+
                                     }
                                 }
                                 else -> {
@@ -975,7 +982,6 @@ fun DiagnosticsReportTextField(
         )
         when (loadingState) {
             is TimeSheetsViewModel.LoadingState.Loading -> {
-                //LoadingStateColumn(title = "Loading Report")
                 LinearProgressIndicator(
                     color = BlueA700,
                     trackColor = Color.Transparent,

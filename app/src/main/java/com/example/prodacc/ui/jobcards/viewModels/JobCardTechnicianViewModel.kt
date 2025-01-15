@@ -20,7 +20,6 @@ class JobCardTechnicianViewModel(
     private val jobCardId: String
 ): ViewModel() {
     private val _jobCardTechnicians = MutableStateFlow<List<UUID>>(emptyList())
-    private val jobCardTechnicians = _jobCardTechnicians.asStateFlow()
 
     private val _technicians = MutableStateFlow<List<Employee>>(emptyList())
     val technicians = _technicians.asStateFlow()
@@ -28,10 +27,10 @@ class JobCardTechnicianViewModel(
     private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val loadingState = _loadingState.asStateFlow()
 
-    private val _addingTechnicianState = MutableStateFlow<LoadingState>(LoadingState.Idle)
-    val addingTechnicianState = _addingTechnicianState.asStateFlow()
+
 
     init{
+        _loadingState.value = LoadingState.Loading
         viewModelScope.launch {
             fetchJobCardTechnicians()
         }
@@ -39,17 +38,16 @@ class JobCardTechnicianViewModel(
 
 
     fun addTechnician(technicianId: UUID){
+        _loadingState.value = LoadingState.Loading
         viewModelScope.launch {
-            _addingTechnicianState.value = LoadingState.Loading
             try {
                 when (val response = jobCardTechnicianRepository.addTechnicianToJobCard(
                     JobCardTechnician(jobCardId = UUID.fromString(jobCardId), technicianId = technicianId)
                 )){
-                    is JobCardTechnicianRepository.LoadingResult.Error -> _addingTechnicianState.value = LoadingState.Error(response.message)
-                    is JobCardTechnicianRepository.LoadingResult.Loading -> _addingTechnicianState.value = LoadingState.Loading
+                    is JobCardTechnicianRepository.LoadingResult.Error -> _loadingState.value = LoadingState.Error(response.message)
+                    is JobCardTechnicianRepository.LoadingResult.Loading -> _loadingState.value = LoadingState.Loading
                     is JobCardTechnicianRepository.LoadingResult.Success -> {
-                        _technicians.value = emptyList()
-                        fetchTechnicians()
+                        refreshJobCardTechnicians()
                     }
                 }
             } catch (e: Exception) {
@@ -65,7 +63,6 @@ class JobCardTechnicianViewModel(
 
 
     private suspend fun fetchJobCardTechnicians() {
-        _loadingState.value = LoadingState.Loading
         try {
             when (val response = jobCardTechnicianRepository.getJobCardTechnicians(UUID.fromString(jobCardId))){
                 is JobCardTechnicianRepository.LoadingResult.Error -> _loadingState.value = LoadingState.Error(response.message)
@@ -124,6 +121,7 @@ class JobCardTechnicianViewModel(
     }
 
     fun refreshJobCardTechnicians() {
+        _loadingState.value = LoadingState.Loading
         _jobCardTechnicians.value = emptyList()
         _technicians.value = emptyList()
         viewModelScope.launch {

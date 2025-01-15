@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.jobcards.stateClasses.NewJobCardState
+import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel.LoadingState
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.NewJobCard
@@ -22,6 +23,7 @@ import com.prodacc.data.repositories.TimeSheetRepository
 import com.prodacc.data.repositories.VehicleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.time.LocalDateTime
@@ -30,15 +32,7 @@ import java.util.UUID
 class NewJobCardViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val employeeRepository: EmployeeRepository = EmployeeRepository(),
-    private val clientRepository: ClientRepository = ClientRepository(),
     private val vehicleRepository: VehicleRepository = VehicleRepository(),
-    private val controlChecklistRepository: ControlChecklistRepository = ControlChecklistRepository(),
-    private val serviceChecklist: ServiceChecklistRepository = ServiceChecklistRepository(),
-    private val stateChecklist: StateChecklistRepository = StateChecklistRepository(),
-    private val timeSheet: TimeSheetRepository = TimeSheetRepository(),
-    private val jobCardReportRepository: JobCardReportRepository = JobCardReportRepository(),
-    private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository(),
-    private val jobCardReport: JobCardReportRepository = JobCardReportRepository()
 ) : ViewModel() {
 
     val clients = emptyList<Client>()
@@ -81,6 +75,11 @@ class NewJobCardViewModel(
     val vehiclesDropdown = mutableStateOf(false)
 
     init {
+
+        viewModelScope.launch {
+            EventBus.crudEvents.collect()
+        }
+
         viewModelScope.launch {
             getEmployees()
             getVehicles()
@@ -251,6 +250,7 @@ class NewJobCardViewModel(
                         }
                         is JobCardRepository.LoadingResult.SingleEntity -> {
                             _saveState.value = LoadingState.Success(response.jobCard)
+                            EventBus.emit(EventBus.JobCardCRUDEvent.JobCardCreated(response.jobCard))
                         }
                         is JobCardRepository.LoadingResult.Success -> {
                             //will never happen for save

@@ -46,8 +46,43 @@ class JobCardDetailsViewModel(
     private val _statusLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val statusLoadingState = _statusLoadingState.asStateFlow()
 
+    fun refreshJobCard() {
+        _loadingState.value = LoadingState.Loading
+        _statusLoadingState.value = LoadingState.Loading
+        _jobCard.value = null
+        _jobCardStatusList.value = emptyList()
+        viewModelScope.launch {
+            fetchJobCard()
+            fetchJobCardCardStatus()
+        }
+    }
+
+    fun refreshJobCardStatus(){
+        _statusLoadingState.value = LoadingState.Loading
+        _jobCardStatusList.value = emptyList()
+        viewModelScope.launch {
+            fetchJobCardCardStatus()
+        }
+    }
+
     init {
         ApiInstance.addWebSocketListener(this)
+
+        // Add event bus collection
+        viewModelScope.launch {
+            EventBus.events.collect { event ->
+                when (event) {
+                    is EventBus.JobCardEvent.StatusChanged -> {
+                        // Refresh job card status when event is received
+                        refreshJobCardStatus()
+                    }
+                    is EventBus.JobCardEvent.Error -> {
+                        _statusLoadingState.value = LoadingState.Error(event.message)
+                    }
+                }
+            }
+        }
+
         viewModelScope.launch {
             fetchJobCard()
             fetchJobCardCardStatus()
@@ -111,16 +146,7 @@ class JobCardDetailsViewModel(
         teamExpanded.value = !teamExpanded.value
     }
 
-    fun refreshJobCard() {
-        _loadingState.value = LoadingState.Loading
-        _statusLoadingState.value = LoadingState.Loading
-        _jobCard.value = null
-        _jobCardStatusList.value = emptyList()
-        viewModelScope.launch {
-            fetchJobCard()
-            fetchJobCardCardStatus()
-        }
-    }
+
 
     private fun updateJobCard(update: JobCard.() -> JobCard){
         _jobCard.value = _jobCard.value?.update()
@@ -224,6 +250,8 @@ class JobCardDetailsViewModel(
                     is IOException -> _savingState.value = SaveState.Error("Network Error")
                     else -> _savingState.value = SaveState.Error(e.message?:"Unknown Error")
                 }
+            } finally {
+                fetchJobCardCardStatus()
             }
 
         }
@@ -232,7 +260,12 @@ class JobCardDetailsViewModel(
 
     fun deleteJobCard() {
         viewModelScope.launch {
-            jobCardRepository.deleteJobCard(jobCard.value!!.id)
+            try {
+                jobCardRepository.deleteJobCard(jobCard.value!!.id)
+            } finally {
+                EventBus.emit(EventBus.JobCardCRUDEvent.JobCardDeleted)
+            }
+
         }
 
     }

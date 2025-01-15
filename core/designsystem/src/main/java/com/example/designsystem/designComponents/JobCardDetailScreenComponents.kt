@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -32,6 +33,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,18 +45,21 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -135,6 +140,16 @@ fun StepIndicator(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
             ) {
                 (0 until maxSteps).forEachIndexed { index, _ ->
+
+                    val previousStatus = if (index > 0) jobCardStatuses[index - 1] else null
+                    val currentStatus = jobCardStatuses[index]
+
+                    val timeSpent: Long = if (previousStatus != null) {
+                        Duration.between(previousStatus.createdAt, currentStatus.createdAt).toMinutes()
+                    } else {
+                        0L
+                    }
+
                     Column(
                         verticalArrangement = Arrangement.Top,
                         horizontalAlignment = Alignment.Start,
@@ -194,11 +209,24 @@ fun StepIndicator(
                             }
                             if (index <= jobCardStatuses.size - 1) {
                                 Row(
-                                    modifier = Modifier.padding(start = 10.dp)
+                                    modifier = Modifier.padding(start = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     BodyText(
-                                        text = "${jobCardStatuses[index].status} : ${jobCardStatuses[index].createdAt.hour}:" + "${jobCardStatuses[index].createdAt.minute}  - " + "${jobCardStatuses[index].createdAt.dayOfMonth} " + "${jobCardStatuses[index].createdAt.month} " + "${jobCardStatuses[index].createdAt.year}"
+                                        text = "${jobCardStatuses[index].status} :"
                                     )
+                                    FormattedTime(time = jobCardStatuses[index].createdAt)
+
+                                    //BodyText(text = " time spent: ")
+                                    /*androidx.compose.material3.Text(
+                                        text = " - $timeSpent",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = Orange,
+                                        fontWeight = FontWeight.Bold
+                                    )*/
+                                    DurationText(timeSpentMinutes = timeSpent, color = DarkGrey)
+
+
                                 }
 
                             }
@@ -230,9 +258,10 @@ fun StepIndicator(
             Row(
                 modifier = Modifier
                     .fillMaxHeight()
+                    .clip(RoundedCornerShape(100.dp))
                     .background(
                         when (jobCardStatuses.last().status) {
-                            "open" -> BlueA700
+                            "opened" -> BlueA700
                             "diagnostics" -> Orange
                             "approval" -> Orange
                             "work_in_progress" -> DarkGreen
@@ -241,11 +270,11 @@ fun StepIndicator(
                             else -> Color.Red
                         }
                     )
-                    //.clip(RoundedCornerShape(100.dp))
-                    .padding(end = 10.dp, top = 5.dp, bottom = 5.dp)
+
+                    .padding(start = 5.dp ,end = 5.dp, top = 5.dp, bottom = 5.dp)
                     .fillMaxWidth(
                         when (jobCardStatuses.last().status) {
-                            "open" -> 0.1f
+                            "opened" -> 0.1f
                             "diagnostics" -> 0.2f
                             "approval" -> 0.3f
                             "work_in_progress" -> 0.5f
@@ -253,7 +282,9 @@ fun StepIndicator(
                             "done" -> 1f
                             else -> 0.1f
                         }
-                    ), horizontalArrangement = Arrangement.End
+                    )
+
+                , horizontalArrangement = Arrangement.Center
 
             ) {
                 Text(text = jobCardStatuses.last().status)
@@ -261,107 +292,43 @@ fun StepIndicator(
             }
         }
 
-        /*
-        Row(horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable { expanded = !expanded }) {
-            Spacer(modifier = Modifier.width(20.dp))
-
-            Icon(
-                Icons.Default.Garage, "", Modifier.size(25.dp), BlueA700
-            )
-
-            (0 until maxSteps).forEachIndexed { index, _ ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-
-
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .background(if (index <= currentStep) BlueA700 else Color.LightGray)
-                                .height(2.dp)
-                                .width(70.dp)
-                                .offset(y = 10.dp)
-                        ) {
-
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .size(25.dp)
-                            .clip(CircleShape)
-                            .border(
-                                width = 2.dp,
-                                shape = CircleShape,
-                                color = if (index <= currentStep) BlueA700 else Color.LightGray
-                            ),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .size(15.dp)
-                                .clip(CircleShape)
-                                .background(if (index <= currentStep) BlueA700 else Color.LightGray),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-
-                        ) {
-                            Text(text = (index + 1).toString(), fontSize = 10.sp)
-                        }
-
-                    }
-
-                }
-
-
-            }
-            Text(
-                text = jobCardStatuses.last().status,
-                //fontSize = 14.sp,
-                color = Color.Black,
-                modifier = Modifier.padding(8.dp),
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(modifier = Modifier.width(50.dp))
-        }*/
     }
 
 }
 
+@Composable
+fun DurationText(timeSpentMinutes: Long, color: Color = Color.Black) {
 
+    val duration = Duration.ofMinutes(timeSpentMinutes)
 
-@OptIn(ExperimentalMaterial3Api::class)
-object SelectableDates : SelectableDates {
-    // Blocks Sunday and from being selected.
-    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val dayOfWeek =
-                Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneId.of("UTC")).toLocalDate().dayOfWeek
-            dayOfWeek != DayOfWeek.SUNDAY
-        } else {
-            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            calendar.timeInMillis = utcTimeMillis
-            calendar[Calendar.DAY_OF_WEEK] != Calendar.SUNDAY && calendar[Calendar.DAY_OF_WEEK] != Calendar.SATURDAY
+    val days = duration.toDays()
+    val hours = duration.toHoursPart()
+    val minutes = duration.toMinutesPart()
+
+    val formattedDuration = buildString {
+        if (days > 0) {
+            append("$days day${if (days > 1) "s" else ""} ")
+        }
+        if (hours > 0) {
+            append("$hours hour${if (hours > 1) "s" else ""} ")
+        }
+        if (minutes > 0 || days.toInt() == 0 && hours == 0) { // Show minutes if there are any, or if no days/hours
+            append("$minutes minute${if (minutes > 1) "s" else ""}")
+        }
+        if (this.isEmpty()) {
+            append("0 minutes") // Handle zero duration case
         }
     }
 
-    // Allow selecting dates from year 2024 forward.
-    override fun isSelectableYear(year: Int): Boolean {
-        return year >= LocalDate.now().year
-    }
+    Text(
+        text = " - $formattedDuration",
+        style = MaterialTheme.typography.bodyLarge,
+        color = color,
+        fontWeight = FontWeight.Bold
+    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun DateTimePickerTextField(
     value: LocalDateTime?,
@@ -437,51 +404,73 @@ fun DateTimePickerDialog(
 
     val pagerState = rememberPagerState(initialPage = 0) { 2 }
 
-    AlertDialog(onDismissRequest = onDismiss, title = {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
 
-        Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center
-        ) {
-            LargeTitleText(name = "Select Date and Time")
-        }
-
-    }, text = {
-
-
-        Column(
-        ) {
-            HorizontalPager(
-                state = pagerState, modifier = Modifier.height(500.dp)
-            ) { page ->
-                when (page) {
-                    0 -> TimePickerContent(
-                        initialTime = selectedTime,
-                        onTimeSelected = { selectedTime = it })
-
-                    1 -> DatePickerContent(
-                        initialDate = selectedDate,
-                        onDateSelected = { selectedDate = it })
-                }
-            }
             Row(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center
             ) {
-                MediumTitleText(name = "Swipe ${if (pagerState.currentPage == 0) "left" else "right"} to select ${if (pagerState.currentPage == 0) "date" else "time"}")
-                Icon(
-                    imageVector = if (pagerState.currentPage == 0) Icons.Default.ArrowForward else Icons.Default.ArrowBack,
-                    contentDescription = "direction side"
-                )
+                MediumTitleText(name = "Select Date and Time")
             }
-        }
-    }, confirmButton = {
-        Button(onClick = { onDateTimeSelected(selectedDate, selectedTime) }) {
-            Text("OK")
-        }
-    }, dismissButton = {
-        TextButton(onClick = onDismiss) {
-            Text("Cancel", color = Color.DarkGray)
-        }
-    }, modifier = Modifier.wrapContentSize()
+
+        },
+        text = {
+
+
+            Column(
+            ) {
+                HorizontalPager(
+                    state = pagerState, modifier = Modifier
+                        .fillMaxWidth()
+                        .height(500.dp)
+                ) { page ->
+                    when (page) {
+                        0 -> TimePickerContent(
+                            initialTime = selectedTime,
+                            onTimeSelected = { selectedTime = it })
+
+                        1 -> DatePickerContent(
+                            initialDate = selectedDate,
+                            onDateSelected = { selectedDate = it })
+                    }
+
+
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (pagerState.currentPage == 1){
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "direction side"
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(20.dp))
+                    BodyText("Swipe to select ${if (pagerState.currentPage == 0) "date" else "time"}")
+                    Spacer(modifier = Modifier.width(20.dp))
+                    if (pagerState.currentPage == 0){
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = "direction side"
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onDateTimeSelected(selectedDate, selectedTime) }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Color.DarkGray)
+            }
+        },
+        containerColor = Color.White
     )
 }
 
@@ -494,9 +483,25 @@ fun TimePickerContent(
         initialHour = initialTime.hour, initialMinute = initialTime.minute
     )
 
-    TimePicker(
-        state = timePickerState, modifier = Modifier.fillMaxSize()
-    )
+    Column {
+        TimePicker(
+            state = timePickerState,
+            modifier = Modifier.fillMaxSize(),
+            colors = TimePickerDefaults.colors(
+                containerColor = BlueA700,
+                timeSelectorSelectedContainerColor = BlueA700,
+                timeSelectorSelectedContentColor = Color.White,
+                periodSelectorSelectedContentColor = Color.White,
+                periodSelectorSelectedContainerColor = BlueA700,
+                timeSelectorUnselectedContainerColor = Blue50,
+                timeSelectorUnselectedContentColor = Color.DarkGray,
+                periodSelectorUnselectedContentColor = Color.DarkGray,
+                periodSelectorUnselectedContainerColor = Blue50,
+                clockDialColor = Blue50
+            )
+        )
+    }
+
 
     LaunchedEffect(timePickerState.hour, timePickerState.minute) {
         onTimeSelected(java.time.LocalTime.of(timePickerState.hour, timePickerState.minute))

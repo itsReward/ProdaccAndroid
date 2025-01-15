@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -38,6 +39,7 @@ import com.example.designsystem.designComponents.EmployeeListCategory
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
+import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.CardGrey
 import com.example.prodacc.ui.jobcards.viewModels.JobCardTechnicianViewModel
@@ -67,19 +69,21 @@ fun TeamDialog(
                 .padding(20.dp)
                 .fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 20.dp)
+                    .padding(bottom = 10.dp)
                     .drawBehind {
                         drawLine(
                             color = CardGrey,
-                            start = Offset(0F, 100f),
-                            end = Offset(size.maxDimension, 100f),
+                            start = Offset(0F, 80f),
+                            end = Offset(size.maxDimension, 80f),
                             strokeWidth = 6f
                         )
-                    }) {
+                    }
+            ) {
                 LargeTitleText(name = "Team")
 
             }
@@ -133,21 +137,20 @@ fun TeamDialogCard(
                 .padding(bottom = 10.dp),
             color = Color.DarkGray
         )
-        TextField(
-            value = initialEmployee, onValueChange = {},
-            //label = { Text(text = "Service Advisor", color = Color.DarkGray) },
-            shape = RoundedCornerShape(10.dp), colors = TextFieldDefaults.colors(
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-                disabledTextColor = Color.DarkGray,
-                disabledContainerColor = Blue50
-            ), trailingIcon = {
-                TextButton(onClick = { dropdownMenu = true }) {
-                    Text(text = "Change", color = Color.Blue, fontWeight = FontWeight.SemiBold)
-                }
-            }, enabled = false, modifier = Modifier.fillMaxWidth()
-        )
+
+        Row (
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(50.dp))
+                .background(Blue50)
+                .padding(horizontal = 10.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val initials = initialEmployee.split(" ")
+            ProfileAvatar(initials = initials.first().first().toString() + initials.last().first())
+            Text(initialEmployee)
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -195,7 +198,7 @@ fun TechnicianRow(
         ) {
             MediumTitleText("Technicians: ")
             TextButton(onClick = { dropdownMenu = true }) {
-                androidx.compose.material3.Text(text = "Add")
+                Text(text = "Add")
             }
         }
         Box(
@@ -228,17 +231,11 @@ fun TechnicianRow(
         }
 
         when (techniciansLoadingState) {
-            is JobCardTechnicianViewModel.LoadingState.Idle -> {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(text = "Load Technicians")
-                }
-            }
             is JobCardTechnicianViewModel.LoadingState.Loading -> {
                 Row (
-                    modifier = Modifier.fillMaxWidth().height(100.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
                     horizontalArrangement = Arrangement.Center
                 ){
                     LoadingStateColumn(title = "Loading Technicians")
@@ -253,9 +250,9 @@ fun TechnicianRow(
                     Text(text = techniciansLoadingState.message)
                 }
             }
-            is JobCardTechnicianViewModel.LoadingState.Success -> {
+            else -> {
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     //maxItemsInEachRow = 4,
                     modifier = Modifier.fillMaxWidth()
@@ -263,13 +260,17 @@ fun TechnicianRow(
                     if (technicians.isNotEmpty()){
                         technicians.forEach {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically, modifier = Modifier
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
                                     .clip(
-                                        RoundedCornerShape(5.dp)
+                                        RoundedCornerShape(50.dp)
                                     )
                                     .background(Blue50)
-                                    .padding(horizontal = 20.dp, vertical = 20.dp)
+                                    .padding(start = 10.dp, end = 30.dp, top = 10.dp, bottom = 10.dp)
+                                ,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
+                                ProfileAvatar(initials = it.employeeName.first().toString() + it.employeeSurname.first().toString())
                                 Text(text = it.employeeName, color = Color.DarkGray)
                             }
 

@@ -115,6 +115,21 @@ class TimeSheetsViewModel(
 
     init {
         viewModelScope.launch {
+            EventBus.events.collect { event ->
+                when (event) {
+                    is EventBus.JobCardEvent.StatusChanged -> {
+                        // Refresh status when status changed event is received
+                        //updateJobCardsStatus(currentStatus)
+                    }
+                    is EventBus.JobCardEvent.Error -> {
+                        // Handle error event if needed
+                        _statusLoadingState.value = LoadingState.Error(event.message)
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
             fetchTimeSheets()
         }
     }
@@ -172,6 +187,7 @@ class TimeSheetsViewModel(
                 )
                 fetchTimeSheets()
             } finally {
+                EventBus.emit(EventBus.JobCardEvent.StatusChanged)
                 updateJobCardsStatus("diagnostics")
             }
 
@@ -188,6 +204,7 @@ class TimeSheetsViewModel(
                 updateDiagnosticsTimeSheet(_diagnosticsTimeSheet.value!!)
             } finally {
                 fetchTimeSheets()
+                EventBus.emit(EventBus.JobCardEvent.StatusChanged)
                 updateJobCardsStatus("approval")
             }
 
@@ -229,6 +246,7 @@ class TimeSheetsViewModel(
                 )
                 fetchTimeSheets()
             } finally {
+                EventBus.emit(EventBus.JobCardEvent.StatusChanged)
                 updateJobCardsStatus("testing")
             }
         }

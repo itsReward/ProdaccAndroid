@@ -94,6 +94,22 @@ class JobCardViewModel(
     init {
         ApiInstance.addWebSocketListener(this)
         _jobCardLoadState.value = LoadingState.Loading
+
+        viewModelScope.launch {
+            EventBus.crudEvents.collect{ event ->
+                when (event) {
+                    is EventBus.JobCardCRUDEvent.JobCardCreated -> {
+                        _jobCards.value += event.jobCard
+                        refreshJobCards()
+                    }
+                    is EventBus.JobCardCRUDEvent.JobCardDeleted -> {
+                        refreshJobCards()
+                    }
+                }
+
+            }
+        }
+
         viewModelScope.launch {
            fetchJobCards()
         }
@@ -270,11 +286,13 @@ class JobCardViewModel(
             try {
                 _refreshing.value = true
                 _jobCards.value = emptyList()
+                _reportsMap.value = emptyMap()
+                _statusMap.value = emptyMap()
                 fetchJobCards()
                 _jobCards.value.let {
                     it.forEach { jobCard ->
                         fetchJobCardStatus(jobCard.id)
-                        fetchJobCardStatus(jobCard.id)
+                        fetchJobCardReports(jobCard.id)
                     }
                 }
             } finally {
