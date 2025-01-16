@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.jobcards.stateClasses.NewJobCardState
 import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel.LoadingState
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.NewJobCard
@@ -57,7 +58,14 @@ class NewJobCardViewModel(
     private val _supervisor = MutableStateFlow<Employee?>(null)
     val supervisor = _supervisor.asStateFlow()
 
-    private val _serviceAdvisor = MutableStateFlow<Employee?>(null)
+    private val _serviceAdvisor = MutableStateFlow(
+        when(SignedInUser.role){
+            is SignedInUser.Role.ServiceAdvisor -> SignedInUser.employee!!
+            else -> {
+                null
+            }
+        }
+    )
     val serviceAdvisor = _serviceAdvisor.asStateFlow()
 
     private val _saveState = MutableStateFlow<LoadingState>(LoadingState.Idle)

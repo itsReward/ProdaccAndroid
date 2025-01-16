@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.example.prodacc.ui.vehicles.stateClasses.NewVehicleStateClass
 import com.google.android.libraries.mapsplatform.transportation.consumer.model.Vehicle
 import com.prodacc.data.remote.dao.Client
@@ -108,7 +109,9 @@ class NewVehicleViewModel(
                             SaveState.Error("Network Error")
                         }
                         is VehicleRepository.LoadingResult.SingleEntity -> {
+                            EventBus.emitVehicleEvents(EventBus.VehicleEvent.VehicleCreated)
                             _saveState.value = SaveState.Success(vehicle.vehicle!!)
+                            EventBus.emitVehicleEvents(EventBus.VehicleEvent.VehicleCreated)
                         }
                         is VehicleRepository.LoadingResult.Success -> {
                             //will never happen

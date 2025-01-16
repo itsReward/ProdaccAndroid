@@ -5,8 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,9 +40,10 @@ fun ClientListCard(
 ) {
     Row(
         modifier = Modifier
+            .clip(RoundedCornerShape(5.dp))
+            .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 10.dp)
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -119,7 +122,7 @@ fun ClientVehicleRow(
             .clip(RoundedCornerShape(5.dp))
             .background(CardGrey)
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 20.dp)
+            .padding(horizontal = 15.dp, vertical = 20.dp)
 
     ){
         MediumTitleText(name = "${vehicle.make} ${vehicle.model}")

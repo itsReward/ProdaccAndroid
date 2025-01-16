@@ -33,6 +33,7 @@ import com.example.prodacc.ui.clients.viewModels.ClientsViewModel
 import com.example.prodacc.ui.vehicles.VehiclesViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.TokenManager
 
 
@@ -67,13 +68,30 @@ fun ClientsScreen(
             },
             bottomBar = { NavigationBar(navController) },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navController.navigate(Route.NewClient.path) },
-                    shape = CircleShape,
-                    containerColor = Color.White
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
+                when (SignedInUser.role){
+                    SignedInUser.Role.Admin -> {
+                        FloatingActionButton(
+                            onClick = { navController.navigate(Route.NewClient.path) },
+                            shape = CircleShape,
+                            containerColor = Color.White
+                        ) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Client")
+                        }
+                    }
+                    SignedInUser.Role.ServiceAdvisor -> {
+                        FloatingActionButton(
+                            onClick = { navController.navigate(Route.NewClient.path) },
+                            shape = CircleShape,
+                            containerColor = Color.White
+                        ) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Client")
+                        }
+                    }
+                    else -> {
+
+                    }
                 }
+
             }
         ) { innerPadding ->
 

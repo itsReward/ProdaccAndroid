@@ -43,6 +43,7 @@ import com.example.designsystem.theme.CardGrey
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModel
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModelFactory
+import com.prodacc.data.SignedInUser
 
 @Composable
 fun VehicleDetailsScreen(
@@ -101,26 +102,36 @@ fun VehicleDetailsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End
             ) {
-                com.example.designsystem.designComponents.IconButton(
-                    onClick = {
-                        navController.navigate(
-                            Route.EditVehicle.path.replace(
-                                "{vehicleId}",
-                                vehicleId
-                            )
-                        )
-                    },
-                    icon = Icons.Filled.Edit,
-                    color = Color.White
-                )
 
-                com.example.designsystem.designComponents.IconButton(
-                    onClick = {
-                        viewModel.toggleDeleteConfirmation()
-                    },
-                    icon = Icons.Filled.Delete,
-                    color = Color.White
-                )
+                when(SignedInUser.role){
+                    SignedInUser.Role.Supervisor -> {}
+                    SignedInUser.Role.Technician -> {}
+                    else -> {
+                        com.example.designsystem.designComponents.IconButton(
+                            onClick = {
+                                navController.navigate(
+                                    Route.EditVehicle.path.replace(
+                                        "{vehicleId}",
+                                        vehicleId
+                                    )
+                                )
+                            },
+                            icon = Icons.Filled.Edit,
+                            color = Color.White
+                        )
+
+                        com.example.designsystem.designComponents.IconButton(
+                            onClick = {
+                                viewModel.toggleDeleteConfirmation()
+                            },
+                            icon = Icons.Filled.Delete,
+                            color = Color.White
+                        )
+                    }
+                }
+
+
+
             }
 
 
@@ -283,12 +294,9 @@ fun VehicleDetailsScreen(
                                         },
                                     )
                                 }
-
                             }
                         }
                     }
-
-
                 }
 
             }

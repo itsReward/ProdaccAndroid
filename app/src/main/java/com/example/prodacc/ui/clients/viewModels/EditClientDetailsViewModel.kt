@@ -31,18 +31,19 @@ class EditClientDetailsViewModel(
     val loadingState = _loadingState.asStateFlow()
 
 
+
     // Dropdown gender toggle state
     val dropGenderToggle = mutableStateOf(false)
 
 
 
     init {
+        _loadingState.value = LoadingState.Loading
         loadClientDetails()
     }
 
     // Load client details when ViewModel is initialized
     private fun loadClientDetails() {
-        _loadingState.value = LoadingState.Loading
         viewModelScope.launch {
             when (val result = clientRepository.getClientsById((UUID.fromString(clientId)))) {
                 is ClientRepository.LoadingResult.SingleEntity -> {
@@ -66,10 +67,13 @@ class EditClientDetailsViewModel(
 
 
    fun refreshClient(){
+       _loadingState.value = LoadingState.Loading
+       _client.value = null
        viewModelScope.launch {
            loadClientDetails()
        }
    }
+
     // Update methods for client details
     fun updateFirstName(newName: String) {
         _client.value = _client.value?.copy(clientName = newName)
@@ -110,9 +114,9 @@ class EditClientDetailsViewModel(
     }
 
     // Save client details
-    fun saveClientDetails(onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun saveClientDetails() {
+        _loadingState.value = LoadingState.Loading
         viewModelScope.launch {
-            _loadingState.value = LoadingState.Loading
             try {
                 val clientId = UUID.fromString(clientId)
                 val result = _client.value?.let { clientRepository.updateClient(clientId, it) }
@@ -120,6 +124,7 @@ class EditClientDetailsViewModel(
                     is ClientRepository.LoadingResult.SingleEntity -> {
                         result.client?.let {
                             _client.value = it
+                            refreshClient()
                             _loadingState.value = LoadingState.Success
                         } ?: run {
                             _loadingState.value = LoadingState.Error("Failed to update client")
@@ -148,7 +153,6 @@ class EditClientDetailsViewModel(
         data class Error(val message : String): LoadingState()
     }
 
-
 }
 
 class EditClientDetailsViewModelFactory(private val clientId: String) : ViewModelProvider.Factory {
@@ -157,7 +161,7 @@ class EditClientDetailsViewModelFactory(private val clientId: String) : ViewMode
         modelClass: Class<T>,
         extras: CreationExtras
     ): T {
-        if (modelClass.isAssignableFrom(EmployeeDetailsViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(EditClientDetailsViewModel::class.java)) {
             return EditClientDetailsViewModel(clientId = clientId) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

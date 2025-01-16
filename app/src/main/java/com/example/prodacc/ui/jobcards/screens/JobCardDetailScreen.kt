@@ -96,6 +96,7 @@ import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModelFactory
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.CreateTimesheet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -401,14 +402,29 @@ fun JobCardDetailScreen(
                                 value = jobCard.dateAndTimeIn,
                                 onValueChange = { viewModel.updateDateAndTimeIn(it) },
                                 label = "Date In",
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = when(SignedInUser.role){
+                                    SignedInUser.Role.Supervisor -> false
+                                    SignedInUser.Role.Technician -> false
+                                    else -> {
+                                        true
+                                    }
+                                }
                             )
 
                             DateTimePickerTextField(
                                 value = jobCard.jobCardDeadline,
                                 onValueChange = { viewModel.updateJobCardDeadline(it) },
                                 label = "Deadline",
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = when(SignedInUser.role){
+                                    SignedInUser.Role.Supervisor -> false
+                                    SignedInUser.Role.Technician -> false
+                                    else -> {
+                                        true
+                                    }
+                                }
+
                             )
 
 
@@ -421,7 +437,14 @@ fun JobCardDetailScreen(
                                 },
                                 label = "Date Frozen",
                                 modifier = Modifier
-                                    .fillMaxWidth()
+                                    .fillMaxWidth(),
+                                enabled = when(SignedInUser.role){
+                                    SignedInUser.Role.Supervisor -> false
+                                    SignedInUser.Role.Technician -> false
+                                    else -> {
+                                        true
+                                    }
+                                }
                             )
 
 
@@ -451,7 +474,14 @@ fun JobCardDetailScreen(
                                 isEdited = reportsViewModel.isServiceAdvisorReportEdited.collectAsState().value,
                                 onSave = { reportsViewModel.saveServiceAdvisorReport() },
                                 modifier = Modifier.fillMaxWidth(),
-                                loadingState = reportsViewModel.serviceAdvisorReportLoadingState.collectAsState().value
+                                loadingState = reportsViewModel.serviceAdvisorReportLoadingState.collectAsState().value,
+                                enabled = when(SignedInUser.role){
+                                    SignedInUser.Role.Supervisor -> false
+                                    SignedInUser.Role.Technician -> false
+                                    else -> {
+                                        false
+                                    }
+                                }
                             )
 
                             DateTimePickerTextField(
@@ -460,7 +490,14 @@ fun JobCardDetailScreen(
                                 label = "Diagnostics clock in",
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 20.dp)
+                                    .padding(top = 20.dp),
+                                enabled = when(SignedInUser.role){
+                                    SignedInUser.Role.Admin -> true
+                                    SignedInUser.Role.Technician -> true
+                                    else -> {
+                                        false
+                                    }
+                                }
                             )
                             DiagnosticsReportTextField(
                                 value = timeSheetViewModel.diagnosticsReport.collectAsState().value,
@@ -469,7 +506,14 @@ fun JobCardDetailScreen(
                                 isEdited = timeSheetViewModel.isDiagnosticsReportEdited.collectAsState().value,
                                 onSave = { timeSheetViewModel.onSaveDiagnosticsReport() },
                                 modifier = Modifier.fillMaxWidth(),
-                                loadingState = timeSheetViewModel.updateLoadingState.collectAsState().value
+                                loadingState = timeSheetViewModel.updateLoadingState.collectAsState().value,
+                                enabled = when(SignedInUser.role){
+                                    SignedInUser.Role.Admin -> true
+                                    SignedInUser.Role.Technician -> true
+                                    else -> {
+                                        false
+                                    }
+                                }
                             )
                             DateTimePickerTextField(
                                 value = timeSheetViewModel.diagnosticsClockOut.collectAsState().value,
@@ -477,7 +521,14 @@ fun JobCardDetailScreen(
                                 label = "Diagnostics clock out",
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 10.dp, top = 10.dp)
+                                    .padding(bottom = 10.dp, top = 10.dp),
+                                enabled = when(SignedInUser.role){
+                                    SignedInUser.Role.Admin -> true
+                                    SignedInUser.Role.Technician -> true
+                                    else -> {
+                                        false
+                                    }
+                                }
                             )
 
                             DateTimePickerTextField(
@@ -485,7 +536,14 @@ fun JobCardDetailScreen(
                                 onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
                                 label = "E.T.C.",
                                 modifier = Modifier
-                                    .fillMaxWidth()
+                                    .fillMaxWidth(),
+                                enabled = when(SignedInUser.role){
+                                    SignedInUser.Role.Admin -> true
+                                    SignedInUser.Role.Technician -> true
+                                    else -> {
+                                        false
+                                    }
+                                }
                             )
                         }
 
@@ -638,7 +696,14 @@ fun JobCardDetailScreen(
                             onValueChange = { timeSheetViewModel.updateControlClockIn(it) },
                             label = "Quality control clock in",
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(),
+                            enabled = when(SignedInUser.role){
+                                SignedInUser.Role.Admin -> true
+                                SignedInUser.Role.Supervisor -> true
+                                else -> {
+                                    false
+                                }
+                            }
                         )
 
                         DiagnosticsReportTextField(
@@ -648,7 +713,14 @@ fun JobCardDetailScreen(
                             isEdited = timeSheetViewModel.isControlReportEdited.collectAsState().value,
                             onSave = { timeSheetViewModel.onSaveControlReport() },
                             modifier = Modifier.fillMaxWidth(),
-                            loadingState = timeSheetViewModel.updateLoadingState.collectAsState().value
+                            loadingState = timeSheetViewModel.updateLoadingState.collectAsState().value,
+                            enabled = when(SignedInUser.role){
+                                SignedInUser.Role.Admin -> true
+                                SignedInUser.Role.Supervisor -> true
+                                else -> {
+                                    false
+                                }
+                            }
                         )
 
                         DateTimePickerTextField(
@@ -656,7 +728,14 @@ fun JobCardDetailScreen(
                             onValueChange = { timeSheetViewModel.updateControlClockOut(it) },
                             label = "Quality control clock out",
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(),
+                            enabled = when(SignedInUser.role){
+                                SignedInUser.Role.Admin -> true
+                                SignedInUser.Role.Supervisor -> true
+                                else -> {
+                                    false
+                                }
+                            }
                         )
 
                         DateTimePickerTextField(
@@ -667,7 +746,14 @@ fun JobCardDetailScreen(
                                 )
                             },
                             label = "Date Closed",
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = when(SignedInUser.role){
+                                SignedInUser.Role.Admin -> true
+                                SignedInUser.Role.ServiceAdvisor -> true
+                                else -> {
+                                    false
+                                }
+                            }
                         )
 
 
@@ -877,7 +963,8 @@ fun ReportTextField(
     isEdited: Boolean,
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
-    loadingState: JobCardReportsViewModel.LoadingState
+    loadingState: JobCardReportsViewModel.LoadingState,
+    enabled: Boolean = true
 ) {
     var successText by remember {
         mutableStateOf(false)
@@ -890,11 +977,16 @@ fun ReportTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp),
-            label = { Text(text = label) }
+            label = { Text(text = label) },
+            enabled = enabled,
+            colors = TextFieldDefaults.colors(
+                disabledContainerColor = Color.Transparent,
+                disabledTextColor = Color.DarkGray,
+                disabledLabelColor = Color.DarkGray
+            )
         )
         when (loadingState) {
             is JobCardReportsViewModel.LoadingState.Loading -> {
-                //LoadingStateColumn(title = "Loading Report")
                 LinearProgressIndicator(
                     color = BlueA700,
                     trackColor = Color.Transparent,
@@ -965,7 +1057,8 @@ fun DiagnosticsReportTextField(
     isEdited: Boolean,
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
-    loadingState: TimeSheetsViewModel.LoadingState
+    loadingState: TimeSheetsViewModel.LoadingState,
+    enabled: Boolean = true
 ) {
     var successText by remember {
         mutableStateOf(false)
@@ -978,7 +1071,15 @@ fun DiagnosticsReportTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp),
-            label = { Text(text = label) }
+            label = { Text(text = label) },
+            colors = TextFieldDefaults.colors(
+                disabledContainerColor = Color.Transparent,
+                disabledTextColor = Color.DarkGray,
+                disabledLabelColor = Color.DarkGray,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
+            ),
+            enabled = enabled
         )
         when (loadingState) {
             is TimeSheetsViewModel.LoadingState.Loading -> {

@@ -3,6 +3,7 @@ package com.example.prodacc.ui.clients.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.designsystem.designComponents.ListCategory
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,9 +16,6 @@ class ClientsViewModel(
     private val _clients = MutableStateFlow<List<Client>>(emptyList())
     val clients = _clients.asStateFlow()
 
-    val clientsList =
-        clients.value.sortedBy { it.clientName.first() }.groupBy { it.clientName.first() }
-            .map { ListCategory(name = it.key.toString(), items = it.value) }
 
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
@@ -26,6 +24,16 @@ class ClientsViewModel(
     val loadState = _loadState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            EventBus.clientEvent.collect{ event ->
+                when(event){
+                    EventBus.ClientEvent.ClientCreated -> refreshClients()
+                    EventBus.ClientEvent.ClientDeleted -> refreshClients()
+                }
+            }
+        }
+
+        _loadState.value = LoadState.Loading
         viewModelScope.launch {
             fetchClients()
         }
@@ -37,13 +45,13 @@ class ClientsViewModel(
 
     fun refreshClients(){
         _loadState.value = LoadState.Loading
+        _clients.value = emptyList()
         viewModelScope.launch {
             fetchClients()
         }
     }
 
-    suspend fun fetchClients() {
-        _loadState.value = LoadState.Loading
+    private suspend fun fetchClients() {
         try {
             when (val clients = clientRepository.getClients()) {
                 is ClientRepository.LoadingResult.Success -> {

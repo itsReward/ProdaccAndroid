@@ -31,6 +31,7 @@ import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.people
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
+import com.prodacc.data.SignedInUser
 
 
 @Composable
@@ -86,9 +87,18 @@ fun TopBar(
                 IconButton(
                     onClick = onClickPeople, icon = people, color = DarkGrey
                 )
-                IconButton(
-                    onClick = onClickDelete, icon = Icons.Filled.Delete, color = DarkGrey
-                )
+
+                when(SignedInUser.role){
+                    SignedInUser.Role.Supervisor -> {}
+                    SignedInUser.Role.Technician -> {}
+                    SignedInUser.Role.ServiceAdvisor -> {}
+                    else -> {
+                        IconButton(
+                            onClick = onClickDelete, icon = Icons.Filled.Delete, color = DarkGrey
+                        )
+                    }
+                }
+
             }
 
 

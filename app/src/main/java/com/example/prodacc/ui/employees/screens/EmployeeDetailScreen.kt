@@ -57,6 +57,7 @@ import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModelFactory
+import com.prodacc.data.SignedInUser
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,9 +93,13 @@ fun EmployeeDetailScreen(
             }) {
                 Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
             }
-            IconButton(onClick = { viewModel.toggleDeleteConfirmation()}) {
-                Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
+
+            if (SignedInUser.role == SignedInUser.Role.Admin){
+                IconButton(onClick = { viewModel.toggleDeleteConfirmation()}) {
+                    Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
+                }
             }
+
         })
     }) { innerPadding ->
 

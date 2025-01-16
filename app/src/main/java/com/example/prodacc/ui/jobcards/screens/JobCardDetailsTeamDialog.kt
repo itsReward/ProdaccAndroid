@@ -43,6 +43,7 @@ import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.CardGrey
 import com.example.prodacc.ui.jobcards.viewModels.JobCardTechnicianViewModel
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
 import java.util.UUID
@@ -197,8 +198,15 @@ fun TechnicianRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             MediumTitleText("Technicians: ")
-            TextButton(onClick = { dropdownMenu = true }) {
-                Text(text = "Add")
+
+            when(SignedInUser.role){
+                SignedInUser.Role.ServiceAdvisor -> {}
+                SignedInUser.Role.Technician -> {}
+                else -> {
+                    TextButton(onClick = { dropdownMenu = true }) {
+                        Text(text = "Add")
+                    }
+                }
             }
         }
         Box(
@@ -214,18 +222,19 @@ fun TechnicianRow(
                 employees.forEach {
                     Text(text = it.name, color = Color.DarkGray, fontWeight = FontWeight.Bold)
                     it.items.forEach {
-                        DropdownMenuItem(text = {
+                        DropdownMenuItem(
+                            text = {
                             Text(
                                 text = "${it.employeeName} ${it.employeeSurname}",
                                 color = Color.DarkGray
                             )
-                        }, onClick = {
+                                   },
+                            onClick = {
                             onAddNewTechnician(it.id)
                             dropdownMenu = false
-                        }
+                            }
                         )
                     }
-
                 }
             }
         }
@@ -266,7 +275,12 @@ fun TechnicianRow(
                                         RoundedCornerShape(50.dp)
                                     )
                                     .background(Blue50)
-                                    .padding(start = 10.dp, end = 30.dp, top = 10.dp, bottom = 10.dp)
+                                    .padding(
+                                        start = 10.dp,
+                                        end = 30.dp,
+                                        top = 10.dp,
+                                        bottom = 10.dp
+                                    )
                                 ,
                                 horizontalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
@@ -276,7 +290,13 @@ fun TechnicianRow(
 
                         }
                     } else {
-                        Text(text = "Add Technicians")
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth().padding(20.dp)
+                        ) {
+                            Text(text = "Add Technicians")
+                        }
+
                     }
 
                 }

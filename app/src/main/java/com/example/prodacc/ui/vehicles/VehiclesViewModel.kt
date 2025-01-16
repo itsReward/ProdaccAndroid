@@ -4,12 +4,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prodacc.MyApplication
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.VehicleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -30,20 +32,39 @@ class VehiclesViewModel (
 
     init {
         viewModelScope.launch {
+            EventBus.vehicleEvent.collect{ event ->
+                when(event){
+                    EventBus.VehicleEvent.VehicleCreated -> refreshVehicles()
+                    EventBus.VehicleEvent.VehicleDeleted -> refreshVehicles()
+                }
+            }
+
+        }
+        viewModelScope.launch {
+            EventBus.clientEvent.collect{ event ->
+                when(event){
+                    EventBus.ClientEvent.ClientCreated -> refreshVehicles()
+                    EventBus.ClientEvent.ClientDeleted -> refreshVehicles()
+                }
+            }
+        }
+
+        _vehicleLoadState.value = VehicleLoadState.Loading
+        viewModelScope.launch {
             getVehicles()
         }
     }
 
 
     fun refreshVehicles() {
+        _vehicleLoadState.value = VehicleLoadState.Loading
+        _vehicles.value = emptyList()
         viewModelScope.launch {
             getVehicles()
         }
     }
 
     private suspend fun getVehicles(){
-        _vehicleLoadState.value = VehicleLoadState.Loading
-
         vehicleRepository.getVehicles().let { loadingResult ->
             when (loadingResult) {
                 is VehicleRepository.LoadingResult.Success -> {

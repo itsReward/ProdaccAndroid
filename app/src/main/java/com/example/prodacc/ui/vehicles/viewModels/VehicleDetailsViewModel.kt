@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.ClientRepository
@@ -161,6 +162,7 @@ class VehicleDetailsViewModel(
                     }
 
                     is VehicleRepository.LoadingResult.Success -> {
+                        EventBus.emitVehicleEvents(EventBus.VehicleEvent.VehicleDeleted)
                         _deleteState.value = DeleteVehicleState.Success
                     }
                 }

@@ -37,6 +37,7 @@ import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.vehicles.VehiclesViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.TokenManager
 
 @Composable
@@ -71,13 +72,21 @@ fun VehiclesScreen(
             },
             bottomBar = { NavigationBar(navController) },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        navController.navigate(Route.NewVehicle.path)
-                    }, shape = CircleShape, containerColor = Color.White
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
+
+                when(SignedInUser.role){
+                    SignedInUser.Role.Supervisor -> {}
+                    SignedInUser.Role.Technician -> {}
+                    else -> {
+                        FloatingActionButton(
+                            onClick = {
+                                navController.navigate(Route.NewVehicle.path)
+                            }, shape = CircleShape, containerColor = Color.White
+                        ) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
+                        }
+                    }
                 }
+
             }
 
         ) { innerPadding ->

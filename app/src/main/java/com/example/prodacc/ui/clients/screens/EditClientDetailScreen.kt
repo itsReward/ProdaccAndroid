@@ -83,11 +83,8 @@ fun EditClientDetailScreen(
                 },
                 actions = {
 
-                    Button(onClick = { }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
+                    Button(onClick = { viewModel.saveClientDetails() }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
                         Text(text = "Save")
-                    }
-                    IconButton(onClick = {}) {
-                        Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
                     }
                 }
             )
@@ -113,6 +110,7 @@ fun EditClientDetailScreen(
                 LoadingStateColumn(title = "Loading Clients...")
             }
             is EditClientDetailsViewModel.LoadingState.Success -> {
+
                 Column(
                     modifier = Modifier.padding(innerPadding)
                 ) {

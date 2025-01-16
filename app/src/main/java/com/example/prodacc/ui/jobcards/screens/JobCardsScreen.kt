@@ -41,6 +41,7 @@ import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
 import com.example.prodacc.ui.jobcards.viewModels.LoadingState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.TokenManager
 
 @Composable
@@ -74,15 +75,24 @@ fun JobCardsScreen(
                 navController.navigate(Route.LogIn.path)
             })
         }, bottomBar = { NavigationBar(navController) }, floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    navController.navigate(
-                        Route.NewJobCard.path
-                    )
-                }, shape = CircleShape, containerColor = Color.White
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
+
+            when(SignedInUser.role){
+                SignedInUser.Role.Supervisor -> {}
+                SignedInUser.Role.Technician -> {}
+                else -> {
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(
+                                Route.NewJobCard.path
+                            )
+                        }, shape = CircleShape, containerColor = Color.White
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add JobCard")
+                    }
+                }
             }
+
+
         }) { innerPadding ->
 
 

@@ -1,12 +1,17 @@
 package com.example.prodacc.ui.clients.viewModels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
@@ -29,11 +34,23 @@ class ClientDetailsViewModel(
 
     init {
         viewModelScope.launch {
+            EventBus.vehicleEvent.collect{ event ->
+                when (event){
+                    EventBus.VehicleEvent.VehicleCreated -> refreshClient()
+                    EventBus.VehicleEvent.VehicleDeleted -> refreshClient()
+                }
+            }
+        }
+
+        _loadState.value = LoadState.Loading
+        viewModelScope.launch {
             fetchClient()
         }
     }
 
     fun refreshClient(){
+        _loadState.value = LoadState.Loading
+        _client.value = null
         viewModelScope.launch {
             fetchClient()
         }
@@ -52,13 +69,11 @@ class ClientDetailsViewModel(
     }
 
 
-    suspend fun fetchClient(){
+    private suspend fun fetchClient(){
         try {
-            _loadState.value = LoadState.Loading
             val id = UUID.fromString(clientId)
             if (id is UUID){
-                val response = clientRepository.getClientsById(id)
-                when (response){
+                when (val response = clientRepository.getClientsById(id)){
                     is ClientRepository.LoadingResult.SingleEntity -> {
                         if (response.client != null){
                             _client.value = response.client
@@ -108,6 +123,7 @@ class ClientDetailsViewModel(
                 val result = clientRepository.deleteClient(clientId)
                 when (result) {
                     is ClientRepository.LoadingResult.Success -> {
+                        EventBus.emitClientEvent(EventBus.ClientEvent.ClientDeleted)
                         _deleteState.value = DeleteState.Success
 
                     }
@@ -137,5 +153,17 @@ class ClientDetailsViewModel(
         data object Loading: LoadState()
         data object Success: LoadState()
         data class Error(val message: String): LoadState()
+    }
+}
+class ClientDetailsViewModelFactory(private val employeeId: String) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(
+        modelClass: Class<T>,
+        extras: CreationExtras
+    ): T {
+        if (modelClass.isAssignableFrom(ClientDetailsViewModel::class.java)) {
+            return ClientDetailsViewModel(clientId = employeeId) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

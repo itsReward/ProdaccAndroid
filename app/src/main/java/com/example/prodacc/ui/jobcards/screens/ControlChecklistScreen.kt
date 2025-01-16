@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -82,11 +83,36 @@ fun ControlChecklistSection(
                     LoadingStateColumn(title = "Saving Checklist")
                 }
                 else -> {
-                    ControlChecklistSectionContent(
-                        existingChecklist = controlChecklist,
-                        onClose = onClose,
-                        onSave = { checklist -> onSaveControlChecklist(checklist) }
-                    )
+
+                    if (controlChecklist == null && SignedInUser.role != SignedInUser.Role.Technician){
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            IconButton(
+                                onClick = onClose,
+                                icon = Icons.Default.ArrowBack,
+                                color = Color.DarkGray
+                            )
+                            Text(text = "Technician has not created control checklist")
+                        }
+                    } else {
+                        ControlChecklistSectionContent(
+                            existingChecklist = controlChecklist,
+                            onClose = onClose,
+                            onSave = { checklist -> onSaveControlChecklist(checklist) },
+                            when(SignedInUser.role){
+                                SignedInUser.Role.Admin -> true
+                                SignedInUser.Role.Technician -> true
+                                else -> {
+                                    false
+                                }
+                            }
+                        )
+                    }
+
+
                 }
             }
 
@@ -99,7 +125,8 @@ fun ControlChecklistSection(
 private fun ControlChecklistSectionContent(
     existingChecklist: ControlChecklist?,
     onClose: () -> Unit,
-    onSave: (Map<String, String>) -> Unit
+    onSave: (Map<String, String>) -> Unit,
+    enabled: Boolean
 ) {
     val scrollState = rememberScrollState()
     val options = listOf("OK", "Not Okay", "Action Taken")
@@ -232,24 +259,26 @@ private fun ControlChecklistSectionContent(
             )
 
             // Action Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                /*TextButton(onClick = onClose) {
-                    Text("Cancel")
-                }*/
-                Button(
-                    onClick = {
-                        val checklistData = checklistItems.mapValues { it.value.value }
-                        onSave(checklistData)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
+            if (enabled){
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Text("Save")
+                    Button(
+                        onClick = {
+                            val checklistData = checklistItems.mapValues { it.value.value }
+                            onSave(checklistData)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Save")
+                    }
                 }
             }
+
         }
     }
 }

@@ -43,6 +43,7 @@ import com.example.designsystem.theme.person
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.jobcards.viewModels.NewJobCardViewModel
 import com.example.prodacc.ui.jobcards.viewModels.NewJobCardViewModelFactory
+import com.prodacc.data.SignedInUser
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -207,32 +208,37 @@ fun NewJobCardScreen(
                             label = { Text(text = "Service Advisor") },
                             leadingIcon = { Icon(imageVector = person, contentDescription = "employee") },
                             trailingIcon = {
-                                IconButton(onClick = {
-                                    viewModel.toggleServiceAdvisor()
+                                when(SignedInUser.role){
+                                    SignedInUser.Role.ServiceAdvisor -> {}
+                                    else -> {
+                                        IconButton(onClick = {
+                                            viewModel.toggleServiceAdvisor()
+                                        }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.KeyboardArrowDown,
+                                                contentDescription = "Drop down"
+                                            )
+                                        }
+                                        EmployeeDropDown(
+                                            list = viewModel.employees.collectAsState().value,
+                                            expanded = viewModel.serviceAdvisorDropdown.collectAsState().value,
+                                            onDismissRequest = {
+                                                viewModel.toggleServiceAdvisor()
+                                            },
+                                            onItemClick = viewModel::updateServiceAdvisor
+                                        )
+                                    }
                                 }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.KeyboardArrowDown,
-                                        contentDescription = "Drop down"
-                                    )
-                                }
-                                EmployeeDropDown(
-                                    list = viewModel.employees.collectAsState().value,
-                                    expanded = viewModel.serviceAdvisorDropdown.collectAsState().value,
-                                    onDismissRequest = {
-                                        viewModel.toggleServiceAdvisor()
-                                    },
-                                    onItemClick = viewModel::updateServiceAdvisor
-                                )
+
                             },
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = CardGrey,
                                 unfocusedContainerColor = CardGrey,
                                 unfocusedIndicatorColor = Color.Transparent,
                                 focusedIndicatorColor = Color.Transparent
-                            ),
-
                             )
+                        )
 
 
 

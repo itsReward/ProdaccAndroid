@@ -334,7 +334,8 @@ fun DateTimePickerTextField(
     value: LocalDateTime?,
     onValueChange: (LocalDateTime) -> Unit,
     label: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(value?.toLocalDate() ?: LocalDate.now()) }
@@ -364,7 +365,13 @@ fun DateTimePickerTextField(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { showDialog = true },
+                .clickable {
+                    if (enabled){
+                        showDialog = true
+                    } else {
+
+                    }
+                },
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = CardGrey,
                 focusedContainerColor = CardGrey,

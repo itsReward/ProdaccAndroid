@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Phone
@@ -58,7 +60,9 @@ import com.example.designsystem.theme.errorIcon
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModel
+import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModelFactory
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
+import com.prodacc.data.SignedInUser
 import kotlinx.coroutines.delay
 import java.util.UUID
 
@@ -66,15 +70,11 @@ import java.util.UUID
 @Composable
 fun ClientDetailScreen(
     navController: NavController,
-    clientId: String
-) {
-    val viewModel: ClientDetailsViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ClientDetailsViewModel(clientId = clientId) as T
-            }
-        }
+    clientId: String,
+    viewModel: ClientDetailsViewModel = viewModel(
+        factory = ClientDetailsViewModelFactory(clientId)
     )
+) {
     val client = viewModel.client.collectAsState().value
 
     Scaffold(
@@ -92,14 +92,30 @@ fun ClientDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
-                    }) {
-                        Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
+
+                    when (SignedInUser.role){
+                        is SignedInUser.Role.Admin -> {
+                            IconButton(onClick = {
+                                navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
+                            }) {
+                                Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
+                            }
+
+                            IconButton(onClick = {viewModel.toggleDeleteClientConfirmation()}) {
+                                Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
+                            }
+                        }
+                        is SignedInUser.Role.ServiceAdvisor -> {
+                            IconButton(onClick = {
+                                navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
+                            }) {
+                                Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
+                            }
+                        }
+                        else -> {}
                     }
-                    IconButton(onClick = {viewModel.toggleDeleteClientConfirmation()}) {
-                        Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
-                    }
+
+
                 }
             )
         }
@@ -219,24 +235,63 @@ fun ClientDetailScreen(
                                     MediumTitleText(name = "Contact Details:")
                                 }
 
-                                DisplayTextField(
-                                    icon = Icons.Outlined.Phone,
-                                    label = "Phone",
-                                    text = client.phone,
-                                    modifier = Modifier.padding(vertical = 10.dp)
-                                )
-                                DisplayTextField(
-                                    icon = Icons.Outlined.Email,
-                                    label = "Email",
-                                    text = client.email,
-                                    modifier = Modifier.padding(vertical = 10.dp)
-                                )
-                                DisplayTextField(
-                                    icon = Icons.Outlined.LocationOn,
-                                    label = "Address",
-                                    text = client.address,
-                                    modifier = Modifier.padding(vertical = 10.dp)
-                                )
+
+                                when (SignedInUser.role){
+                                    SignedInUser.Role.Supervisor -> {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(20.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lock,
+                                                contentDescription = "Not Authorised"
+                                            )
+                                            Text(text = "Not Authorised ")
+                                        }
+
+                                    }
+                                    SignedInUser.Role.Technician -> {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(20.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lock,
+                                                contentDescription = "Not Authorised"
+                                            )
+                                            Text(text = "Not Authorised ")
+                                        }
+                                    }
+                                    else -> {
+                                        DisplayTextField(
+                                            icon = Icons.Outlined.Phone,
+                                            label = "Phone",
+                                            text = client.phone,
+                                            modifier = Modifier.padding(vertical = 10.dp)
+                                        )
+                                        DisplayTextField(
+                                            icon = Icons.Outlined.Email,
+                                            label = "Email",
+                                            text = client.email,
+                                            modifier = Modifier.padding(vertical = 10.dp)
+                                        )
+                                        DisplayTextField(
+                                            icon = Icons.Outlined.LocationOn,
+                                            label = "Address",
+                                            text = client.address,
+                                            modifier = Modifier.padding(vertical = 10.dp)
+                                        )
+                                    }
+                                }
+
+
+
 
 
                             }
@@ -246,7 +301,7 @@ fun ClientDetailScreen(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(20.dp))
                                     .background(CardGrey)
-                                    .padding(horizontal = 20.dp, vertical = 20.dp),
+                                    .padding(horizontal = 20.dp, vertical = 10.dp),
                                 horizontalAlignment = Alignment.Start,
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
@@ -255,35 +310,96 @@ fun ClientDetailScreen(
                                 ) {
                                     MediumTitleText(name = "Professional Details:")
                                 }
-                                DisplayTextField(
-                                    icon = workIcon,
-                                    label = "Job Title",
-                                    text = client.jobTitle
-                                )
 
-                                DisplayTextField(
-                                    icon = companyIcon,
-                                    label = "Company",
-                                    text = client.company
-                                )
+
+                                when (SignedInUser.role){
+                                    SignedInUser.Role.Supervisor -> {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(20.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lock,
+                                                contentDescription = "Not Authorised"
+                                            )
+                                            Text(text = "Not Authorised ")
+                                        }
+                                    }
+                                    SignedInUser.Role.Technician -> {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(20.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lock,
+                                                contentDescription = "Not Authorised"
+                                            )
+                                            Text(text = "Not Authorised ")
+                                        }
+                                    }
+                                    else -> {
+                                        DisplayTextField(
+                                            icon = workIcon,
+                                            label = "Job Title",
+                                            text = client.jobTitle
+                                        )
+
+                                        DisplayTextField(
+                                            icon = companyIcon,
+                                            label = "Company",
+                                            text = client.company
+                                        )
+
+                                        Spacer(modifier = Modifier.height(5.dp))
+                                    }
+                                }
+
+
 
                             }
 
                             Row (
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 20.dp, bottom = 10.dp),
+                                    .padding(top = 50.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                Box(modifier = Modifier
-                                    .background(LightGrey)
-                                    .height(2.dp)
-                                    .fillMaxWidth())
+
 
                             }
 
-                            MediumTitleText(name = "Vehicles", modifier = Modifier.padding(start = 20.dp, bottom = 10.dp))
+                            Row (
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom,
+                                modifier = Modifier.fillMaxWidth()
+                            ){
+                                MediumTitleText(name = "Vehicles", modifier = Modifier.padding(start = 20.dp, bottom = 10.dp))
+
+                                when(SignedInUser.role){
+                                    SignedInUser.Role.Supervisor -> {}
+                                    SignedInUser.Role.Technician -> {}
+                                    else -> {
+                                        IconButton(onClick = {navController.navigate(Route.NewVehicle.path)}){
+                                            Icon(
+                                                imageVector = Icons.Default.AddCircle,
+                                                contentDescription = "Add new Vehicle",
+                                                tint = Color.DarkGray
+                                            )
+                                        }
+                                    }
+                                }
+
+
+                            }
+
+
                             FlowRow (
                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                                 verticalArrangement = Arrangement.spacedBy(10.dp),

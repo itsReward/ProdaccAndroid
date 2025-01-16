@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prodacc.ui.clients.stateClasses.AddClientState
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.NewClient
 import com.prodacc.data.repositories.ClientRepository
@@ -95,6 +96,7 @@ class NewClientViewModel(
                     }
 
                     is ClientRepository.LoadingResult.SingleEntity -> {
+                        EventBus.emitClientEvent(EventBus.ClientEvent.ClientCreated)
                         if (result.client == null) {
                             _saveState.value = SaveState.Error("Returned Null Value")
                         } else {

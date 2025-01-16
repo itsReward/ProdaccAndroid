@@ -22,19 +22,23 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkBlue
 import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.car
 import com.example.designsystem.theme.people
+import com.example.designsystem.theme.person
 import com.example.designsystem.theme.work
+import com.prodacc.data.SignedInUser
 
 
 @Composable
-fun NavigationBar(navController : NavController ){
+fun NavigationBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -47,8 +51,14 @@ fun NavigationBar(navController : NavController ){
     }
 
 
-    
-    val items = listOf("Job Cards", "Vehicles", "Clients", "Employees")
+    val items = if (SignedInUser.role == SignedInUser.Role.Admin) {
+        listOf("Job Cards", "Vehicles", "Clients", "Employees")
+    } else if (SignedInUser.role == SignedInUser.Role.Technician){
+        listOf("Job Cards", "Vehicles", "Profile")
+    }
+    else {
+        listOf("Job Cards", "Vehicles", "Clients", "Profile")
+    }
     NavigationBar(
         containerColor = Color.Transparent,
         modifier = Modifier.drawWithContent {
@@ -97,29 +107,51 @@ fun NavigationBar(navController : NavController ){
                     }
 
 
-
-                        },
+                },
                 onClick = {
                     selectedItem = index
-                    when(item){
+                    when (item) {
                         "Job Cards" -> {
-                            navController.navigate(com.example.prodacc.navigation.Route.JobCards.path){ popUpTo(
-                                com.example.prodacc.navigation.Route.LogIn.path){inclusive = true} }
+                            navController.navigate(com.example.prodacc.navigation.Route.JobCards.path) {
+                                popUpTo(
+                                    com.example.prodacc.navigation.Route.LogIn.path
+                                ) { inclusive = true }
+                            }
                         }
+
                         "Vehicles" -> {
-                            navController.navigate(com.example.prodacc.navigation.Route.Vehicles.path){popUpTo(
-                                com.example.prodacc.navigation.Route.JobCards.path) }
+                            navController.navigate(com.example.prodacc.navigation.Route.Vehicles.path) {
+                                popUpTo(
+                                    com.example.prodacc.navigation.Route.JobCards.path
+                                )
+                            }
                         }
+
                         "Clients" -> {
-                            navController.navigate(com.example.prodacc.navigation.Route.Clients.path){popUpTo(
-                                com.example.prodacc.navigation.Route.JobCards.path) }
+                            navController.navigate(com.example.prodacc.navigation.Route.Clients.path) {
+                                popUpTo(
+                                    com.example.prodacc.navigation.Route.JobCards.path
+                                )
+                            }
                         }
+
                         "Employees" -> {
-                            navController.navigate(com.example.prodacc.navigation.Route.Employees.path){popUpTo(
-                                com.example.prodacc.navigation.Route.JobCards.path) }
+                            navController.navigate(com.example.prodacc.navigation.Route.Employees.path) {
+                                popUpTo(
+                                    com.example.prodacc.navigation.Route.JobCards.path
+                                )
+                            }
+                        }
+
+                        "Profile" -> {
+                            navController.navigate(
+                                Route.EmployeeDetails.path.replace(
+                                    "{employeeId}", SignedInUser.user!!.employeeId.toString()
+                                )
+                            )
                         }
                     }
-                } ,
+                },
                 icon = { NavigationBarItemIcon(item = item, Modifier.scale(scale)) },
                 alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
@@ -136,18 +168,28 @@ fun NavigationBar(navController : NavController ){
 
 @Composable
 fun NavigationBarItemIcon(item: String, modifier: Modifier) {
-    return when(item){
+    return when (item) {
         "Job Cards" -> {
-            Icon(imageVector = work, contentDescription = "JobCards", modifier = modifier )
+            Icon(imageVector = work, contentDescription = "JobCards", modifier = modifier)
         }
+
         "Vehicles" -> {
-            Icon(imageVector = car, contentDescription = "Vehicles", modifier = modifier )
+            Icon(imageVector = car, contentDescription = "Vehicles", modifier = modifier)
         }
+
         "Clients" -> {
-            Icon(imageVector = people, contentDescription = "Clients", modifier = modifier )
+            Icon(imageVector = people, contentDescription = "Clients", modifier = modifier)
         }
+
         "Employees" -> {
-            Icon(imageVector = people, contentDescription = "Employees", modifier = modifier )
+            Icon(
+                imageVector = people, contentDescription = "Employees", modifier = modifier
+            )
+        }
+
+        "Profile" -> {
+            ProfileAvatar(initials = SignedInUser.user!!.employeeName.first().toString().uppercase(), color = Grey, textSize = 18.sp, size = 35.dp)
+            //Icon(imageVector = person, contentDescription = "Profile", modifier = Modifier)
         }
 
         else -> {
