@@ -479,7 +479,7 @@ fun JobCardDetailScreen(
                                     SignedInUser.Role.Supervisor -> false
                                     SignedInUser.Role.Technician -> false
                                     else -> {
-                                        false
+                                        true
                                     }
                                 }
                             )
@@ -560,13 +560,20 @@ fun JobCardDetailScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 MediumTitleText(name = "Timesheets/work done ")
-                                TextButton(
-                                    onClick = {
-                                        showBottomSheet = true
+
+                                when(SignedInUser.role){
+                                    SignedInUser.Role.ServiceAdvisor -> {}
+                                    else -> {
+                                        TextButton(
+                                            onClick = {
+                                                showBottomSheet = true
+                                            }
+                                        ) {
+                                            Text(text = "Add", fontWeight = FontWeight.Bold)
+                                        }
                                     }
-                                ) {
-                                    Text(text = "Add")
                                 }
+
                             }
 
                             when (val timeSheetsLoadingState =
@@ -622,6 +629,7 @@ fun JobCardDetailScreen(
                                     }
 
                                     if (timeSheetViewModel.onClickTimesheet.collectAsState().value) {
+
                                         TimeSheetDialog(
                                             timeSheet = timeSheetViewModel.timesheet.collectAsState().value!!,
                                             timeSheetDialogVisibility = timeSheetViewModel.showTimesheetDialog.collectAsState().value,
@@ -629,7 +637,7 @@ fun JobCardDetailScreen(
                                             clockOut = timeSheetViewModel::updateTimeSheetClockOut,
                                             onReportChange = timeSheetViewModel::updateTimesheetReport,
                                             onDialogDismiss = timeSheetViewModel::timeSheetDialogDismissRequest,
-                                            onSave = timeSheetViewModel::saveUpdatedTimesheet
+                                            onSave = timeSheetViewModel::saveUpdatedTimesheet,
                                         )
                                     }
 
@@ -982,7 +990,9 @@ fun ReportTextField(
             colors = TextFieldDefaults.colors(
                 disabledContainerColor = Color.Transparent,
                 disabledTextColor = Color.DarkGray,
-                disabledLabelColor = Color.DarkGray
+                disabledLabelColor = Color.DarkGray,
+                unfocusedContainerColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent
             )
         )
         when (loadingState) {

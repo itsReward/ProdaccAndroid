@@ -125,6 +125,10 @@ class TimeSheetsViewModel(
                         // Handle error event if needed
                         _statusLoadingState.value = LoadingState.Error(event.message)
                     }
+
+                    is EventBus.JobCardEvent.ReportCRUD -> {
+                        //don't have to do anything
+                    }
                 }
             }
         }
@@ -185,10 +189,11 @@ class TimeSheetsViewModel(
                         employeeId = signedInUser.user!!.employeeId
                     )
                 )
-                fetchTimeSheets()
+
             } finally {
-                EventBus.emit(EventBus.JobCardEvent.StatusChanged)
                 updateJobCardsStatus("diagnostics")
+                EventBus.emit(EventBus.JobCardEvent.StatusChanged(UUID.fromString(jobCardId)))
+                fetchTimeSheets()
             }
 
 
@@ -203,9 +208,10 @@ class TimeSheetsViewModel(
             try {
                 updateDiagnosticsTimeSheet(_diagnosticsTimeSheet.value!!)
             } finally {
-                fetchTimeSheets()
-                EventBus.emit(EventBus.JobCardEvent.StatusChanged)
                 updateJobCardsStatus("approval")
+                EventBus.emit(EventBus.JobCardEvent.StatusChanged(UUID.fromString(jobCardId)))
+                fetchTimeSheets()
+
             }
 
 
@@ -244,10 +250,11 @@ class TimeSheetsViewModel(
                         employeeId = signedInUser.user!!.employeeId
                     )
                 )
-                fetchTimeSheets()
+
             } finally {
-                EventBus.emit(EventBus.JobCardEvent.StatusChanged)
                 updateJobCardsStatus("testing")
+                EventBus.emit(EventBus.JobCardEvent.StatusChanged(UUID.fromString(jobCardId)))
+                fetchTimeSheets()
             }
         }
     }

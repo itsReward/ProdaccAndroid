@@ -15,6 +15,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +36,7 @@ import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
 import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.Timesheet
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -98,6 +101,8 @@ fun TimeSheetDialog(
     onReportChange: (String) -> Unit,
     onSave: () -> Unit
 ){
+    val enabled by remember{ mutableStateOf(SignedInUser.employee!!.id == timeSheet.technicianId)}
+
     AnimatedVisibility(visible = timeSheetDialogVisibility) {
         Dialog(onDismissRequest = onDialogDismiss) {
             Column(
@@ -124,13 +129,23 @@ fun TimeSheetDialog(
                 OutlinedTextField(value = timeSheet.sheetTitle,
                     onValueChange = {},
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(text = "Title", color = Color.DarkGray) })
-                DateTimePickerTextField(
-                    value = timeSheet.clockInDateAndTime, onValueChange = {}, label = "Start"
+                    label = { Text(text = "Title", color = Color.DarkGray) },
+                    enabled = enabled,
+                    colors = TextFieldDefaults.colors(
+                        disabledContainerColor = Color.Transparent,
+                        disabledTextColor = Color.DarkGray,
+                        disabledLabelColor = Color.DarkGray,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    )
                 )
 
                 DateTimePickerTextField(
-                    value = timeSheet.clockOutDateAndTime, onValueChange = clockOut, label = "Stop"
+                    value = timeSheet.clockInDateAndTime, onValueChange = {}, label = "Start", enabled = enabled
+                )
+
+                DateTimePickerTextField(
+                    value = timeSheet.clockOutDateAndTime, onValueChange = clockOut, label = "Stop", enabled = enabled
                 )
                 OutlinedTextField(
                     value = timeSheet.report,
@@ -138,7 +153,15 @@ fun TimeSheetDialog(
                     label = { Text(text = "Timesheet report") },
                     modifier = Modifier
                         .height(200.dp)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    enabled = enabled,
+                    colors = TextFieldDefaults.colors(
+                        disabledTextColor = Color.DarkGray,
+                        disabledLabelColor = Color.DarkGray,
+                        disabledContainerColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    )
                 )
 
                 Row(

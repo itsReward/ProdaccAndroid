@@ -79,6 +79,8 @@ class JobCardDetailsViewModel(
                     is EventBus.JobCardEvent.Error -> {
                         _statusLoadingState.value = LoadingState.Error(event.message)
                     }
+
+                    is EventBus.JobCardEvent.ReportCRUD -> {}
                 }
             }
         }

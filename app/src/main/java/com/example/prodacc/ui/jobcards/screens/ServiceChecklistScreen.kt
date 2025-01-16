@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -81,11 +82,27 @@ fun ServiceChecklistSection(
                 }
 
                 else -> {
-                    ServiceChecklistSectionContent(
-                        existingChecklist = serviceChecklist,
-                        onClose = onClose,
-                        onSave = { checklist -> onSaveServiceChecklist(checklist) }
-                    )
+                    if (serviceChecklist == null && SignedInUser.role != SignedInUser.Role.Technician && SignedInUser.role != SignedInUser.Role.Admin ){
+                        Row (
+                            modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ){
+                            IconButton(
+                                onClick = onClose,
+                                icon = Icons.Default.ArrowBack,
+                                color = Color.DarkGray
+                            )
+                            Text("Technician has not created service checklist")
+                        }
+                    }else {
+                        ServiceChecklistSectionContent(
+                            existingChecklist = serviceChecklist,
+                            onClose = onClose,
+                            onSave = { checklist -> onSaveServiceChecklist(checklist) }
+                        )
+                    }
+
                 }
             }
         }
@@ -213,19 +230,24 @@ fun ServiceChecklistSectionContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                /*TextButton(onClick = onClose) {
-                    Text("Cancel")
-                }*/
-                Button(
-                    onClick = {
-                        val checklistData = checklistItems.mapValues { it.value.value }
-                        onSave(checklistData)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text(if (existingChecklist==null)"Save" else "Update")
+
+                when(SignedInUser.role){
+                    SignedInUser.Role.Supervisor -> {}
+                    SignedInUser.Role.ServiceAdvisor -> {}
+                    else -> {
+                        Button(
+                            onClick = {
+                                val checklistData = checklistItems.mapValues { it.value.value }
+                                onSave(checklistData)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(if (existingChecklist==null)"Save" else "Update")
+                        }
+                    }
                 }
+
             }
         }
     }

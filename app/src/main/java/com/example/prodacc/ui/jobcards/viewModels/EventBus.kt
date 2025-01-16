@@ -5,6 +5,7 @@ import com.prodacc.data.remote.dao.JobCard
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import java.util.UUID
 
 object EventBus {
     private val _events = MutableSharedFlow<JobCardEvent>()
@@ -61,7 +62,8 @@ object EventBus {
     }
 
     sealed class JobCardEvent {
-        data object StatusChanged : JobCardEvent()
+        data class StatusChanged(val jobId: UUID) : JobCardEvent()
+        data class ReportCRUD(val jobId: UUID) : JobCardEvent()
         data class Error(val message: String) : JobCardEvent()
     }
 

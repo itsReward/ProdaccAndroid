@@ -14,6 +14,7 @@ import com.prodacc.data.repositories.JobCardStatusRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -111,8 +112,37 @@ class JobCardViewModel(
         }
 
         viewModelScope.launch {
+            EventBus.events.collect{ event ->
+                when(event){
+                    is EventBus.JobCardEvent.Error -> {}
+                    is EventBus.JobCardEvent.StatusChanged ->
+                        refreshJobCardStatus(event.jobId)
+
+                    is EventBus.JobCardEvent.ReportCRUD -> {
+                        refreshJobCardReports(event.jobId)
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
            fetchJobCards()
         }
+    }
+
+    private fun refreshJobCardStatus(id: UUID){
+        val currentMap = _statusMap.value.toMutableMap()
+        currentMap[id]  = StatusLoadingState.Loading
+        _statusMap.value = currentMap
+        fetchJobCardStatus(id)
+
+    }
+
+    private fun refreshJobCardReports(id: UUID){
+        val currentMap = _reportsMap.value.toMutableMap()
+        currentMap[id] = ReportLoadingState.Loading
+        _reportsMap.value = currentMap
+        fetchJobCardReports(id)
     }
 
     private fun filterJobCards() {
