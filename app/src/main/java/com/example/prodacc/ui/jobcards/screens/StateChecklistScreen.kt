@@ -53,6 +53,7 @@ import com.example.designsystem.theme.DarkRed
 import com.example.designsystem.theme.Orange
 import com.example.designsystem.theme.Red
 import com.example.prodacc.ui.jobcards.viewModels.StateChecklistViewModel
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.StateChecklist
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -104,19 +105,43 @@ fun StateChecklistSection(
                 }
 
                 else -> {
-                    StateChecklistSectionContent(
-                        existingChecklist = stateChecklist,
-                        onClose = onClose,
-                        onSave = { checklist -> onSaveStateChecklist(checklist) },
-                        fuelLevelIn = fuelLevelIn,
-                        fuelLevelOut = fuelLevelOut,
-                        onFuelLevelInChange = onFuelLevelInChange,
-                        onFuelLevelOutChange = onFuelLevelOutChange,
-                        millageIn = millageIn,
-                        millageOut = millageOut,
-                        onMillageInChange = onMillageInChange,
-                        onMillageOutChange = onMillageOutChange,
-                    )
+                    if (stateChecklist == null && SignedInUser.role != SignedInUser.Role.Technician && SignedInUser.role != SignedInUser.Role.Admin){
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            IconButton(
+                                onClick = onClose,
+                                icon = Icons.Default.ArrowBack,
+                                color = Color.DarkGray
+                            )
+                            Text(text = "Technician has not created State checklist")
+                        }
+                    } else {
+                        StateChecklistSectionContent(
+                            existingChecklist = stateChecklist,
+                            onClose = onClose,
+                            onSave = { checklist -> onSaveStateChecklist(checklist) },
+                            fuelLevelIn = fuelLevelIn,
+                            fuelLevelOut = fuelLevelOut,
+                            onFuelLevelInChange = onFuelLevelInChange,
+                            onFuelLevelOutChange = onFuelLevelOutChange,
+                            millageIn = millageIn,
+                            millageOut = millageOut,
+                            onMillageInChange = onMillageInChange,
+                            onMillageOutChange = onMillageOutChange,
+                            enabled = when(SignedInUser.role){
+                                SignedInUser.Role.Admin -> true
+                                SignedInUser.Role.Technician -> true
+                                else -> {
+                                    false
+                                }
+                            }
+                        )
+                    }
+
+
                 }
             }
         }
@@ -138,6 +163,7 @@ fun StateChecklistSectionContent(
     millageOut: String,
     onMillageInChange: (String) -> Unit = {},
     onMillageOutChange: (String) -> Unit = {},
+    enabled: Boolean
 ) {
 
     val scrollState = rememberScrollState()
@@ -277,7 +303,9 @@ fun StateChecklistSectionContent(
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(vertical = 16.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -287,6 +315,7 @@ fun StateChecklistSectionContent(
                         ) {
                             BodyText(text = "Updated on: ")
                             FormattedTime(time = existingChecklist.created)
+                            BodyText(text = " By ${existingChecklist.technicianName} ${existingChecklist.technicianSurname}")
                         }
                     } else {
                         Row(
@@ -294,6 +323,7 @@ fun StateChecklistSectionContent(
                         ) {
                             BodyText(text = "Created on: ")
                             FormattedTime(time = LocalDateTime.now())
+                            BodyText(text = " By ${SignedInUser.employee!!.employeeName} ${SignedInUser.employee!!.employeeSurname}")
                         }
                     }
 
@@ -484,16 +514,19 @@ fun StateChecklistSectionContent(
                 horizontalArrangement = Arrangement.End
             ) {
 
-                Button(
-                    onClick = {
-                        val checklistData = checklistItems.mapValues { it.value.value }
-                        onSave(checklistData)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Save")
+                if(enabled){
+                    Button(
+                        onClick = {
+                            val checklistData = checklistItems.mapValues { it.value.value }
+                            onSave(checklistData)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Save")
+                    }
                 }
+
             }
         }
     }

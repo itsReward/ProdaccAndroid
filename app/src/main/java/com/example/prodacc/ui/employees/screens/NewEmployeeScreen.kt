@@ -45,9 +45,9 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewEmployeeScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: NewEmployeeViewModel = NewEmployeeViewModel()
 ) {
-    val viewModel = NewEmployeeViewModel()
     val state = viewModel.state.collectAsState()
     val scroll = rememberScrollState()
 

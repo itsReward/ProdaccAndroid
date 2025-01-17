@@ -8,6 +8,9 @@ data class StateChecklist(
     @SerializedName("id") val id: UUID,
     @SerializedName("jobCardId") val jobCardId: UUID,
     @SerializedName("jobCardName") val jobCardName: String,
+    @SerializedName("technicianId") val technicianId: UUID,
+    @SerializedName("technicianName") val technicianName: String,
+    @SerializedName("technicianSurname") val technicianSurname: String,
     @SerializedName("millageIn") val millageIn: String,
     @SerializedName("millageOut") val millageOut: String,
     @SerializedName("fuelLevelIn") val fuelLevelIn: String,
@@ -18,6 +21,7 @@ data class StateChecklist(
 
 data class NewStateChecklist(
     @SerializedName("jobCardId") val jobCardId: UUID,
+    @SerializedName("technicianId") val technicianId: UUID,
     @SerializedName("millageIn") val millageIn: String,
     @SerializedName("millageOut") val millageOut: String,
     @SerializedName("fuelLevelIn") val fuelLevelIn: String,

@@ -103,10 +103,31 @@ class JobCardReportsViewModel(
             try {
                 if (jobCardReports.value.any { it.reportType == report.reportType }) {
                     // Update existing report
-                    jobCardReportRepository.updateJobCardReport(report.reportId, report)
+                    when (val response = jobCardReportRepository.updateJobCardReport(report.reportId, report)){
+                        is JobCardReportRepository.LoadingResult.Error -> _serviceAdvisorReportLoadingState.value = LoadingState.Error(response.message)
+                        is JobCardReportRepository.LoadingResult.SingleEntitySuccess -> {
+                            EventBus.emit(EventBus.JobCardEvent.ReportCRUD(UUID.fromString(jobId)))
+                            _serviceAdvisorReport.value = response.response
+                            _serviceAdvisorReportLoadingState.value = LoadingState.Success
+                        }
+                        is JobCardReportRepository.LoadingResult.Success -> {
+                            //will never happen
+                        }
+                    }
+
                 } else {
                     // Create new report
-                    jobCardReportRepository.newJobCardReport(report)
+                    when(val response = jobCardReportRepository.newJobCardReport(report)){
+                        is JobCardReportRepository.LoadingResult.Error -> _serviceAdvisorReportLoadingState.value = LoadingState.Error(response.message)
+                        is JobCardReportRepository.LoadingResult.SingleEntitySuccess -> {
+                            EventBus.emit(EventBus.JobCardEvent.ReportCRUD(UUID.fromString(jobId)))
+                            _serviceAdvisorReport.value = response.response
+                        }
+                        is JobCardReportRepository.LoadingResult.Success -> {
+                            //Will never happen
+                        }
+                    }
+
                 }
                 fetchJobCardReports() // Refresh reports after save/update
             } catch (e: Exception) {

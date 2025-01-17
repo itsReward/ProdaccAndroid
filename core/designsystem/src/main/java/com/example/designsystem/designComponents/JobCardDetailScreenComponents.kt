@@ -86,9 +86,11 @@ import androidx.wear.compose.material.Text
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.DarkBlue
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Orange
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
@@ -111,6 +113,16 @@ fun StepIndicator(
     jobCardStatuses: List<JobCardStatus>
 ) {
     var expanded by remember { mutableStateOf(false) }
+
+    fun formatStatusText(status: String): String {
+        return if ((SignedInUser.role is SignedInUser.Role.Technician ||
+                    SignedInUser.role is SignedInUser.Role.Supervisor) &&
+            status == "waiting_for_payment") {
+            "waiting for client approval"
+        } else {
+            status
+        }
+    }
 
     val currentStep = jobCardStatuses.size - 1
     val maxSteps = jobCardStatuses.size
@@ -213,7 +225,7 @@ fun StepIndicator(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     BodyText(
-                                        text = "${jobCardStatuses[index].status} :"
+                                        text = "${formatStatusText(jobCardStatuses[index].status)} :"
                                     )
                                     FormattedTime(time = jobCardStatuses[index].createdAt)
 
@@ -266,6 +278,7 @@ fun StepIndicator(
                             "approval" -> Orange
                             "work_in_progress" -> DarkGreen
                             "testing" -> DarkGreen
+                            "waiting_for_payment" -> DarkBlue
                             "done" -> DarkGreen
                             else -> Color.Red
                         }
@@ -278,7 +291,8 @@ fun StepIndicator(
                             "diagnostics" -> 0.2f
                             "approval" -> 0.3f
                             "work_in_progress" -> 0.5f
-                            "testing" -> 0.8f
+                            "testing" -> 0.6f
+                            "waiting_for_payment" -> 0.8f
                             "done" -> 1f
                             else -> 0.1f
                         }
@@ -287,7 +301,7 @@ fun StepIndicator(
                 , horizontalArrangement = Arrangement.Center
 
             ) {
-                Text(text = jobCardStatuses.last().status)
+                Text(text = formatStatusText(jobCardStatuses.last().status))
 
             }
         }

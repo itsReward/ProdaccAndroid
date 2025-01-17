@@ -1,6 +1,7 @@
 package com.example.designsystem.designComponents
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.dialog.Dialog
+import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
@@ -272,16 +274,28 @@ fun AllJobCardListItem(
             text = jobCardName,
             style = MaterialTheme.typography.titleMedium
         )
-        Text(
-            text = "Closed: ${
-                if (closedDate != null) {
-                    "${closedDate.dayOfWeek} ${closedDate.month} ${closedDate.hour}:${closedDate.minute}"
-                } else {
-                    "null"
-                }
-            } ",
-            style = MaterialTheme.typography.bodyMedium
-        )
+
+        if (closedDate != null){
+            Row {
+                Text(
+                    text = "Closed: ",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.End,
+                )
+                FormattedTime(time = closedDate!!)
+            }
+
+        } else {
+            Text(
+                text = "active",
+                modifier = Modifier
+                    .clip(RoundedCornerShape(100f))
+                    .border(width = 0.5.dp, color = LightGrey, shape = RoundedCornerShape(100f))
+                    .background(Blue50)
+                    .padding(horizontal = 15.dp, vertical = 2.dp)
+            )
+        }
+
     }
 }
 

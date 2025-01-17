@@ -35,6 +35,7 @@ import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.LightOrange
 import com.example.designsystem.theme.Red
 import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
+import com.prodacc.data.SignedInUser
 
 @Composable
 fun JobStatusFilters(
@@ -46,18 +47,39 @@ fun JobStatusFilters(
     onClickTesting: () -> Unit,
     onClickDone: () -> Unit,
     onClickFrozen: () -> Unit,
+    onClickWaitingForPayment: () -> Unit,
     jobCardFilterState: JobCardViewModel.JobCardsFilter
 ) {
-    val jobCardsStatus = listOf(
-        "all",
-        "open",
-        "approval",
-        "diagnostics",
-        "workInProgress",
-        "testing",
-        "done",
-        "onhold"
-    )
+
+
+    val jobCardsStatus = when(SignedInUser.role){
+        is SignedInUser.Role.Technician -> {
+            listOf(
+                "all",
+                "open",
+                "approval",
+                "diagnostics",
+                "workInProgress",
+                "testing",
+                "waitingForClientApproval",
+                "done",
+                "onhold"
+            )
+        }
+        else -> {
+            listOf(
+                "all",
+                "open",
+                "approval",
+                "diagnostics",
+                "workInProgress",
+                "testing",
+                "waitingForPayment",
+                "done",
+                "onhold"
+            )
+        }
+    }
 
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -81,10 +103,12 @@ fun JobStatusFilters(
                         onClickApproval()
                     } else if (it == "diagnostics") {
                         onClickDiagnostics()
-                    } else if (it == "workInProgress") {
+                    } else if (it == "workInProgress" ) {
                         onClickWorkInProgress()
                     } else if (it == "testing") {
                         onClickTesting()
+                    } else if (it == "waitingForPayment"|| it == "waitingForClientApproval") {
+                        onClickWaitingForPayment()
                     } else if (it == "done") {
                         onClickDone()
                     } else if (it == "onhold") {
@@ -106,6 +130,10 @@ fun JobStatusFilters(
                             "Work In Progress"
                         } else if (it == "testing") {
                             "Testing"
+                        }else if (it == "waitingForPayment") {
+                            "Waiting For Payment"
+                        } else if (it == "waitingForClientApproval") {
+                            "Client approval"
                         } else if (it == "done") {
                             "Done"
                         } else if (it == "onhold") {
@@ -122,6 +150,8 @@ fun JobStatusFilters(
                     "diagnostics" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Diagnostics
                     "workInProgress" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.WorkInProgress
                     "testing" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Testing
+                    "waitingForPayment" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.WaitingForPayment
+                    "waitingForClientApproval" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.WaitingForPayment
                     "done" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Done
                     "onhold" -> jobCardFilterState is JobCardViewModel.JobCardsFilter.Frozen
                     else -> false
@@ -138,6 +168,10 @@ fun JobStatusFilters(
                 border = FilterChipDefaults.filterChipBorder(enabled = false, selected = false)
             )
 
+        }
+
+        item {
+            Spacer(modifier = Modifier.width(20.dp))
         }
 
     }

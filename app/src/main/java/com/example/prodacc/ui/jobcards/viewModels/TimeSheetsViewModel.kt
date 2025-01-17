@@ -266,6 +266,8 @@ class TimeSheetsViewModel(
             try {
                 updateControlTimeSheet(_controlTimeSheet.value!!)
             } finally {
+                updateJobCardsStatus("waiting_for_payment")
+                EventBus.emit(EventBus.JobCardEvent.StatusChanged(UUID.fromString(jobCardId)))
                 fetchTimeSheets()
             }
         }
@@ -423,9 +425,18 @@ class TimeSheetsViewModel(
     }
 
     private suspend fun addTimesheets() {
-        if (newTimeSheetCount == 0){
-            updateJobCardsStatus("work_in_progress")
-            newTimeSheetCount += 1
+        // First check if this is a regular timesheet not diagnostics or quality control)
+        if (_newTimeSheet.value.sheetTitle != "Diagnostics" && _newTimeSheet.value.sheetTitle != "Quality Control Test") {
+            // Check if this is the first regular timesheet
+            val hasRegularTimesheet = _timeSheets.value.any {
+                it.sheetTitle != "Diagnostics" && it.sheetTitle != "Quality Control Test"
+            }
+
+            // Only update status if this is the first regular timesheet
+            if (!hasRegularTimesheet) {
+                updateJobCardsStatus("work_in_progress")
+                EventBus.emit(EventBus.JobCardEvent.StatusChanged(UUID.fromString(jobCardId)))
+            }
         }
 
         if (_newTimeSheet.value.sheetTitle == null || _newTimeSheet.value.clockInDateAndTime == null) {
@@ -449,8 +460,11 @@ class TimeSheetsViewModel(
                         LoadingState.Error("Returned list instead of Timesheet")
                 }
 
-                is TimeSheetRepository.LoadingResult.TimeSheet -> _newTimeSheetLoadState.value =
-                    LoadingState.Success
+                is TimeSheetRepository.LoadingResult.TimeSheet -> {
+                    EventBus.emitTimeSheetEvent(EventBus.TimesheetEvent.NewTimesheet)
+                    _newTimeSheetLoadState.value =
+                        LoadingState.Success
+                }
             }
         }
     }

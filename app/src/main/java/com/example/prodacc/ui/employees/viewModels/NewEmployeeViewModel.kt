@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prodacc.ui.employees.stateClasses.NewEmployeeState
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.dao.NewEmployee
 import com.prodacc.data.repositories.EmployeeRepository
 import kotlinx.coroutines.Dispatchers
@@ -85,6 +86,7 @@ class NewEmployeeViewModel(
                     when (result) {
                         is EmployeeRepository.LoadingResult.Success -> {
                             // Save was successful
+                            EventBus.emitEmployeeEvent(EventBus.EmployeeEvent.EmployeeCreated)
                             _loadState.value = SaveState.Success
                         }
                         is EmployeeRepository.LoadingResult.Error -> {

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.NewStateChecklist
 import com.prodacc.data.remote.dao.StateChecklist
 import com.prodacc.data.remote.dao.User
@@ -18,7 +19,6 @@ import java.util.UUID
 
 class StateChecklistViewModel(
     private val stateChecklistRepository: StateChecklistRepository = StateChecklistRepository(),
-    private val signedInUser: User? = null,
     private val jobCardId: String
 ) : ViewModel() {
     private val _stateChecklist = MutableStateFlow<StateChecklist?>(null)
@@ -114,6 +114,7 @@ class StateChecklistViewModel(
                     fuelLevelOut = _fuelLevelOut.value,
                     millageIn = _millageIn.value,
                     millageOut = millageOut.value,
+                    technicianId = SignedInUser.employee!!.id
                 )
 
                 val result = if (_stateChecklist.value == null) {

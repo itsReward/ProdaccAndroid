@@ -1,12 +1,16 @@
 package com.example.prodacc.ui.jobcards.screens
 
+import android.graphics.Paint.Align
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -29,11 +34,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
+import com.example.designsystem.designComponents.CategoryHeader
 import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.TopBar
+import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
@@ -52,7 +60,6 @@ fun JobCardsScreen(
     val scroll = rememberScrollState()
 
     val jobCards = viewModel.filteredJobCards.collectAsState()
-    val pastJobCards = viewModel.pastJobCards.collectAsState()
     val reportsMap = viewModel.reportsMap.collectAsState().value
     val statusMap = viewModel.statusMap.collectAsState().value
 
@@ -162,6 +169,7 @@ fun JobCardsScreen(
                                 onClickDone = { viewModel.onToggleDoneChip() },
                                 onClickFrozen = { viewModel.onToggleFrozenChip() },
                                 onClickTesting = { viewModel.onToggleTesting() },
+                                onClickWaitingForPayment = {viewModel.onToggleWaitingForPayment()},
                                 jobCardFilterState = viewModel.jobCardsFilter.collectAsState().value
                             )
 
@@ -207,33 +215,42 @@ fun JobCardsScreen(
 
                             }
 
-                            HistorySection(heading = "History", buttonOnClick = {navController.navigate(
-                                Route.Search.path.replace(
-                                    "{title}", "Job Cards"
-                                )
-                            )})
+                            when(SignedInUser.role){
+                                is SignedInUser.Role.Technician -> {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                }
+                                else -> {
+                                    Row (
+                                        modifier  = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 20.dp, vertical = 10.dp)
 
-                            LazyColumn(
-                                //verticalArrangement = Arrangement.spacedBy(10.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .sizeIn(maxHeight = 2000.dp)
-                                    .padding(horizontal = 20.dp)
-                            ) {
-                                items(pastJobCards.value) {
-                                    AllJobCardListItem(
-                                        jobCardName = it.jobCardName,
-                                        closedDate = it.dateAndTimeClosed,
-                                        onClick = {
-                                            navController.navigate(
-                                                Route.JobCardDetails.path.replace(
-                                                    "{jobCardId}", it.id.toString()
-                                                )
-                                            )
-                                        },
-                                    )
+                                        ,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                    ){
+                                        Row(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(10f))
+                                                .clickable {
+                                                    navController.navigate(
+                                                        Route.Search.path.replace(
+                                                    "{title}", "Job Cards"
+                                                        )
+                                                    )
+                                                }
+                                                .padding(vertical = 10.dp, horizontal = 20.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(Icons.Default.List, "All JobCards")
+                                            Text(text = "All JobCards")
+                                        }
+
+                                    }
                                 }
                             }
+
                         }
 
                     }

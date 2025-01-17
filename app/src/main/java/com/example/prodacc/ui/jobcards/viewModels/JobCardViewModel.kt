@@ -2,7 +2,7 @@ package com.example.prodacc.ui.jobcards.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
@@ -11,10 +11,10 @@ import com.prodacc.data.remote.dao.JobCardStatus
 import com.prodacc.data.repositories.JobCardReportRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardStatusRepository
+import com.prodacc.data.repositories.JobCardTechnicianRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -23,8 +23,9 @@ import java.util.UUID
 class JobCardViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val jobCardReportRepository: JobCardReportRepository = JobCardReportRepository(),
-    private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository()
-): ViewModel(), ApiInstance.WebSocketEventListener{
+    private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
+    private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository()
+) : ViewModel(), ApiInstance.WebSocketEventListener {
     private val _jobCards = MutableStateFlow<List<JobCard>>(emptyList())
     private val jobCards: StateFlow<List<JobCard>> = _jobCards.asStateFlow()
 
@@ -43,51 +44,52 @@ class JobCardViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
 
-    private val _pastJobCards = MutableStateFlow<List<JobCard>>(emptyList())
-    val pastJobCards: StateFlow<List<JobCard>> = _pastJobCards.asStateFlow()
-
-
 
     private val _jobCardsFilter = MutableStateFlow<JobCardsFilter>(JobCardsFilter.All())
     val jobCardsFilter = _jobCardsFilter.asStateFlow()
 
-    fun onToggleAllFilterChip(){
+    fun onToggleAllFilterChip() {
         _jobCardsFilter.value = JobCardsFilter.All()
         filterJobCards()
     }
 
-    fun onToggleOpenFilterChip(){
+    fun onToggleOpenFilterChip() {
         _jobCardsFilter.value = JobCardsFilter.Open()
         filterJobCards()
     }
 
-    fun onToggleDiagnosticsFilterChip(){
+    fun onToggleDiagnosticsFilterChip() {
         _jobCardsFilter.value = JobCardsFilter.Diagnostics()
         filterJobCards()
     }
 
-    fun onToggleWorkInProgressChip(){
+    fun onToggleWorkInProgressChip() {
         _jobCardsFilter.value = JobCardsFilter.WorkInProgress()
         filterJobCards()
     }
 
-    fun onToggleApprovalChip(){
+    fun onToggleApprovalChip() {
         _jobCardsFilter.value = JobCardsFilter.Approval()
         filterJobCards()
     }
 
-    fun onToggleDoneChip(){
+    fun onToggleDoneChip() {
         _jobCardsFilter.value = JobCardsFilter.Done()
         filterJobCards()
     }
 
-    fun onToggleFrozenChip(){
+    fun onToggleFrozenChip() {
         _jobCardsFilter.value = JobCardsFilter.Frozen()
         filterJobCards()
     }
 
-    fun onToggleTesting(){
+    fun onToggleTesting() {
         _jobCardsFilter.value = JobCardsFilter.Testing()
+        filterJobCards()
+    }
+
+    fun onToggleWaitingForPayment() {
+        _jobCardsFilter.value = JobCardsFilter.WaitingForPayment()
         filterJobCards()
     }
 
@@ -97,12 +99,13 @@ class JobCardViewModel(
         _jobCardLoadState.value = LoadingState.Loading
 
         viewModelScope.launch {
-            EventBus.crudEvents.collect{ event ->
+            EventBus.crudEvents.collect { event ->
                 when (event) {
                     is EventBus.JobCardCRUDEvent.JobCardCreated -> {
                         _jobCards.value += event.jobCard
                         refreshJobCards()
                     }
+
                     is EventBus.JobCardCRUDEvent.JobCardDeleted -> {
                         refreshJobCards()
                     }
@@ -112,33 +115,33 @@ class JobCardViewModel(
         }
 
         viewModelScope.launch {
-            EventBus.events.collect{ event ->
-                when(event){
+            EventBus.events.collect { event ->
+                when (event) {
                     is EventBus.JobCardEvent.Error -> {}
                     is EventBus.JobCardEvent.StatusChanged ->
-                        refreshJobCardStatus(event.jobId)
+                        refreshSingleJobCardStatus(event.jobId)
 
                     is EventBus.JobCardEvent.ReportCRUD -> {
-                        refreshJobCardReports(event.jobId)
+                        refreshSingleJobCardReport(event.jobId)
                     }
                 }
             }
         }
 
         viewModelScope.launch {
-           fetchJobCards()
+            fetchJobCards()
         }
     }
 
-    private fun refreshJobCardStatus(id: UUID){
+    private fun refreshJobCardStatus(id: UUID) {
         val currentMap = _statusMap.value.toMutableMap()
-        currentMap[id]  = StatusLoadingState.Loading
+        currentMap[id] = StatusLoadingState.Loading
         _statusMap.value = currentMap
         fetchJobCardStatus(id)
 
     }
 
-    private fun refreshJobCardReports(id: UUID){
+    private fun refreshJobCardReports(id: UUID) {
         val currentMap = _reportsMap.value.toMutableMap()
         currentMap[id] = ReportLoadingState.Loading
         _reportsMap.value = currentMap
@@ -156,6 +159,7 @@ class JobCardViewModel(
                                 state.response?.status == "opened"
                     } ?: false
                 }
+
                 is JobCardsFilter.Approval -> currentCards.filter {
                     statusMap.value[it.id]?.let { state ->
                         state is StatusLoadingState.Success &&
@@ -169,55 +173,117 @@ class JobCardViewModel(
                                 state.response?.status == "diagnostics"
                     } ?: false
                 }
+
                 is JobCardsFilter.Done -> currentCards.filter {
                     statusMap.value[it.id]?.let { state ->
                         state is StatusLoadingState.Success &&
                                 state.response?.status == "done"
                     } ?: false
                 }
+
                 is JobCardsFilter.Frozen -> currentCards.filter {
                     statusMap.value[it.id]?.let { state ->
                         state is StatusLoadingState.Success &&
                                 state.response?.status == "onhold"
                     } ?: false
                 }
+
                 is JobCardsFilter.Testing -> currentCards.filter {
                     statusMap.value[it.id]?.let { state ->
                         state is StatusLoadingState.Success &&
                                 state.response?.status == "testing"
                     } ?: false
                 }
+
                 is JobCardsFilter.WorkInProgress -> currentCards.filter {
                     statusMap.value[it.id]?.let { state ->
                         state is StatusLoadingState.Success &&
                                 state.response?.status == "work_in_progress"
                     } ?: false
                 }
+
+                is JobCardsFilter.WaitingForPayment -> currentCards.filter {
+                    statusMap.value[it.id]?.let { state ->
+                        state is StatusLoadingState.Success &&
+                                state.response?.status == "waiting_for_payment"
+                    } ?: false
+                }
             }
         }
     }
 
-    private suspend fun fetchJobCards(){
+    private suspend fun fetchJobCards() {
 
-        jobCardRepository.getJobCards().let { loadingResult ->
-            when (loadingResult) {
-                is JobCardRepository.LoadingResult.Success -> {
-                    _jobCardLoadState.value = LoadingState.Success(loadingResult.jobCards)
-                    _jobCards.value = loadingResult.jobCards.sortedByDescending { it.dateAndTimeIn }
-                    filterJobCards()
+        when (SignedInUser.role) {
+            is SignedInUser.Role.Technician -> {
+                jobCardTechnicianRepository.getJobCardsForTechnician(SignedInUser.employee!!.id)
+                    .let { result ->
+                        when (result) {
+                            is JobCardTechnicianRepository.LoadingResult.Error -> _jobCardLoadState.value =
+                                LoadingState.Error(result.message)
+
+                            is JobCardTechnicianRepository.LoadingResult.Loading -> _jobCardLoadState.value =
+                                LoadingState.Loading
+
+                            is JobCardTechnicianRepository.LoadingResult.Success -> {
+                                val jobCards = mutableListOf<JobCard>()
+                                result.list.let {
+                                    it.forEach {
+                                        when (val response = jobCardRepository.getJobCard(it)) {
+                                            is JobCardRepository.LoadingResult.Error -> jobCardLoadState.value =
+                                                LoadingState.Error(response.message)
+
+                                            is JobCardRepository.LoadingResult.ErrorSingleMessage -> jobCardLoadState.value =
+                                                LoadingState.Error(response.message)
+
+                                            is JobCardRepository.LoadingResult.NetworkError -> jobCardLoadState.value =
+                                                LoadingState.Error("Network Error")
+
+                                            is JobCardRepository.LoadingResult.SingleEntity -> jobCards.add(
+                                                response.jobCard
+                                            )
+
+                                            is JobCardRepository.LoadingResult.Success -> {/* Will never  happen */
+                                            }
+                                        }
+                                    }
+                                }
+                                _jobCards.value = jobCards.sortedByDescending { it.dateAndTimeIn }
+                                _jobCardLoadState.value = LoadingState.Success(_jobCards.value)
+                                filterJobCards()
+                            }
+                        }
+                    }
+            }
+
+            else -> {
+                jobCardRepository.getJobCards().let { loadingResult ->
+                    when (loadingResult) {
+                        is JobCardRepository.LoadingResult.Success -> {
+                            _jobCardLoadState.value = LoadingState.Success(loadingResult.jobCards)
+                            _jobCards.value =
+                                loadingResult.jobCards.sortedByDescending { it.dateAndTimeIn }
+                            filterJobCards()
+                        }
+
+                        is JobCardRepository.LoadingResult.Error -> {
+                            _jobCardLoadState.value = LoadingState.Error(loadingResult.message)
+                        }
+
+                        is JobCardRepository.LoadingResult.ErrorSingleMessage -> _jobCardLoadState.value =
+                            LoadingState.Error(loadingResult.message)
+
+                        is JobCardRepository.LoadingResult.NetworkError -> _jobCardLoadState.value =
+                            LoadingState.Error("Network Error")
+
+                        is JobCardRepository.LoadingResult.SingleEntity -> _jobCardLoadState.value =
+                            LoadingState.Error("Returned Single Entity Instead of List")
+                    }
                 }
 
-                is JobCardRepository.LoadingResult.Error -> {
-                    _jobCardLoadState.value = LoadingState.Error(loadingResult.message)
-                }
-
-                is JobCardRepository.LoadingResult.ErrorSingleMessage ->_jobCardLoadState.value = LoadingState.Error(loadingResult.message)
-                is JobCardRepository.LoadingResult.NetworkError ->_jobCardLoadState.value = LoadingState.Error("Network Error")
-                is JobCardRepository.LoadingResult.SingleEntity ->_jobCardLoadState.value = LoadingState.Error("Returned Single Entity Instead of List")
             }
         }
 
-        _pastJobCards.value = jobCards.value.filter { it.dateAndTimeClosed != null }
 
     }
 
@@ -237,6 +303,7 @@ class JobCardViewModel(
                                 currentMap + (jobCardId to ReportLoadingState.Error(result.message))
                             }
                         }
+
                         is JobCardReportRepository.LoadingResult.Success -> {
                             _reportsMap.update { currentMap ->
                                 currentMap + (jobCardId to ReportLoadingState.Success(
@@ -248,6 +315,7 @@ class JobCardViewModel(
                                 ))
                             }
                         }
+
                         is JobCardReportRepository.LoadingResult.SingleEntitySuccess -> {
                             _reportsMap.update { currentMap ->
                                 currentMap + (jobCardId to ReportLoadingState.Error("returned single entity instead of list"))
@@ -268,25 +336,110 @@ class JobCardViewModel(
 
     }
 
+    private fun refreshSingleJobCardReport(jobCardId: UUID) {
+        viewModelScope.launch {
+            try {
+                // Only update the reports map for this specific card
+                _reportsMap.update { currentMap ->
+                    currentMap + (jobCardId to ReportLoadingState.Loading)
+                }
+
+                when (val result = jobCardReportRepository.getJobCardReports(jobCardId)) {
+                    is JobCardReportRepository.LoadingResult.Success -> {
+                        _reportsMap.update { currentMap ->
+                            currentMap + (jobCardId to ReportLoadingState.Success(
+                                if (result.response.isEmpty()) {
+                                    null
+                                } else {
+                                    result.response.first { it.reportType == "serviceAdvisorReport" }
+                                }
+                            ))
+                        }
+                    }
+
+                    is JobCardReportRepository.LoadingResult.Error -> {
+                        _reportsMap.update { currentMap ->
+                            currentMap + (jobCardId to ReportLoadingState.Error(result.message))
+                        }
+                    }
+
+                    else -> {
+                        _reportsMap.update { currentMap ->
+                            currentMap + (jobCardId to ReportLoadingState.Error("Unexpected response"))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _reportsMap.update { currentMap ->
+                    currentMap + (jobCardId to ReportLoadingState.Error(
+                        e.message ?: "Unknown error"
+                    ))
+                }
+            }
+        }
+    }
+
+    private fun refreshSingleJobCardStatus(jobCardId: UUID) {
+        viewModelScope.launch {
+            try {
+                // Set loading state for this specific card's status
+                _statusMap.update { currentMap ->
+                    currentMap + (jobCardId to StatusLoadingState.Loading)
+                }
+
+                when (val result = jobCardStatusRepository.getJobCardStatusesByJobId(jobCardId)) {
+                    is JobCardStatusRepository.LoadingResult.Success -> {
+                        _statusMap.update { currentMap ->
+                            currentMap + (jobCardId to StatusLoadingState.Success(
+                                result.status.lastOrNull()
+                            ))
+                        }
+                    }
+
+                    is JobCardStatusRepository.LoadingResult.Error -> {
+                        _statusMap.update { currentMap ->
+                            currentMap + (jobCardId to StatusLoadingState.Error(result.message))
+                        }
+                    }
+
+                    is JobCardStatusRepository.LoadingResult.Loading -> {
+                        // We already set the loading state above, so we can ignore this case
+                    }
+                }
+            } catch (e: Exception) {
+                val errorState = when (e) {
+                    is IOException -> StatusLoadingState.Error("Network Error")
+                    else -> StatusLoadingState.Error(e.message ?: "Unknown Error")
+                }
+                _statusMap.update { currentMap ->
+                    currentMap + (jobCardId to errorState)
+                }
+            }
+        }
+    }
+
     fun fetchJobCardStatus(jobCardId: UUID) {
         val currentState = _statusMap.value[jobCardId]
-        if (currentState == null ) {
+        if (currentState == null) {
             viewModelScope.launch {
                 try {
                     _statusMap.update { currentMap ->
                         currentMap + (jobCardId to StatusLoadingState.Loading)
                     }
-                    when (val result = jobCardStatusRepository.getJobCardStatusesByJobId(jobCardId)) {
+                    when (val result =
+                        jobCardStatusRepository.getJobCardStatusesByJobId(jobCardId)) {
                         is JobCardStatusRepository.LoadingResult.Error -> {
                             _statusMap.update { currentMap ->
                                 currentMap + (jobCardId to StatusLoadingState.Error(result.message))
                             }
                         }
+
                         is JobCardStatusRepository.LoadingResult.Loading -> {
                             _statusMap.update { currentMap ->
                                 currentMap + (jobCardId to StatusLoadingState.Loading)
                             }
                         }
+
                         is JobCardStatusRepository.LoadingResult.Success -> {
                             _statusMap.update { currentMap ->
                                 currentMap + (jobCardId to StatusLoadingState.Success(
@@ -296,7 +449,7 @@ class JobCardViewModel(
                             }
                         }
                     }
-                } catch (e:Exception){
+                } catch (e: Exception) {
                     val errorState = when (e) {
                         is IOException -> StatusLoadingState.Error("Network Error")
                         else -> StatusLoadingState.Error(e.message ?: "Unknown Error")
@@ -310,7 +463,7 @@ class JobCardViewModel(
 
     }
 
-    fun refreshJobCards(){
+    fun refreshJobCards() {
         _jobCardLoadState.value = LoadingState.Loading
         viewModelScope.launch {
             try {
@@ -332,20 +485,21 @@ class JobCardViewModel(
         }
     }
 
-    sealed class JobCardsFilter(){
-        data class All(val name: String = "all"): JobCardsFilter()
-        data class Open(val name: String = "open"): JobCardsFilter()
-        data class Approval(val name: String = "approval"): JobCardsFilter()
-        data class Diagnostics(val name: String = "diagnostics"): JobCardsFilter()
-        data class WorkInProgress(val name: String = "workInProgress"): JobCardsFilter()
-        data class Testing(val name: String = "testing"): JobCardsFilter()
-        data class Done(val name: String = "done"): JobCardsFilter()
-        data class Frozen(val name: String = "frozen"): JobCardsFilter()
+    sealed class JobCardsFilter{
+        data class All(val name: String = "all") : JobCardsFilter()
+        data class Open(val name: String = "open") : JobCardsFilter()
+        data class Approval(val name: String = "approval") : JobCardsFilter()
+        data class Diagnostics(val name: String = "diagnostics") : JobCardsFilter()
+        data class WorkInProgress(val name: String = "workInProgress") : JobCardsFilter()
+        data class Testing(val name: String = "testing") : JobCardsFilter()
+        data class WaitingForPayment(val name: String = "waitingForPayment") : JobCardsFilter()
+        data class Done(val name: String = "done") : JobCardsFilter()
+        data class Frozen(val name: String = "frozen") : JobCardsFilter()
     }
 
     override fun onJobCardUpdate(update: WebSocketUpdate) {
         viewModelScope.launch {
-            when(update){
+            when (update) {
                 is WebSocketUpdate.JobCardCreated -> refreshJobCards()
                 is WebSocketUpdate.JobCardUpdated -> refreshJobCards()
                 is WebSocketUpdate.StatusChanged -> refreshJobCards()

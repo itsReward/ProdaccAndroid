@@ -23,6 +23,9 @@ object EventBus {
     private val _clientEvents = MutableSharedFlow<ClientEvent>()
     val clientEvent = _clientEvents.asSharedFlow()
 
+    private val _timesheetEvents = MutableSharedFlow<TimesheetEvent>()
+    val timesheetEvent = _timesheetEvents.asSharedFlow()
+
     suspend fun emit(event: JobCardEvent) {
         _events.emit(event)
     }
@@ -43,6 +46,10 @@ object EventBus {
         _employeeEvents.emit(event)
     }
 
+    suspend fun emitTimeSheetEvent(event: TimesheetEvent){
+        _timesheetEvents.emit(event)
+    }
+
 
 
     sealed class ClientEvent {
@@ -53,6 +60,11 @@ object EventBus {
     sealed class EmployeeEvent {
         data object EmployeeCreated: EmployeeEvent()
         data object EmployeeDeleted: EmployeeEvent()
+    }
+
+    sealed class TimesheetEvent {
+        data object NewTimesheet: TimesheetEvent()
+        data object Error: TimesheetEvent()
     }
 
 

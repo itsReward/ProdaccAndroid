@@ -27,21 +27,20 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
-import com.example.designsystem.designComponents.DeleteConfirmation
-import com.example.designsystem.designComponents.DeleteStateError
 import com.example.designsystem.designComponents.DisplayTextField
 import com.example.designsystem.designComponents.ErrorStateColumn
 import com.example.designsystem.designComponents.IdleStateColumn
@@ -94,13 +93,15 @@ fun EmployeeDetailScreen(
                 Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
             }
 
-            if (SignedInUser.role == SignedInUser.Role.Admin){
-                IconButton(onClick = { viewModel.toggleDeleteConfirmation()}) {
+            if (SignedInUser.role == SignedInUser.Role.Admin) {
+                IconButton(onClick = { viewModel.toggleDeleteConfirmation() }) {
                     Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
                 }
             }
 
-        })
+        },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            )
     }) { innerPadding ->
 
         when (viewModel.employeeLoadState.collectAsState().value) {
@@ -179,13 +180,14 @@ fun EmployeeDetailScreen(
                             DisplayTextField(
                                 icon = Icons.Outlined.LocationOn,
                                 label = "Address",
-                                text = employee!!.homeAddress,
+                                text = employee.homeAddress,
                                 modifier = Modifier.padding(vertical = 10.dp)
                             )
 
 
                         }
                         Spacer(modifier = Modifier.height(10.dp))
+                        
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -221,23 +223,43 @@ fun EmployeeDetailScreen(
 
                         }
 
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            items(jobCards.value) { jobCards ->
-                                if (jobCards != null) {
-                                    AllJobCardListItem(jobCardName = jobCards.jobCardName,
-                                        closedDate = jobCards.dateAndTimeClosed,
-                                        onClick = {
-                                            navController.navigate(
-                                                Route.JobCardDetails.path.replace(
-                                                    "{jobCardId}", jobCards.id.toString()
-                                                )
-                                            )
-                                        })
+                        when (viewModel.jobCardLoadState.collectAsState().value) {
+                            is EmployeeDetailsViewModel.LoadingState.Error -> {
+                                ErrorStateColumn(
+                                    title = (viewModel.jobCardLoadState.collectAsState().value as EmployeeDetailsViewModel.LoadingState.Error).message,
+                                    buttonOnClick = {
+                                        viewModel.refreshJobCards()
+                                    },
+                                    buttonText = "try again"
+                                )
+                            }
+
+                            is EmployeeDetailsViewModel.LoadingState.Idle -> {}
+                            is EmployeeDetailsViewModel.LoadingState.Loading -> {
+                                LoadingStateColumn(title = "Loading JobCards")
+                            }
+
+                            is EmployeeDetailsViewModel.LoadingState.Success -> {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    items(jobCards.value) { jobCards ->
+                                        if (jobCards != null) {
+                                            AllJobCardListItem(jobCardName = jobCards.jobCardName,
+                                                closedDate = jobCards.dateAndTimeClosed,
+                                                onClick = {
+                                                    navController.navigate(
+                                                        Route.JobCardDetails.path.replace(
+                                                            "{jobCardId}", jobCards.id.toString()
+                                                        )
+                                                    )
+                                                })
+                                        }
+                                    }
                                 }
                             }
                         }
+
                     }
 
 
@@ -250,29 +272,25 @@ fun EmployeeDetailScreen(
 
         when (viewModel.deleteState.collectAsState().value) {
             is EmployeeDetailsViewModel.DeleteState.Error -> {
-                AlertDialog(
-                    onDismissRequest = viewModel::resetDeleteState,
-                    confirmButton = {
-                        TextButton(onClick = { viewModel.deleteEmployee() }) {
-                            Text(text = "Try Again")
-                        }
-                    },
-                    dismissButton = {
-                        Button(onClick = {viewModel.resetDeleteState()}) {
-                            Text(text = "Cancel")
-                        }
-                    },
-                    icon = { Icon(
+                AlertDialog(onDismissRequest = viewModel::resetDeleteState, confirmButton = {
+                    TextButton(onClick = { viewModel.deleteEmployee() }) {
+                        Text(text = "Try Again")
+                    }
+                }, dismissButton = {
+                    Button(onClick = { viewModel.resetDeleteState() }) {
+                        Text(text = "Cancel")
+                    }
+                }, icon = {
+                    Icon(
                         imageVector = errorIcon,
                         contentDescription = "Delete Icon",
                         tint = DarkGrey
-                    )},
-                    title = { Text(text = "Error") },
-                    text = {
-                        Text(text = (viewModel.deleteState.collectAsState().value as EmployeeDetailsViewModel.DeleteState.Error).message)
-                    }
-                )
+                    )
+                }, title = { Text(text = "Error") }, text = {
+                    Text(text = (viewModel.deleteState.collectAsState().value as EmployeeDetailsViewModel.DeleteState.Error).message)
+                })
             }
+
             is EmployeeDetailsViewModel.DeleteState.Idle -> {}
             is EmployeeDetailsViewModel.DeleteState.Loading -> {
                 LoadingStateColumn(title = "Deleting ${viewModel.employee.collectAsState().value?.employeeName}")
@@ -298,24 +316,27 @@ fun EmployeeDetailScreen(
                         TextButton(onClick = { viewModel.deleteEmployee() }) {
                             Text(text = "Delete")
                         }
-                                    },
+                    },
                     dismissButton = {
-                        Button(onClick = {viewModel.closeDeleteConfirmation()}) {
+                        Button(onClick = { viewModel.closeDeleteConfirmation() }) {
                             Text(text = "Cancel")
                         }
                     },
-                    icon = { Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete Icon",
-                        tint = DarkGrey
-                    )},
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Icon",
+                            tint = DarkGrey
+                        )
+                    },
                     title = { Text(text = "Delete Employee?") },
                     text = {
                         Text(text = "Are you sure you want to delete ${viewModel.employee.collectAsState().value?.employeeName} ${viewModel.employee.collectAsState().value?.employeeSurname}")
                     },
-                    
-                )
+
+                    )
             }
+
             false -> {}
         }
     }

@@ -1,5 +1,6 @@
 package com.example.prodacc.ui.jobcards.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -169,7 +170,9 @@ fun JobCardDisplayCard(
                         LinearProgressIndicator(
                             color = BlueA700,
                             trackColor = Color.Transparent,
-                            modifier = Modifier.height(2.dp)
+                            modifier = Modifier
+                                .height(5.dp)
+                                .clip(RoundedCornerShape(50.dp))
                         )
                     }
                     is StatusLoadingState.Success -> {
@@ -182,6 +185,7 @@ fun JobCardDisplayCard(
                                         "approval" -> 3f / 6f
                                         "work_in_progress" -> 4f / 6f
                                         "testing" -> 5f / 6f
+                                        "waiting_for_payment" -> 5.5f / 6f
                                         "done" -> 6f / 6f
                                         "frozen" -> 0f
                                         else -> 0f

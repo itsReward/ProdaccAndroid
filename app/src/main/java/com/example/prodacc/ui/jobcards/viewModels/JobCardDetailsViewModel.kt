@@ -57,7 +57,7 @@ class JobCardDetailsViewModel(
         }
     }
 
-    fun refreshJobCardStatus(){
+    private fun refreshJobCardStatus(){
         _statusLoadingState.value = LoadingState.Loading
         _jobCardStatusList.value = emptyList()
         viewModelScope.launch {
@@ -81,6 +81,15 @@ class JobCardDetailsViewModel(
                     }
 
                     is EventBus.JobCardEvent.ReportCRUD -> {}
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            EventBus.timesheetEvent.collect{ event ->
+                when(event){
+                    EventBus.TimesheetEvent.Error -> _statusLoadingState.value = LoadingState.Error("Encountered error, refresh Job Card")
+                    EventBus.TimesheetEvent.NewTimesheet -> refreshJobCardStatus()
                 }
             }
         }
@@ -118,6 +127,7 @@ class JobCardDetailsViewModel(
                 is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value = LoadingState.Error(response.message)
                 is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value = LoadingState.Loading
                 is JobCardStatusRepository.LoadingResult.Success -> {
+                    EventBus.emit(EventBus.JobCardEvent.StatusChanged(UUID.fromString(jobId)))
                     _jobCardStatusList.value = response.status
                     _statusLoadingState.value = LoadingState.Success
                 }

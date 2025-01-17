@@ -1,17 +1,18 @@
 package com.example.prodacc.ui.employees.viewModels
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.room.util.getColumnIndexOrThrow
-import com.example.prodacc.ui.employees.stateClasses.EmployeeDetailsState
+import com.example.designsystem.theme.female
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
+import com.example.prodacc.ui.search.screen.SearchViewModel.LoadingState
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.repositories.EmployeeRepository
 import com.prodacc.data.repositories.JobCardRepository
+import com.prodacc.data.repositories.JobCardTechnicianRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -21,7 +22,8 @@ import java.util.UUID
 class EmployeeDetailsViewModel (
     private val employeeId: String,
     private val employeeRepository: EmployeeRepository = EmployeeRepository(),
-    private val jobCardRepository: JobCardRepository = JobCardRepository()
+    private val jobCardRepository: JobCardRepository = JobCardRepository(),
+    private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository()
 ): ViewModel() {
     private val _employee = MutableStateFlow<Employee?>(null)
     val employee = _employee.asStateFlow()
@@ -29,7 +31,7 @@ class EmployeeDetailsViewModel (
     private val _employeeLoadState = MutableStateFlow<EmployeeLoadState>(EmployeeLoadState.Idle)
     val employeeLoadState = _employeeLoadState.asStateFlow()
 
-    private val _jobCardLoadState = MutableStateFlow<JobCardsLoadState>(JobCardsLoadState.Idle)
+    private val _jobCardLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val jobCardLoadState = _jobCardLoadState.asStateFlow()
 
     private val _deleteState = MutableStateFlow<DeleteState>(DeleteState.Idle)
@@ -42,6 +44,8 @@ class EmployeeDetailsViewModel (
     var jobCards = _jobCards.asStateFlow()
 
     init {
+        _jobCardLoadState.value = LoadingState.Loading
+        _employeeLoadState.value = EmployeeLoadState.Loading
         viewModelScope.launch {
             getEmployee()
             getJobCards()
@@ -49,6 +53,7 @@ class EmployeeDetailsViewModel (
     }
 
     fun refreshEmployee(){
+        _employeeLoadState.value = EmployeeLoadState.Loading
         viewModelScope.launch {
             getEmployee()
         }
@@ -63,11 +68,11 @@ class EmployeeDetailsViewModel (
 
     private suspend fun getEmployee(){
         try {
-            _employeeLoadState.value = EmployeeLoadState.Loading
             val id = UUID.fromString(employeeId)
             when (val result = employeeRepository.getEmployee(id)) {
                 is EmployeeRepository.LoadingResult.EmployeeEntity -> {
                     _employee.value = result.employee
+                    getJobCards()
                     _employeeLoadState.value = EmployeeLoadState.Success
                 }
                 is EmployeeRepository.LoadingResult.Error -> {
@@ -88,22 +93,55 @@ class EmployeeDetailsViewModel (
         }
     }
 
-    private suspend fun getJobCard(id : UUID){
-        val result = jobCardRepository.getJobCard(id)
+    private suspend fun getJobCards() {
+        _jobCards.value = emptyList()
+        when(_employee.value!!.employeeRole){
+            "technician" -> {
+                when(val jobCardIds = jobCardTechnicianRepository.getJobCardsForTechnician(
+                    _employee.value!!.id)){
+                    is JobCardTechnicianRepository.LoadingResult.Error ->  _jobCardLoadState.value = LoadingState.Error(jobCardIds.message)
+                    is JobCardTechnicianRepository.LoadingResult.Loading ->  _jobCardLoadState.value = LoadingState.Loading
+                    is JobCardTechnicianRepository.LoadingResult.Success -> {
+                        try {
+                            jobCardIds.list.forEach {
+                                when(val response = jobCardRepository.getJobCard(it)){
+                                    is JobCardRepository.LoadingResult.Error -> _jobCardLoadState.value = LoadingState.Error(response.message)
+                                    is JobCardRepository.LoadingResult.ErrorSingleMessage ->  _jobCardLoadState.value = LoadingState.Error(response.message)
+                                    is JobCardRepository.LoadingResult.NetworkError ->  _jobCardLoadState.value = LoadingState.Error("Network Error")
+                                    is JobCardRepository.LoadingResult.SingleEntity -> {
+                                        _jobCards.value+=response.jobCard
+                                    }
+                                    is JobCardRepository.LoadingResult.Success -> {/*Will never happen for a single entity search*/}
+                                }
+                            }
+                        } finally {
+                            _jobCardLoadState.value = LoadingState.Success
+                        }
 
-        when (result){
-            is JobCardRepository.LoadingResult.SingleEntity -> {
-                _jobCards.value += result.jobCard
+                    }
+                }
             }
-            else -> _jobCards.value = emptyList()
-        }
+            else -> {
+                try {
+                    val jobCardsList = mutableListOf<JobCard>()
+                    _employee.value!!.jobCards.forEach {
+                        when(val response = jobCardRepository.getJobCard(it.id)){
+                            is JobCardRepository.LoadingResult.Error -> _jobCardLoadState.value = LoadingState.Error(response.message)
+                            is JobCardRepository.LoadingResult.ErrorSingleMessage ->  _jobCardLoadState.value = LoadingState.Error(response.message)
+                            is JobCardRepository.LoadingResult.NetworkError ->  _jobCardLoadState.value = LoadingState.Error("Network Error")
+                            is JobCardRepository.LoadingResult.SingleEntity -> {
+                                jobCardsList.add(response.jobCard)
+                            }
+                            is JobCardRepository.LoadingResult.Success -> {/*Will never happen for a single entity search*/}
+                        }
+                    }
+                    _jobCards.value = jobCardsList
 
-    }
-
-    private suspend fun getJobCards(){
-        if (employee.value != null){
-            employee.value!!.jobCards.forEach {
-                getJobCard(it.id)
+                } catch (e: Exception) {
+                    handleError(e)
+                } finally {
+                    _jobCardLoadState.value = LoadingState.Success
+                }
             }
         }
     }
@@ -113,9 +151,9 @@ class EmployeeDetailsViewModel (
             _deleteConfirmationState.value = false
             _deleteState.value = DeleteState.Loading
             try {
-                val result = employeeRepository.deleteEmployee(UUID.fromString(employeeId))
-                when (result) {
+                when (val result = employeeRepository.deleteEmployee(UUID.fromString(employeeId))) {
                     EmployeeRepository.LoadingResult.Success() -> {
+                        EventBus.emitEmployeeEvent(EventBus.EmployeeEvent.EmployeeDeleted)
                         _deleteState.value = DeleteState.Success
                     }
                     is EmployeeRepository.LoadingResult.Error -> {
@@ -138,11 +176,25 @@ class EmployeeDetailsViewModel (
         _deleteState.value = DeleteState.Idle
     }
 
-    sealed class JobCardsLoadState{
-        data object Idle : JobCardsLoadState()
-        data object Loading : JobCardsLoadState()
-        data object Success : JobCardsLoadState()
-        data class Error(val message: String) : JobCardsLoadState()
+    private fun handleError(e: Exception) {
+        when (e) {
+            is IOException -> _jobCardLoadState.value = LoadingState.Error("Network Error")
+            else -> _jobCardLoadState.value = LoadingState.Error(e.message ?: "Unknown Error")
+        }
+    }
+
+    fun refreshJobCards() {
+        _jobCardLoadState.value = LoadingState.Loading
+        viewModelScope.launch {
+            getJobCards()
+        }
+    }
+
+    sealed class LoadingState{
+        data object Idle : LoadingState()
+        data object Loading : LoadingState()
+        data object Success : LoadingState()
+        data class Error(val message: String) : LoadingState()
 
     }
 

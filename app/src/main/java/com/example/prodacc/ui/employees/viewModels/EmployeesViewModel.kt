@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.designsystem.designComponents.EmployeeListCategory
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.repositories.EmployeeRepository
@@ -27,19 +28,31 @@ class EmployeesViewModel(
     val loadState = _loadState.asStateFlow()
 
     init {
+        _loadState.value = LoadState.Loading
+
+        viewModelScope.launch {
+            EventBus.employeeEvent.collect{ event ->
+                when(event){
+                    EventBus.EmployeeEvent.EmployeeCreated -> refreshEmployees()
+                    EventBus.EmployeeEvent.EmployeeDeleted -> refreshEmployees()
+                }
+            }
+        }
+
+
         viewModelScope.launch {
             getEmployees()
         }
     }
 
     fun refreshEmployees() {
+        _loadState.value = LoadState.Loading
         viewModelScope.launch {
             getEmployees()
         }
     }
 
-    suspend fun getEmployees() {
-        _loadState.value = LoadState.Loading
+    private suspend fun getEmployees() {
         when (val response = employeeRepository.getEmployees()){
             is EmployeeRepository.LoadingResult.EmployeeEntity -> {
                 _loadState.value = LoadState.Error("returned single entity instead of list")

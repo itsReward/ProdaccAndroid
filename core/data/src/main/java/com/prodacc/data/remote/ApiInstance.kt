@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiInstance {
     @Volatile
-    var BASE_URL = "http://10.42.0.144:5000"
+    var BASE_URL = "http://192.168.122.123:5000"
         set
 
     //WebSocket

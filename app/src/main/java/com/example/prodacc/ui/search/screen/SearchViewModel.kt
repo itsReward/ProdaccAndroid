@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.jobcards.viewModels.LoadingState
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
@@ -15,6 +16,7 @@ import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.EmployeeRepository
 import com.prodacc.data.repositories.JobCardRepository
+import com.prodacc.data.repositories.JobCardTechnicianRepository
 import com.prodacc.data.repositories.VehicleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +28,7 @@ class SearchViewModel(
     private val employeeRepository: EmployeeRepository = EmployeeRepository(),
     private val clientRepository: ClientRepository = ClientRepository(),
     private val vehicleRepository: VehicleRepository = VehicleRepository(),
+    private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository(),
     private val searchScreen: String
 ) : ViewModel() {
     private val searchQuery = MutableStateFlow("")
@@ -38,16 +41,12 @@ class SearchViewModel(
     val loadingState = _loadingState.asStateFlow()
 
     private val employees = MutableStateFlow<List<Employee>>(emptyList())
-    val employeesList = employees.asStateFlow()
 
     private val clients = MutableStateFlow<List<Client>>(emptyList())
-    val clientsList = clients.asStateFlow()
 
     private val vehicles: MutableStateFlow<List<Vehicle>> = MutableStateFlow(emptyList())
-    val vehiclesList = vehicles.asStateFlow()
 
     private val jobCards = MutableStateFlow(emptyList<JobCard>())
-    val jobCardsList = jobCards.asStateFlow()
 
     private val _filteredJobCards = MutableStateFlow<List<JobCard>>(emptyList())
     val filteredJobCards = _filteredJobCards.asStateFlow()
@@ -156,23 +155,53 @@ class SearchViewModel(
     }
 
     private suspend fun fetchJobCards() {
-        try {
-            when (val response = jobCardRepository.getJobCards()) {
-                is JobCardRepository.LoadingResult.Error -> LoadingState.Error(response.message)
-                is JobCardRepository.LoadingResult.ErrorSingleMessage -> LoadingState.Error(response.message)
-                is JobCardRepository.LoadingResult.NetworkError -> LoadingState.Error("Network Error")
-                is JobCardRepository.LoadingResult.SingleEntity -> _loadingState.value =
-                    LoadingState.Error("Returned one entity instead of list")
+        when(SignedInUser.role){
+            SignedInUser.Role.Technician -> {
+                when(val jobCardIds = jobCardTechnicianRepository.getJobCardsForTechnician(SignedInUser.employee!!.id)){
+                    is JobCardTechnicianRepository.LoadingResult.Error ->  _loadingState.value = LoadingState.Error(jobCardIds.message)
+                    is JobCardTechnicianRepository.LoadingResult.Loading ->  _loadingState.value = LoadingState.Loading
+                    is JobCardTechnicianRepository.LoadingResult.Success -> {
+                        try {
+                            jobCardIds.list.forEach {
+                                when(val response = jobCardRepository.getJobCard(it)){
+                                    is JobCardRepository.LoadingResult.Error -> _loadingState.value = LoadingState.Error(response.message)
+                                    is JobCardRepository.LoadingResult.ErrorSingleMessage ->  _loadingState.value = LoadingState.Error(response.message)
+                                    is JobCardRepository.LoadingResult.NetworkError ->  _loadingState.value = LoadingState.Error("Network Error")
+                                    is JobCardRepository.LoadingResult.SingleEntity -> {
+                                        jobCards.value+=response.jobCard
+                                    }
+                                    is JobCardRepository.LoadingResult.Success -> {/*Will never happen for a single entity search*/}
+                                }
+                            }
+                        } finally {
+                            _filteredJobCards.value = jobCards.value
+                            _loadingState.value = LoadingState.Success
+                        }
 
-                is JobCardRepository.LoadingResult.Success -> {
-                    jobCards.value = response.jobCards
-                    _filteredJobCards.value = jobCards.value
-                    _loadingState.value = LoadingState.Success
+                    }
                 }
             }
-        } catch (e: Exception) {
-            handleError(e)
+            else -> {
+                try {
+                    when (val response = jobCardRepository.getJobCards()) {
+                        is JobCardRepository.LoadingResult.Error -> _loadingState.value = LoadingState.Error(response.message)
+                        is JobCardRepository.LoadingResult.ErrorSingleMessage ->  _loadingState.value = LoadingState.Error(response.message)
+                        is JobCardRepository.LoadingResult.NetworkError ->  _loadingState.value = LoadingState.Error("Network Error")
+                        is JobCardRepository.LoadingResult.SingleEntity -> _loadingState.value =
+                            LoadingState.Error("Returned one entity instead of list")
+
+                        is JobCardRepository.LoadingResult.Success -> {
+                            jobCards.value = response.jobCards
+                            _filteredJobCards.value = jobCards.value
+                            _loadingState.value = LoadingState.Success
+                        }
+                    }
+                } catch (e: Exception) {
+                    handleError(e)
+                }
+            }
         }
+
     }
 
 

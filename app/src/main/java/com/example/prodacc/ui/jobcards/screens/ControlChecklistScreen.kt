@@ -84,7 +84,7 @@ fun ControlChecklistSection(
                 }
                 else -> {
 
-                    if (controlChecklist == null && SignedInUser.role != SignedInUser.Role.Technician){
+                    if (controlChecklist == null && SignedInUser.role != SignedInUser.Role.Technician && SignedInUser.role != SignedInUser.Role.Admin){
                         Row(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically,
@@ -102,7 +102,7 @@ fun ControlChecklistSection(
                             existingChecklist = controlChecklist,
                             onClose = onClose,
                             onSave = { checklist -> onSaveControlChecklist(checklist) },
-                            when(SignedInUser.role){
+                            enabled = when(SignedInUser.role){
                                 SignedInUser.Role.Admin -> true
                                 SignedInUser.Role.Technician -> true
                                 else -> {

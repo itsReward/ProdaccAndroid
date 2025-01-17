@@ -200,7 +200,6 @@ fun TechnicianRow(
             MediumTitleText("Technicians: ")
 
             when(SignedInUser.role){
-                SignedInUser.Role.ServiceAdvisor -> {}
                 SignedInUser.Role.Technician -> {}
                 else -> {
                     TextButton(onClick = { dropdownMenu = true }) {

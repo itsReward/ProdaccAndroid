@@ -54,7 +54,7 @@ fun NavigationBar(navController: NavController) {
     val items = if (SignedInUser.role == SignedInUser.Role.Admin) {
         listOf("Job Cards", "Vehicles", "Clients", "Employees")
     } else if (SignedInUser.role == SignedInUser.Role.Technician){
-        listOf("Job Cards", "Vehicles", "Profile")
+        listOf("Job Cards", "Profile")
     }
     else {
         listOf("Job Cards", "Vehicles", "Clients", "Profile")

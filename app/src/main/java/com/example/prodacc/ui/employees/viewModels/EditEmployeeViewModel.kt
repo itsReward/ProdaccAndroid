@@ -2,6 +2,7 @@ package com.example.prodacc.ui.employees.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.NewEmployee
 import com.prodacc.data.repositories.EmployeeRepository
@@ -26,6 +27,7 @@ class EditEmployeeViewModel(
     val updateState = _updateState.asStateFlow()
 
     init {
+        _loadState.value = LoadState.Loading
         viewModelScope.launch {
             fetchEmployee()
         }
@@ -61,13 +63,13 @@ class EditEmployeeViewModel(
 
 
     fun refreshEmployee(){
+        _loadState.value = LoadState.Loading
         viewModelScope.launch {
             fetchEmployee()
         }
     }
     private suspend fun fetchEmployee() {
         try {
-            _loadState.value = LoadState.Loading
             val id = UUID.fromString(employeeId)
             if (id is UUID){
                 when (val result = employeeRepository.getEmployee(id)) {
