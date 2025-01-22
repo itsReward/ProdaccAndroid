@@ -122,7 +122,7 @@ class VehicleRepository {
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body() ?: emptyList())
             } else {
-                LoadingResult.Error(response.raw().message())
+                LoadingResult.Error(response.raw().message)
             }
         } catch (e: Exception) {
             when (e) {
@@ -144,7 +144,7 @@ class VehicleRepository {
                     LoadingResult.SingleEntity(response.body(), null)
                 }
             } else {
-                LoadingResult.Error(response.raw().message())
+                LoadingResult.Error(response.raw().message)
             }
         } catch (e: Exception) {
             when (e) {

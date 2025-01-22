@@ -252,6 +252,7 @@ class JobCardDetailsViewModel(
                     is JobCardRepository.LoadingResult.NetworkError -> _savingState.value = SaveState.Error("Network Error")
                     is JobCardRepository.LoadingResult.SingleEntity -> {
                         _jobCard.value = response.jobCard
+
                         _savingState.value = SaveState.Success
                     }
                     is JobCardRepository.LoadingResult.Success -> _savingState.value = SaveState.Error("Returned list instead of single entity")
@@ -275,6 +276,7 @@ class JobCardDetailsViewModel(
             try {
                 jobCardRepository.deleteJobCard(jobCard.value!!.id)
                 EventBus.emit(EventBus.JobCardCRUDEvent.JobCardDeleted(jobCard.value!!.id))
+                ApiInstance.sendWebSocketMessage("DELETE_JOB_CARD", jobCard.value!!.id )
             } catch (e:Exception) {
                 throw e
             }
@@ -313,6 +315,7 @@ class JobCardDetailsViewModel(
                 is WebSocketUpdate.JobCardCreated -> refreshJobCard()
                 is WebSocketUpdate.JobCardUpdated -> refreshJobCard()
                 is WebSocketUpdate.StatusChanged -> refreshStatusList()
+                is WebSocketUpdate.JobCardDeleted -> refreshJobCard()
             }
         }
     }

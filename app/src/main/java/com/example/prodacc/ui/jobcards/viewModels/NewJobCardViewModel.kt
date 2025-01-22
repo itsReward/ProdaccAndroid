@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.jobcards.stateClasses.NewJobCardState
 import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel.LoadingState
 import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.NewJobCard
@@ -267,6 +268,8 @@ class NewJobCardViewModel(
                         is JobCardRepository.LoadingResult.SingleEntity -> {
                             _saveState.value = LoadingState.Success(response.jobCard)
                             EventBus.emit(EventBus.JobCardCRUDEvent.JobCardCreated(response.jobCard))
+                            ApiInstance.sendWebSocketMessage("NEW_JOB_CARD", response.jobCard.id)  // Sending WebSocket Message
+
                         }
                         is JobCardRepository.LoadingResult.Success -> {
                             //will never happen for save

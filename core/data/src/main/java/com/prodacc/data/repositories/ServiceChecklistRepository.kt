@@ -14,9 +14,9 @@ class ServiceChecklistRepository {
         return try {
             val response = service.getServiceChecklistByJobCard(id)
 
-            println(response.raw().request().url())
-            println(response.raw().code())
-            println(response.raw().body())
+            println(response.raw().request.url)
+            println(response.raw().code)
+            println(response.raw().body)
 
             if (response.isSuccessful){
                 LoadingResult.Success(response.body())

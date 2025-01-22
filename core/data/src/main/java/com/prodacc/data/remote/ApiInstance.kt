@@ -29,6 +29,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -88,19 +89,32 @@ object ApiInstance {
         setupWebSocket()
     }
 
+    fun sendWebSocketMessage(type: String, data: Any) {
+        webSocket?.let { ws ->
+            try {
+                val jsonObject = JSONObject().apply {
+                    put("type", type)
+                    put("data", JSONObject(gson.toJson(data)))
+                }
+                ws.send(jsonObject.toString())
+            } catch (e: Exception) {
+                Log.e("WebSocket", "Error sending message", e)
+            }
+        }
+    }
+
+
     private fun setupWebSocket() {
-        println("setting up web socket")
         val token = TokenManager.getToken()?.accessToken ?: run {
             Log.e("WebSocket", "No token available")
             WSURL.value = "No authentication token"
             return
         }
 
-
-        // Ensure proper URL encoding of the token
-        val encodedToken = URLEncoder.encode(token, "UTF-8")
         val wsUrl = try {
-            "${BASE_URL.replace("http", "ws")}/websocket?token=$encodedToken"
+            BASE_URL.replace("http://", "ws://")
+                .replace("https://", "wss://")
+                .let { "$it/websocket?token=$token" }
         } catch (e: Exception) {
             Log.e("WebSocket", "Error creating WebSocket URL", e)
             return
@@ -112,10 +126,16 @@ object ApiInstance {
 
         val client = OkHttpClient.Builder()
             .pingInterval(30, TimeUnit.SECONDS) // Keep connection alive
+            .readTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
+            .writeTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
             .build()
 
         val request = Request.Builder()
             .url(wsUrl)
+            .addHeader("Origin", BASE_URL)
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
@@ -127,23 +147,27 @@ object ApiInstance {
             override fun onMessage(webSocket: WebSocket, text: String) {
                 try {
                     val jsonObject = JSONObject(text)
-                    val eventType = jsonObject.getString("eventType")
-                    val data = jsonObject.getJSONObject("data").toString()
+                    val type = jsonObject.getString("type")
 
-                    logger.info("WebSocket Received: $eventType")
+                    logger.info("WebSocket Received: $type")
 
-                    when (eventType) {
-
+                    when (type) {
                         "NEW_JOB_CARD" -> {
-
-                        logger.info("WebSocket Received: $eventType")
+                            logger.info("WebSocket Received: $type")
+                            val data = jsonObject.getJSONObject("data").toString()
                             val jobCard = gson.fromJson(data, JobCard::class.java)
                             val update = WebSocketUpdate.JobCardCreated(jobCard.id)
                             webSocketListeners.forEach { listener ->
                                 listener.onJobCardUpdate(update)
                             }
                         }
-                        // Handle other event types...
+                        "DELETE_JOB_CARD" -> {
+                            val jobCardId = UUID.fromString(jsonObject.getString("data"))  // Parse data as string
+                            val update = WebSocketUpdate.JobCardDeleted(jobCardId)  // or create a new DeletedJobCard update type
+                            webSocketListeners.forEach { listener ->
+                                listener.onJobCardUpdate(update)
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e("WebSocket", "Error parsing message", e)
@@ -160,7 +184,14 @@ object ApiInstance {
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                Log.e("WebSocket", "WebSocket failure", t)
+                Log.e("WebSocket", """
+                WebSocket failure:
+                Error: ${t.message}
+                Response code: ${response?.code}
+                Response message: ${response?.message}
+                Response headers: ${response?.headers}
+                Full URL: $wsUrl
+            """.trimIndent())
                 webSocketListeners.forEach { listener ->
                     listener.onWebSocketError(t)
                 }
@@ -331,6 +362,7 @@ object ApiInstance {
 // Define your WebSocket update data class
 sealed class WebSocketUpdate {
     data class JobCardCreated(val jobCardId: UUID) : WebSocketUpdate()
+    data class JobCardDeleted(val jobCardId: UUID) : WebSocketUpdate()
     data class JobCardUpdated(val jobCardId: UUID) : WebSocketUpdate()
     data class StatusChanged(val jobCardId: UUID, val newStatus: String) : WebSocketUpdate()
 }

@@ -501,6 +501,15 @@ class JobCardViewModel(
                 is WebSocketUpdate.JobCardCreated -> refreshJobCards()
                 is WebSocketUpdate.JobCardUpdated -> refreshJobCards()
                 is WebSocketUpdate.StatusChanged -> refreshJobCards()
+                is WebSocketUpdate.JobCardDeleted -> {
+                    // Remove the job card from the list
+                    _jobCards.value = _jobCards.value.filter { it.id != update.jobCardId }
+                    // Update filtered list
+                    filterJobCards()
+                    // Clean up related data
+                    _reportsMap.value = _reportsMap.value - update.jobCardId
+                    _statusMap.value = _statusMap.value - update.jobCardId
+                }
             }
         }
     }
