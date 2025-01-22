@@ -1,21 +1,15 @@
 package com.example.prodacc.ui.jobcards.viewModels
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
-import com.prodacc.data.remote.dao.JobCardReport
 import com.prodacc.data.remote.dao.JobCardStatus
-import com.prodacc.data.repositories.JobCardReportRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardStatusRepository
-import com.prodacc.data.repositories.TimeSheetRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -151,15 +145,6 @@ class JobCardDetailsViewModel(
 
 
 
-
-    val teamExpanded = mutableStateOf(false)
-
-    fun onTeamExpandedToggle(){
-        teamExpanded.value = !teamExpanded.value
-    }
-
-
-
     private fun updateJobCard(update: JobCard.() -> JobCard){
         _jobCard.value = _jobCard.value?.update()
         saveJobCard()
@@ -198,16 +183,6 @@ class JobCardDetailsViewModel(
             updateJobCardsStatus("onhold")
         }
     }
-
-    fun updateSupervisor(id : UUID){
-
-    }
-
-    fun updateServiceAdvisor(id : UUID){
-
-    }
-
-
 
     private suspend fun fetchJobCard(){
         _loadingState.value = LoadingState.Loading
