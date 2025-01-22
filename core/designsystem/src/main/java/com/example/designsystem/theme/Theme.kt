@@ -28,7 +28,11 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.core.view.WindowCompat
+import com.example.designsystem.R
 
 
 private val DarkColorScheme = darkColorScheme(
@@ -98,3 +102,15 @@ val checklistIcon = Icons.Default.Checklist
 val errorIcon = Icons.Default.Error
 val logOutIcon = Icons.AutoMirrored.Filled.Logout
 val refreshIcon = Icons.Default.Refresh
+
+val pretendard = FontFamily(
+    Font(R.font.pretendard_thin, FontWeight.Thin),
+    Font(R.font.pretendard_extra_light, FontWeight.ExtraLight),
+    Font(R.font.pretendard_light, FontWeight.Light),
+    Font(R.font.pretendard_regular),
+    Font(R.font.pretendard_medium, FontWeight.Medium),
+    Font(R.font.pretendard_semi_bold, FontWeight.SemiBold),
+    Font(R.font.pretendard_bold, FontWeight.Bold),
+    Font(R.font.pretendard_extra_bold, FontWeight.ExtraBold),
+    Font(R.font.pretendard_black, FontWeight.Black)
+)

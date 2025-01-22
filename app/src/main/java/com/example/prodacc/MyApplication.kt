@@ -8,8 +8,7 @@ import dagger.hilt.android.HiltAndroidApp
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-
-        ApiInstance.initialize(applicationContext)
+        ApiInstance.initialize(this)
     }
 
     override fun onTerminate() {

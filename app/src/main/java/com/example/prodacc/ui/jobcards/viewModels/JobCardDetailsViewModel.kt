@@ -274,8 +274,9 @@ class JobCardDetailsViewModel(
         viewModelScope.launch {
             try {
                 jobCardRepository.deleteJobCard(jobCard.value!!.id)
-            } finally {
-                EventBus.emit(EventBus.JobCardCRUDEvent.JobCardDeleted)
+                EventBus.emit(EventBus.JobCardCRUDEvent.JobCardDeleted(jobCard.value!!.id))
+            } catch (e:Exception) {
+                throw e
             }
 
         }

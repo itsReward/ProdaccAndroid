@@ -18,13 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -45,14 +41,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.LargeTitleText
-import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.PasswordTextField
-import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
+import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.White
-import com.example.designsystem.theme.errorIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.login.viewmodel.LogInState
 import com.example.prodacc.ui.login.viewmodel.LogInViewModel
@@ -76,18 +70,18 @@ fun LogInScreen(
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(bottomEnd = 50.dp, bottomStart = 50.dp))
-                .background(Color.Blue)
+                .background(BlueA700)
                 .weight(1.5f)
                 .fillMaxWidth()
                 .systemBarsPadding()
-                .padding(top = 100.dp),
+                .padding(top = 1.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(com.example.designsystem.R.drawable.prodacc_logo),
+                painter = painterResource(com.example.designsystem.R.drawable.jobkeep_logo),
                 contentDescription = "logo",
-                modifier = Modifier.width(200.dp)
+                modifier = Modifier.width(800.dp)
             )
 
         }
@@ -103,9 +97,12 @@ fun LogInScreen(
             Text(
                 text = "Welcome, Log in",
                 fontWeight = FontWeight.Bold,
-                fontSize = 30.sp,
+                fontSize = 18.sp,
                 color = BlueA700,
-                modifier = Modifier.padding(start = 5.dp, top = 35.dp, bottom = 25.dp)
+                modifier = Modifier
+                    .padding(start = 13.dp, top = 35.dp, bottom = 10.dp)
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Start
             )
 
             TextField(
@@ -114,16 +111,45 @@ fun LogInScreen(
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 5.dp),
+                    //.padding(bottom = 5.dp)
+                ,
                 label = { Text("username") },
                 colors = TextFieldDefaults.colors(
-                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = LightGrey,
                 ),
-                singleLine = true
+                singleLine = true,
+                isError = when(viewModel.loginState.collectAsState().value ){
+                    is LogInState.Error -> true
+                    else -> false
+                },
             )
             
 
-            PasswordTextField(password = viewModel.passwordState.collectAsState().value) { viewModel.onPasswordChange(it) }
+            PasswordTextField(
+                password = viewModel.passwordState.collectAsState().value,
+                onPasswordChange = { viewModel.onPasswordChange(it) },
+                isError = when(viewModel.loginState.collectAsState().value){
+                    is LogInState.Error -> true
+                    else -> false
+                },
+
+            )
+
+            when (viewModel.loginState.collectAsState().value){
+                is LogInState.Error -> {
+                    Text(
+                        text = (viewModel.loginState.collectAsState().value as LogInState.Error).message,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        color = Color.Red,
+                        modifier = Modifier
+                            .padding(start = 5.dp, top = 10.dp, bottom = 25.dp)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                else -> {}
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
             Button(
@@ -138,7 +164,8 @@ fun LogInScreen(
                 ),
                 enabled = true,
                 shape = RoundedCornerShape(50.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 5.dp)
             ) {
                 Text(text = "LogIn")
             }
@@ -148,9 +175,11 @@ fun LogInScreen(
                 text = "If you do not have an account, consult the system administrator",
                 fontWeight = FontWeight.Normal,
                 fontStyle = FontStyle.Italic,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 color = DarkGrey,
-                modifier = Modifier.padding(start = 5.dp, top = 25.dp, bottom = 25.dp),
+                modifier = Modifier
+                    .padding(start = 5.dp, top = 10.dp, bottom = 25.dp)
+                    .fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
 
@@ -163,7 +192,8 @@ fun LogInScreen(
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            TextField(
+            //Text(text = ApiInstance.WSURL.collectAsState().value, color = Grey)
+            /*TextField(
                 value = viewModel.APIAddress.collectAsState().value,
                 onValueChange = viewModel::onAPIAddressChange,
                 shape = RoundedCornerShape(10.dp),
@@ -186,11 +216,12 @@ fun LogInScreen(
                         )
                     }
                 },
-            )
+            )*/
             Text(
                 textAlign = TextAlign.Center,
                 text = "Version 1.0 created with ❤ by Render Creative",
                 color = Grey,
+                fontSize = 12.sp,
             )
         }
 
@@ -245,30 +276,6 @@ fun LogInScreen(
                     }
                 }
 
-            }
-            is LogInState.Error -> {
-                Dialog(onDismissRequest = viewModel::resetLoginState) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(Color.White)
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Icon(imageVector = errorIcon, contentDescription = "error", tint = Color.Red)
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(text = state.message)
-                        }
-
-                    }
-
-
-                }
             }
 
             else -> {}

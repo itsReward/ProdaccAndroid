@@ -1,9 +1,11 @@
 package com.example.designsystem.designComponents
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,12 +29,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import com.example.designsystem.theme.BlueA700
+import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
 import com.prodacc.data.remote.dao.Client
@@ -45,21 +51,15 @@ fun VehiclesList(
     regNumber: String,
     vehicleModel : String,
     clientName: String,
-    borderColor: Color,
+    color: Color,
     onClick: () -> Unit
 ){
     Row (
         modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(color)
             .fillMaxWidth()
-            .drawWithContent {
-                drawContent()
-                drawLine(
-                    color = borderColor,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 1.5.dp.toPx()
-                )
-            }
+
             .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -71,11 +71,29 @@ fun VehiclesList(
             verticalArrangement = Arrangement.spacedBy(1.dp),
             //verticalAlignment = Alignment.CenterVertically
         ) {
-            LargeTitleText(regNumber)
-            BodyText(text = vehicleModel)
+            Text(text = regNumber)
+            Text(
+                text = vehicleModel,
+                fontStyle = FontStyle.Italic
+            )
+            //BodyTextItalic(text = vehicleModel)
         }
 
-        BodyText(text = clientName)
+        Row (
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val clientInitials = clientName.split(" ")
+            BodyText(text = clientInitials[0])
+            Spacer(modifier = Modifier.width(10.dp))
+            if (clientInitials.size > 1){
+                ProfileAvatar(initials = "${clientInitials[0].first()}${clientInitials[1].first()}", textSize = 16.sp)
+            } else {
+                ProfileAvatar(initials = "${clientInitials[0].first()}", textSize = 16.sp)
+            }
+
+
+        }
+        //BodyText(text = clientName)
     }
 }
 

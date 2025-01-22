@@ -222,7 +222,8 @@ fun JobCardDetailScreen(
                             onUpdateSupervisor = viewModel::updateSupervisor,
                             onUpdateServiceAdvisor = viewModel::updateServiceAdvisor,
                             technicians = jobCardTechnicianViewModel.technicians.collectAsState().value,
-                            techniciansLoadingState = jobCardTechnicianViewModel.loadingState.collectAsState().value
+                            techniciansLoadingState = jobCardTechnicianViewModel.loadingState.collectAsState().value,
+                            techniciansList = employeesViewModel.technicians.collectAsState().value
                         )
                     }
 
@@ -232,8 +233,8 @@ fun JobCardDetailScreen(
                             confirmButton = {
                                 TextButton(onClick = {
                                     viewModel.deleteJobCard()
-                                    navController.navigate(Route.JobCards.path)
                                     viewModel.setDeleteJobCardConfirmation(false)
+                                    navController.navigate(Route.JobCards.path)
                                 }) {
                                     Text(text = "Delete")
                                 }

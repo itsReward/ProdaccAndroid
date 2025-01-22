@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.CategoryHeader
+import com.example.designsystem.designComponents.CustomSearchBar
 import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.Blue50
@@ -160,6 +161,26 @@ fun JobCardsScreen(
                                 .padding(innerPadding)
                                 .verticalScroll(scroll)
                         ) {
+                            /*Column(
+                                modifier = Modifier.padding(horizontal = 10.dp)
+                            ) {
+                                CustomSearchBar(
+                                    query = "", onQueryChange = {}, onSearch = {},
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 10.dp)
+                                        .clip(RoundedCornerShape(50.dp))
+                                        .clickable {
+                                            navController.navigate(
+                                                Route.Search.path.replace(
+                                                    "{title}", "Job Cards"
+                                                )
+                                            )
+                                        },
+                                    placeHolder = "Search JobCards"
+                                )
+                            }*/
+
                             JobStatusFilters(
                                 onClickAll = { viewModel.onToggleAllFilterChip() },
                                 onClickOpen = { viewModel.onToggleOpenFilterChip() },
@@ -185,8 +206,14 @@ fun JobCardsScreen(
 
                                 if (jobCards.value.isNotEmpty()){
                                     items(jobCards.value) { jobCard ->
-                                        viewModel.fetchJobCardReports(jobCard.id)
-                                        viewModel.fetchJobCardStatus(jobCard.id)
+                                        if (jobCards.value.any{it.id == jobCard.id}){
+                                            viewModel.fetchJobCardReports(jobCard.id)
+                                            viewModel.fetchJobCardStatus(jobCard.id)
+                                        }
+
+                                        if (jobCard == jobCards.value.first()){
+                                            Spacer(modifier = Modifier.height(5.dp))
+                                        }
 
                                         JobCardDisplayCard(
                                             jobCard = jobCard,
@@ -195,7 +222,9 @@ fun JobCardsScreen(
                                             navController = navController
                                         )
 
-
+                                        if (jobCard == jobCards.value.last()){
+                                            Spacer(modifier = Modifier.height(30.dp))
+                                        }
                                     }
                                 } else {
                                     item {
@@ -235,7 +264,7 @@ fun JobCardsScreen(
                                                 .clickable {
                                                     navController.navigate(
                                                         Route.Search.path.replace(
-                                                    "{title}", "Job Cards"
+                                                            "{title}", "Job Cards"
                                                         )
                                                     )
                                                 }
@@ -261,9 +290,10 @@ fun JobCardsScreen(
                                 .clip(RoundedCornerShape(5.dp))
                                 .background(Color.White)
                                 .padding(innerPadding)
-                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                                .padding(horizontal = 20.dp, vertical = 10.dp)
+                                .fillMaxSize(),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                            verticalArrangement = Arrangement.Center
                         ) {
                             Text(text = state.message)
                             Button(onClick = { viewModel.refreshJobCards() }) {
@@ -277,8 +307,6 @@ fun JobCardsScreen(
 
         }
     }
-
-
 }
 
 

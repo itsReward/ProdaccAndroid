@@ -27,7 +27,6 @@ class JobCardViewModel(
     private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository()
 ) : ViewModel(), ApiInstance.WebSocketEventListener {
     private val _jobCards = MutableStateFlow<List<JobCard>>(emptyList())
-    private val jobCards: StateFlow<List<JobCard>> = _jobCards.asStateFlow()
 
     private val _filteredJobCards = MutableStateFlow<List<JobCard>>(emptyList())
     val filteredJobCards: StateFlow<List<JobCard>> = _filteredJobCards.asStateFlow()
@@ -96,6 +95,7 @@ class JobCardViewModel(
 
     init {
         ApiInstance.addWebSocketListener(this)
+
         _jobCardLoadState.value = LoadingState.Loading
 
         viewModelScope.launch {
@@ -107,6 +107,14 @@ class JobCardViewModel(
                     }
 
                     is EventBus.JobCardCRUDEvent.JobCardDeleted -> {
+                        _jobCardLoadState.value = LoadingState.Loading
+                        _reportsMap.value = emptyMap()
+                        /*_reportsMap.update { currentMap ->
+                            currentMap.filterKeys { it != event.jobCardId }
+                        }*/
+                        _statusMap.update { currentMap ->
+                            currentMap.filterKeys { it != event.jobCardId }
+                        }
                         refreshJobCards()
                     }
                 }
@@ -133,20 +141,6 @@ class JobCardViewModel(
         }
     }
 
-    private fun refreshJobCardStatus(id: UUID) {
-        val currentMap = _statusMap.value.toMutableMap()
-        currentMap[id] = StatusLoadingState.Loading
-        _statusMap.value = currentMap
-        fetchJobCardStatus(id)
-
-    }
-
-    private fun refreshJobCardReports(id: UUID) {
-        val currentMap = _reportsMap.value.toMutableMap()
-        currentMap[id] = ReportLoadingState.Loading
-        _reportsMap.value = currentMap
-        fetchJobCardReports(id)
-    }
 
     private fun filterJobCards() {
         viewModelScope.launch {
@@ -469,6 +463,7 @@ class JobCardViewModel(
             try {
                 _refreshing.value = true
                 _jobCards.value = emptyList()
+                _filteredJobCards.value = emptyList()
                 _reportsMap.value = emptyMap()
                 _statusMap.value = emptyMap()
                 fetchJobCards()
@@ -480,10 +475,13 @@ class JobCardViewModel(
                 }
             } finally {
                 _refreshing.value = false
+                _jobCardLoadState.value = LoadingState.Success(true)
             }
 
         }
     }
+
+
 
     sealed class JobCardsFilter{
         data class All(val name: String = "all") : JobCardsFilter()

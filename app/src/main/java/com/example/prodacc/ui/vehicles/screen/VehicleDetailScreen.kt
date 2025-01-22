@@ -26,6 +26,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -40,6 +43,8 @@ import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.DarkGrey
+import com.example.designsystem.theme.LightCardGrey
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModel
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModelFactory
@@ -69,17 +74,26 @@ fun VehicleDetailsScreen(
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(bottomEnd = 30.dp))
-                .background(Color.Blue)
                 .wrapContentSize()
                 .systemBarsPadding()
                 .fillMaxWidth()
-                .padding(top = 20.dp),
+                .padding(top = 20.dp)
+                .drawBehind {
+                    drawLine(
+                        color = LightCardGrey,
+                        start = Offset(0f, size.height),
+                        end = Offset(size.width, size.height),
+                        strokeWidth = 2f
+                    )
+                },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
 
         ) {
             Row(
-                modifier = Modifier.weight(2f),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(30.dp))
+                    .weight(2f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -87,18 +101,20 @@ fun VehicleDetailsScreen(
                 com.example.designsystem.designComponents.IconButton(
                     onClick = { navController.navigateUp() },
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
-                    color = Color.White
+                    color = DarkGrey
                 )
                 LargeTitleText(
                     name = if (vehicle == null) "Loading ..." else "${vehicle.clientSurname}'s ${vehicle.model}",
-                    color = Color.White
+                    color = DarkGrey
                 )
             }
 
             Row(
                 modifier = Modifier
-                    .weight(2f)
-                    .padding(end = 10.dp),
+                    //.weight(2f)
+                    //.background(BlueA700)
+                    .padding(end = 10.dp)
+                    ,
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End
             ) {
@@ -117,7 +133,7 @@ fun VehicleDetailsScreen(
                                 )
                             },
                             icon = Icons.Filled.Edit,
-                            color = Color.White
+                            color = DarkGrey
                         )
 
                         com.example.designsystem.designComponents.IconButton(
@@ -125,7 +141,7 @@ fun VehicleDetailsScreen(
                                 viewModel.toggleDeleteConfirmation()
                             },
                             icon = Icons.Filled.Delete,
-                            color = Color.White
+                            color = DarkGrey
                         )
                     }
                 }
@@ -184,15 +200,16 @@ fun VehicleDetailsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 5.dp, start = 18.dp),
+                            .padding(bottom = 5.dp,),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         MediumTitleText(name = "Details")
                     }
 
                     Column(
                         modifier = Modifier
+                            //.shadow(5.dp, shape = RoundedCornerShape(20.dp))
                             .clip(RoundedCornerShape(20.dp))
                             .wrapContentSize()
                             .fillMaxWidth()
@@ -212,7 +229,7 @@ fun VehicleDetailsScreen(
                             .fillMaxWidth()
                             .padding(top = 20.dp, start = 18.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         MediumTitleText(name = "Service History")
                     }

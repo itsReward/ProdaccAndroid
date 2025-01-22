@@ -39,7 +39,13 @@ class NewJobCardViewModel(
     val clients = emptyList<Client>()
 
     private val _employees = MutableStateFlow<List<Employee>>(emptyList())
-    val employees = _employees.asStateFlow()
+    //val employees = _employees.asStateFlow()
+
+    private val _serviceAdvisors = MutableStateFlow<List<Employee>>(emptyList())
+    val serviceAdvisors = _serviceAdvisors.asStateFlow()
+
+    private val _supervisors = MutableStateFlow<List<Employee>>(emptyList())
+    val supervisors = _supervisors.asStateFlow()
 
     private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
     val vehicles = _vehicles.asStateFlow()
@@ -122,6 +128,8 @@ class NewJobCardViewModel(
 
                 is EmployeeRepository.LoadingResult.Success -> {
                     _employees.value = response.employees ?: emptyList()
+                    _serviceAdvisors.value = response.employees?.filter { it.employeeRole == "serviceAdvisor" } ?: emptyList()
+                    _supervisors.value = response.employees?.filter { it.employeeRole == "supervisor" } ?: emptyList()
                     _employeeLoadingState.value =
                         EmployeeLoadingResult.Success(response.employees ?: emptyList())
                 }

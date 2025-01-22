@@ -81,7 +81,7 @@ object EventBus {
 
     sealed class JobCardCRUDEvent {
         data class JobCardCreated(val jobCard : JobCard) : JobCardCRUDEvent()
-        data object JobCardDeleted : JobCardCRUDEvent()
+        data class JobCardDeleted(val jobCardId: UUID) : JobCardCRUDEvent()
 
     }
 }

@@ -30,12 +30,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.DarkGrey
-import com.example.designsystem.theme.LightGrey
 
 @Composable
 fun PasswordTextField(
     password: String,
-    onPasswordChange: (String) -> Unit
+    onPasswordChange: (String) -> Unit,
+    isError: Boolean
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -63,7 +63,8 @@ fun PasswordTextField(
                 )
             }
         },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        isError = isError
     )
 }
 

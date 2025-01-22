@@ -21,6 +21,9 @@ class EmployeesViewModel(
     private val _employees = MutableStateFlow<List<Employee>>(emptyList())
     val employees = _employees.asStateFlow()
 
+    private val _technicians = MutableStateFlow(_employees.value.filter { it.employeeRole == "technician" })
+    val technicians = _technicians.asStateFlow()
+
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
 
@@ -64,8 +67,11 @@ class EmployeesViewModel(
                 _loadState.value = LoadState.Error("Network Error")
             }
             is EmployeeRepository.LoadingResult.Success -> {
+                _employees.value = response.employees?: emptyList()
+                _technicians.value = response.employees?.filter { it.employeeRole == "technician" }
+                    ?: emptyList()
                 _loadState.value = LoadState.Success
-                _employees.value = response.employees!!
+
             }
         }
     }

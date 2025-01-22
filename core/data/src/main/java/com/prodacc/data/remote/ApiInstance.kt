@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
+import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.services.ClientService
 import com.prodacc.data.remote.services.ControlChecklistService
 import com.prodacc.data.remote.services.EmployeeService
@@ -21,22 +22,30 @@ import com.prodacc.data.remote.services.StateChecklistService
 import com.prodacc.data.remote.services.TimesheetService
 import com.prodacc.data.remote.services.UserService
 import com.prodacc.data.remote.services.VehicleService
+import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
+import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.util.logging.Logger
 
 
 object ApiInstance {
+    private val logger = Logger.getLogger(ApiInstance::class.java.name)
+
+    var WSURL = MutableStateFlow("not changed")
+
     @Volatile
     var BASE_URL = "http://192.168.122.123:5000"
         set
@@ -75,11 +84,31 @@ object ApiInstance {
         setupWebSocket()
     }
 
-    private fun setupWebSocket() {
-        // Get the current token
-        val token = TokenManager.getToken()?.accessToken ?: return
+    fun reconnectWebSocket() {
+        setupWebSocket()
+    }
 
-        val wsUrl = "${BASE_URL.replace("http", "ws")}/websocket?token=$token"
+    private fun setupWebSocket() {
+        println("setting up web socket")
+        val token = TokenManager.getToken()?.accessToken ?: run {
+            Log.e("WebSocket", "No token available")
+            WSURL.value = "No authentication token"
+            return
+        }
+
+
+        // Ensure proper URL encoding of the token
+        val encodedToken = URLEncoder.encode(token, "UTF-8")
+        val wsUrl = try {
+            "${BASE_URL.replace("http", "ws")}/websocket?token=$encodedToken"
+        } catch (e: Exception) {
+            Log.e("WebSocket", "Error creating WebSocket URL", e)
+            return
+        }
+
+        WSURL.value = wsUrl
+        Log.d("WebSocket", "Attempting connection to: $wsUrl")
+
 
         val client = OkHttpClient.Builder()
             .pingInterval(30, TimeUnit.SECONDS) // Keep connection alive
@@ -90,19 +119,44 @@ object ApiInstance {
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
+
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.d("WebSocket", "Connection established")
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 try {
+                    val jsonObject = JSONObject(text)
+                    val eventType = jsonObject.getString("eventType")
+                    val data = jsonObject.getJSONObject("data").toString()
+
+                    logger.info("WebSocket Received: $eventType")
+
+                    when (eventType) {
+
+                        "NEW_JOB_CARD" -> {
+
+                        logger.info("WebSocket Received: $eventType")
+                            val jobCard = gson.fromJson(data, JobCard::class.java)
+                            val update = WebSocketUpdate.JobCardCreated(jobCard.id)
+                            webSocketListeners.forEach { listener ->
+                                listener.onJobCardUpdate(update)
+                            }
+                        }
+                        // Handle other event types...
+                    }
+                } catch (e: Exception) {
+                    Log.e("WebSocket", "Error parsing message", e)
+                }
+
+                /*try {
                     val update = gson.fromJson(text, WebSocketUpdate::class.java)
                     webSocketListeners.forEach { listener ->
                         listener.onJobCardUpdate(update)
                     }
                 } catch (e: Exception) {
                     Log.e("WebSocket", "Error parsing message", e)
-                }
+                }*/
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {

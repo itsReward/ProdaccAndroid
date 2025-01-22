@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +32,8 @@ import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.designComponents.VehicleStatusFilters
 import com.example.designsystem.designComponents.VehiclesList
 import com.example.designsystem.theme.BlueA700
+import com.example.designsystem.theme.CardGrey
+import com.example.designsystem.theme.LightCardGrey
 import com.example.designsystem.theme.LightGrey
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
@@ -165,14 +168,14 @@ fun VehiclesScreen(
                         }
                     }
                     VehiclesViewModel.VehicleLoadState.Success -> {
-                        Row {
+                        /*Row {
                             VehicleStatusFilters(
                                 viewModel.allVehicles.value,
                                 viewModel.workshopVehicles.value,
                                 { viewModel.onAllVehiclesClick() },
                                 { viewModel.onWorkshopVehiclesClick() }
                             )
-                        }
+                        }*/
 
                         LazyColumn(
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -184,14 +187,14 @@ fun VehiclesScreen(
                                         Text(text = "No active vehicles")
                                     }
                                 } else {
-                                    items(
-                                        activeVehicles.value
-                                    ) { vehicle ->
+                                    itemsIndexed(
+                                        vehicles
+                                    ) { index, vehicle ->
                                         VehiclesList(
                                             regNumber = vehicle.regNumber,
                                             vehicleModel = vehicle.model,
                                             clientName = "${vehicle.clientName} ${vehicle.clientSurname}",
-                                            borderColor = if (vehicle != activeVehicles.value.last()) LightGrey else Color.Transparent,
+                                            color = if (index % 2 == 0) CardGrey else Color.Transparent,
                                             onClick = {
                                                 navController.navigate(
                                                     Route.VehicleDetails.path.replace(
@@ -205,14 +208,14 @@ fun VehiclesScreen(
                                 }
 
                             } else {
-                                items(
+                                itemsIndexed(
                                     vehicles
-                                ) { vehicle ->
+                                ) { index, vehicle ->
                                     VehiclesList(
                                         regNumber = vehicle.regNumber,
                                         vehicleModel = vehicle.model,
                                         clientName = "${vehicle.clientName} ${vehicle.clientSurname}",
-                                        borderColor = if (vehicle != vehicles.last()) LightGrey else Color.Transparent,
+                                        color = if (index % 2 == 0) LightCardGrey else Color.Transparent,
                                         onClick = {
                                             navController.navigate(
                                                 Route.VehicleDetails.path.replace(

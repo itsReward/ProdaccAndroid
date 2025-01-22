@@ -221,7 +221,7 @@ fun NewJobCardScreen(
                                             )
                                         }
                                         EmployeeDropDown(
-                                            list = viewModel.employees.collectAsState().value,
+                                            list = viewModel.serviceAdvisors.collectAsState().value,
                                             expanded = viewModel.serviceAdvisorDropdown.collectAsState().value,
                                             onDismissRequest = {
                                                 viewModel.toggleServiceAdvisor()
@@ -260,7 +260,7 @@ fun NewJobCardScreen(
                                 }
 
                                 EmployeeDropDown(
-                                    list = viewModel.employees.collectAsState().value,
+                                    list = viewModel.supervisors.collectAsState().value,
                                     expanded = viewModel.supervisorDropdown.collectAsState().value,
                                     onDismissRequest = { viewModel.toggleSupervisorDropdown() },
                                     onItemClick = viewModel::updateSupervisor
@@ -298,7 +298,9 @@ fun NewJobCardScreen(
                     navController.navigateUp()
                 }
                 Column(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
 

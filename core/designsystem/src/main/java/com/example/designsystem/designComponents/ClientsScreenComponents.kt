@@ -68,7 +68,7 @@ fun CategorisedList(
     navController: NavController
 ) {
     LazyColumn(
-        modifier = modifier
+        modifier = modifier.padding(top = 10.dp)
     ) {
         categories.forEach { category ->
             stickyHeader {
@@ -94,15 +94,17 @@ fun CategoryHeader(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier.background(Color.White)
+        modifier = Modifier.background(Color.White).fillMaxWidth().padding(start = 10.dp),
+        horizontalArrangement = Arrangement.Start
     ) {
         Text(
             text = text,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .clip(RoundedCornerShape(50))
+                .background(CardGrey)
+                .padding(horizontal = 16.dp, vertical = 4.dp),
             color = DarkGrey
 
         )

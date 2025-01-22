@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.BodyTextItalic
+import com.example.designsystem.designComponents.DurationText
 import com.example.designsystem.designComponents.FormattedTime
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
@@ -41,6 +42,9 @@ import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.jobcards.viewModels.ReportLoadingState
 import com.example.prodacc.ui.jobcards.viewModels.StatusLoadingState
 import com.prodacc.data.remote.dao.JobCard
+import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Composable
@@ -79,7 +83,7 @@ fun JobCardDisplayCard(
                     .padding(top = 5.dp),
             ) {
                 LargeTitleText(name = jobCard.jobCardName)
-                if (jobCard.jobCardDeadline != null){
+                if (jobCard.jobCardDeadline != null && (jobCard.jobCardDeadline)!! > LocalDateTime.now().toLocalDate().atStartOfDay()) {
 
                     Row(
                         verticalAlignment = Alignment.Bottom
@@ -87,6 +91,22 @@ fun JobCardDisplayCard(
                         BodyText(
                             text = "Due: "
                         )
+
+                        FormattedTime(time = jobCard.jobCardDeadline!!)
+                    }
+
+                } else if ( jobCard.jobCardDeadline != null && (jobCard.jobCardDeadline)!! < LocalDateTime.now().toLocalDate().atStartOfDay()) {
+                    Row(
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = "Overdue by: ",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.Red,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                        DurationText(timeSpentMinutes = Duration.between(jobCard.jobCardDeadline, LocalDate.now().atStartOfDay()).toMinutes())
+
 
                         FormattedTime(time = jobCard.jobCardDeadline!!)
                     }

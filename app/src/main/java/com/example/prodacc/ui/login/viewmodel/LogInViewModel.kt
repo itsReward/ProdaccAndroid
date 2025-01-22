@@ -26,17 +26,6 @@ class LogInViewModel(
     private val _signedInScreen = MutableStateFlow(false)
     val signedInScreen = _signedInScreen.asStateFlow()
 
-    private val _APIAddress = MutableStateFlow(ApiInstance.BASE_URL)
-    val APIAddress = _APIAddress
-
-    fun onAPIAddressChange(newAPIAddress: String) {
-        _APIAddress.value = newAPIAddress
-    }
-
-    fun saveAPIAddress() {
-        ApiInstance.BASE_URL = _APIAddress.value
-        logInRepository.reinitializeService()
-    }
 
     fun onUsernameChange(newUsername: String) {
         username.value = newUsername
@@ -70,12 +59,13 @@ class LogInViewModel(
                                 println(SignedInUser.user)
                             }
                         }
+                        ApiInstance.reconnectWebSocket()
                         _loginState.value = LogInState.Success(result.token)
                     }
 
                     is LogInRepository.LoginResult.Error -> {
                         _loginState.value = result.message?.let { LogInState.Error(it.message) }
-                            ?: LogInState.Error("Unknown Error")
+                            ?: LogInState.Error("Incorrect credentials")
                     }
 
                     is LogInRepository.LoginResult.ErrorSingleMessage -> {

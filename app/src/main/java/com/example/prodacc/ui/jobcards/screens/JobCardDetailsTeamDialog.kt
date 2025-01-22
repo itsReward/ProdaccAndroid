@@ -58,7 +58,8 @@ fun TeamDialog(
     employees: List<EmployeeListCategory>,
     onUpdateServiceAdvisor: (UUID) -> Unit,
     onUpdateSupervisor: (UUID) -> Unit,
-    techniciansLoadingState: JobCardTechnicianViewModel.LoadingState
+    techniciansLoadingState: JobCardTechnicianViewModel.LoadingState,
+    techniciansList: List<Employee>
 ) {
     Dialog(
         onDismissRequest = onDismiss
@@ -102,7 +103,7 @@ fun TeamDialog(
                 onSelectNewEmployee = onUpdateSupervisor
             )
 
-            TechnicianRow(technicians = technicians, employees = employees, onAddNewTechnician = onAddNewTechnician, techniciansLoadingState = techniciansLoadingState)
+            TechnicianRow(technicians = technicians, employees = techniciansList, onAddNewTechnician = onAddNewTechnician, techniciansLoadingState = techniciansLoadingState)
 
 
             Row(
@@ -183,7 +184,7 @@ fun TeamDialogCard(
 @Composable
 fun TechnicianRow(
     technicians: List<Employee>,
-    employees: List<EmployeeListCategory>,
+    employees: List<Employee>,
     onAddNewTechnician: (UUID) -> Unit,
     techniciansLoadingState: JobCardTechnicianViewModel.LoadingState
 ) {
@@ -216,24 +217,21 @@ fun TechnicianRow(
             DropdownMenu(
                 expanded = dropdownMenu,
                 onDismissRequest = { dropdownMenu = false },
-                modifier = Modifier.padding(10.dp)
+                modifier = Modifier.padding(10.dp).fillMaxWidth()
             ) {
                 employees.forEach {
-                    Text(text = it.name, color = Color.DarkGray, fontWeight = FontWeight.Bold)
-                    it.items.forEach {
-                        DropdownMenuItem(
-                            text = {
+                    DropdownMenuItem(
+                        text = {
                             Text(
                                 text = "${it.employeeName} ${it.employeeSurname}",
                                 color = Color.DarkGray
                             )
-                                   },
-                            onClick = {
+                        },
+                        onClick = {
                             onAddNewTechnician(it.id)
                             dropdownMenu = false
-                            }
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }
@@ -291,7 +289,9 @@ fun TechnicianRow(
                     } else {
                         Row(
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth().padding(20.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp)
                         ) {
                             Text(text = "Add Technicians")
                         }

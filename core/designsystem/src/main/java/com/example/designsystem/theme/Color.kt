@@ -23,7 +23,7 @@ val DarkGrey = Color(0xFF333333)
 val Grey = Color(0xFF818181)
 val LightGrey = Color(0xFFE6E6E6)
 val CardGrey = Color(0xFFF3F3F3)
-
+val LightCardGrey = Color(0xFFFAFAFA)
 val Orange = Color(0xFFFFA500)
 val LightOrange = Color(0xFFFFD700)
 val DarkOrange = Color(0xFFF57C00)

@@ -3,6 +3,7 @@ package com.example.prodacc.ui.search.screen
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,6 +23,7 @@ import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.ClientListCard
 import com.example.designsystem.designComponents.EmployeeListCard
 import com.example.designsystem.designComponents.VehiclesList
+import com.example.designsystem.theme.LightCardGrey
 import com.example.designsystem.theme.LightGrey
 import com.example.prodacc.navigation.Route
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -89,12 +91,13 @@ fun SearchScreen(
                 "Vehicles" -> LazyColumn(
                     modifier = Modifier.padding(horizontal = 5.dp)
                 ) {
-                    items(viewModel.filteredVehicles.value) {
+                    itemsIndexed(viewModel.filteredVehicles.value) {
+                        index, it ->
                         VehiclesList(
                             it.regNumber,
                             it.model,
                             it.clientName,
-                            LightGrey
+                            if (index%2 == 0) LightCardGrey else Color.White
                         ) {
                             navController.navigate(
                                 Route.VehicleDetails.path.replace(

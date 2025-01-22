@@ -9,17 +9,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.wear.compose.material.Text
+import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGrey
 import com.prodacc.data.remote.dao.Employee
 import java.util.UUID
@@ -58,16 +62,19 @@ fun EmployeeCategoryHeader(
     modifier: Modifier = Modifier
 ){
     Row (
-        modifier = Modifier.background(Color.White)
+        modifier = Modifier.background(Color.Transparent).fillMaxWidth().padding(start=10.dp),
+        horizontalArrangement = Arrangement.Start
     ) {
         Text(
             text = text,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            color = DarkGrey
+                .clip(RoundedCornerShape(50))
+                .background(CardGrey)
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            color = DarkGrey,
+            textAlign = TextAlign.Start
 
         )
     }
@@ -90,6 +97,7 @@ fun EmployeeDropDown(
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
+        modifier = Modifier.fillMaxWidth()
     ) {
         list.forEach { it ->
             DropdownMenuItem(

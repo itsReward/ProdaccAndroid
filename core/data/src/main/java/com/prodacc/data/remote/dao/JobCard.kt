@@ -54,3 +54,4 @@ data class NewJobCard(
     @SerializedName("supervisorId") val supervisorId: UUID,
     @SerializedName("dateAndTimeIn") val dateAndTimeIn: LocalDateTime
 )
+
