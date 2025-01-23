@@ -219,8 +219,8 @@ fun JobCardDetailScreen(
                                         items = it.value
                                     )
                                 },
-                            onUpdateSupervisor = viewModel::updateSupervisor,
-                            onUpdateServiceAdvisor = viewModel::updateServiceAdvisor,
+                            onUpdateSupervisor = {},
+                            onUpdateServiceAdvisor = {},
                             technicians = jobCardTechnicianViewModel.technicians.collectAsState().value,
                             techniciansLoadingState = jobCardTechnicianViewModel.loadingState.collectAsState().value,
                             techniciansList = employeesViewModel.technicians.collectAsState().value

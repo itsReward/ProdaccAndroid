@@ -165,7 +165,7 @@ class NewJobCardViewModel(
                 }
 
                 is VehicleRepository.LoadingResult.Success -> {
-                    _vehicles.value = vehicles.vehicles ?: emptyList()
+                    _vehicles.value = vehicles.vehicles
                     _vehiclesLoadingState.value = LoadingState.Success(vehicles.vehicles)
                 }
             }

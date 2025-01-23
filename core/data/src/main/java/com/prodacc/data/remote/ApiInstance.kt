@@ -94,8 +94,9 @@ object ApiInstance {
             try {
                 val jsonObject = JSONObject().apply {
                     put("type", type)
-                    put("data", JSONObject(gson.toJson(data)))
+                    put("data", data.toString())
                 }
+                Log.e("WebSocket", "Sending message: $jsonObject")
                 ws.send(jsonObject.toString())
             } catch (e: Exception) {
                 Log.e("WebSocket", "Error sending message", e)
@@ -125,12 +126,12 @@ object ApiInstance {
 
 
         val client = OkHttpClient.Builder()
-            .pingInterval(30, TimeUnit.SECONDS) // Keep connection alive
+            .pingInterval(60, TimeUnit.SECONDS) // Keep connection alive
             .readTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
             .writeTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
+            .addInterceptor(
+                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+            )
             .build()
 
         val request = Request.Builder()
@@ -154,14 +155,14 @@ object ApiInstance {
                     when (type) {
                         "NEW_JOB_CARD" -> {
                             logger.info("WebSocket Received: $type")
-                            val data = jsonObject.getJSONObject("data").toString()
-                            val jobCard = gson.fromJson(data, JobCard::class.java)
-                            val update = WebSocketUpdate.JobCardCreated(jobCard.id)
+                            val jobCardId = UUID.fromString(jsonObject.getString("data"))
+                            val update = WebSocketUpdate.JobCardCreated(jobCardId)
                             webSocketListeners.forEach { listener ->
                                 listener.onJobCardUpdate(update)
                             }
                         }
                         "DELETE_JOB_CARD" -> {
+                            logger.info("WebSocket Received: $type")
                             val jobCardId = UUID.fromString(jsonObject.getString("data"))  // Parse data as string
                             val update = WebSocketUpdate.JobCardDeleted(jobCardId)  // or create a new DeletedJobCard update type
                             webSocketListeners.forEach { listener ->
@@ -173,14 +174,7 @@ object ApiInstance {
                     Log.e("WebSocket", "Error parsing message", e)
                 }
 
-                /*try {
-                    val update = gson.fromJson(text, WebSocketUpdate::class.java)
-                    webSocketListeners.forEach { listener ->
-                        listener.onJobCardUpdate(update)
-                    }
-                } catch (e: Exception) {
-                    Log.e("WebSocket", "Error parsing message", e)
-                }*/
+
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -251,7 +245,6 @@ object ApiInstance {
     private var _employeeService: EmployeeService =
         _retrofitBuilder.create(EmployeeService::class.java)
     private var _userService = _retrofitBuilder.create(UserService::class.java)
-
     private var _controlChecklistService = _retrofitBuilder.create(ControlChecklistService::class.java)
     private var _jobCardReportService = _retrofitBuilder.create(JobCardReportService::class.java)
     private var _jobCardStatusService = _retrofitBuilder.create(JobCardStatusService::class.java)

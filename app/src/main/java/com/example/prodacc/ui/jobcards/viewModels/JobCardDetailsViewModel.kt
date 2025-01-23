@@ -40,25 +40,6 @@ class JobCardDetailsViewModel(
     private val _statusLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val statusLoadingState = _statusLoadingState.asStateFlow()
 
-    fun refreshJobCard() {
-        _loadingState.value = LoadingState.Loading
-        _statusLoadingState.value = LoadingState.Loading
-        _jobCard.value = null
-        _jobCardStatusList.value = emptyList()
-        viewModelScope.launch {
-            fetchJobCard()
-            fetchJobCardCardStatus()
-        }
-    }
-
-    private fun refreshJobCardStatus(){
-        _statusLoadingState.value = LoadingState.Loading
-        _jobCardStatusList.value = emptyList()
-        viewModelScope.launch {
-            fetchJobCardCardStatus()
-        }
-    }
-
     init {
         ApiInstance.addWebSocketListener(this)
 
@@ -93,6 +74,27 @@ class JobCardDetailsViewModel(
             fetchJobCardCardStatus()
         }
     }
+
+    fun refreshJobCard() {
+        _loadingState.value = LoadingState.Loading
+        _statusLoadingState.value = LoadingState.Loading
+        _jobCard.value = null
+        _jobCardStatusList.value = emptyList()
+        viewModelScope.launch {
+            fetchJobCard()
+            fetchJobCardCardStatus()
+        }
+    }
+
+    private fun refreshJobCardStatus(){
+        _statusLoadingState.value = LoadingState.Loading
+        _jobCardStatusList.value = emptyList()
+        viewModelScope.launch {
+            fetchJobCardCardStatus()
+        }
+    }
+
+
 
     private suspend fun fetchJobCardCardStatus() {
         _statusLoadingState.value = LoadingState.Loading
