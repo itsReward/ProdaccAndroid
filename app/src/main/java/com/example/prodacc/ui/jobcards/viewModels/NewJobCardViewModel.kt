@@ -5,23 +5,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
-import com.example.prodacc.ui.jobcards.stateClasses.NewJobCardState
-import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel.LoadingState
 import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.NewJobCard
 import com.prodacc.data.remote.dao.Vehicle
-import com.prodacc.data.repositories.ClientRepository
-import com.prodacc.data.repositories.ControlChecklistRepository
 import com.prodacc.data.repositories.EmployeeRepository
-import com.prodacc.data.repositories.JobCardReportRepository
 import com.prodacc.data.repositories.JobCardRepository
-import com.prodacc.data.repositories.JobCardTechnicianRepository
-import com.prodacc.data.repositories.ServiceChecklistRepository
-import com.prodacc.data.repositories.StateChecklistRepository
-import com.prodacc.data.repositories.TimeSheetRepository
 import com.prodacc.data.repositories.VehicleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,7 +58,7 @@ class NewJobCardViewModel(
     val supervisor = _supervisor.asStateFlow()
 
     private val _serviceAdvisor = MutableStateFlow(
-        when(SignedInUser.role){
+        when (SignedInUser.role) {
             is SignedInUser.Role.ServiceAdvisor -> SignedInUser.employee!!
             else -> {
                 null
@@ -129,8 +121,12 @@ class NewJobCardViewModel(
 
                 is EmployeeRepository.LoadingResult.Success -> {
                     _employees.value = response.employees ?: emptyList()
-                    _serviceAdvisors.value = response.employees?.filter { it.employeeRole == "serviceAdvisor" } ?: emptyList()
-                    _supervisors.value = response.employees?.filter { it.employeeRole == "supervisor" } ?: emptyList()
+                    _serviceAdvisors.value =
+                        response.employees?.filter { it.employeeRole == "serviceAdvisor" }
+                            ?: emptyList()
+                    _supervisors.value =
+                        response.employees?.filter { it.employeeRole == "supervisor" }
+                            ?: emptyList()
                     _employeeLoadingState.value =
                         EmployeeLoadingResult.Success(response.employees ?: emptyList())
                 }
@@ -220,8 +216,6 @@ class NewJobCardViewModel(
     }
 
 
-
-
     fun updateServiceAdvisor(employee: Employee) {
         _serviceAdvisor.value = employee
     }
@@ -233,7 +227,6 @@ class NewJobCardViewModel(
     fun updateVehicle(vehicle: Vehicle) {
         _vehicle.value = vehicle
     }
-
 
 
     fun toggleVehiclesDropDown() {
@@ -259,23 +252,30 @@ class NewJobCardViewModel(
                         is JobCardRepository.LoadingResult.Error -> {
                             _saveState.value = LoadingState.Error(response.message)
                         }
+
                         is JobCardRepository.LoadingResult.ErrorSingleMessage -> {
                             _saveState.value = LoadingState.Error(response.message)
                         }
+
                         is JobCardRepository.LoadingResult.NetworkError -> {
                             _saveState.value = LoadingState.Error("Network Error")
                         }
+
                         is JobCardRepository.LoadingResult.SingleEntity -> {
                             _saveState.value = LoadingState.Success(response.jobCard)
                             EventBus.emit(EventBus.JobCardCRUDEvent.JobCardCreated(response.jobCard))
-                            ApiInstance.sendWebSocketMessage("NEW_JOB_CARD", response.jobCard.id)  // Sending WebSocket Message
+                            WebSocketInstance.sendWebSocketMessage(
+                                "NEW_JOB_CARD",
+                                response.jobCard.id
+                            )  // Sending WebSocket Message
 
                         }
+
                         is JobCardRepository.LoadingResult.Success -> {
                             //will never happen for save
                         }
                     }
-                } catch (e: Exception){
+                } catch (e: Exception) {
                     when (e) {
                         is IOException -> _saveState.value = LoadingState.NetworkError
                         else -> _saveState.value = LoadingState.Error(e.message ?: "Unknown Error")
@@ -307,7 +307,6 @@ class NewJobCardViewModel(
         data class Error(val message: String) : LoadingState()
         data object NetworkError : LoadingState()
     }
-
 
 
 }

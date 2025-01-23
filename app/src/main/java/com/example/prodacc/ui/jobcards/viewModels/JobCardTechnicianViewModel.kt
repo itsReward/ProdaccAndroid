@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCardTechnician
 import com.prodacc.data.repositories.EmployeeRepository
@@ -18,7 +20,7 @@ class JobCardTechnicianViewModel(
     private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository(),
     private val employeeRepository: EmployeeRepository = EmployeeRepository(),
     private val jobCardId: String
-): ViewModel() {
+): ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _jobCardTechnicians = MutableStateFlow<List<UUID>>(emptyList())
 
     private val _technicians = MutableStateFlow<List<Employee>>(emptyList())
@@ -134,6 +136,28 @@ class JobCardTechnicianViewModel(
         data object Loading: LoadingState()
         data object Success: LoadingState()
         data class Error(val message: String): LoadingState()
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        viewModelScope.launch {
+            when(update){
+                is WebSocketUpdate.NewTechnician -> {
+                    if (update.id == UUID.fromString(jobCardId)){
+                        refreshJobCardTechnicians()
+                    }
+                }
+                is WebSocketUpdate.DeleteTechnician -> {
+                    if (update.id == UUID.fromString(jobCardId)){
+                        refreshJobCardTechnicians()
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+        _loadingState.value = LoadingState.Error(error.message ?: "WebSocket Error")
     }
 
 }

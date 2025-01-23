@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
@@ -21,7 +21,7 @@ class JobCardDetailsViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
     private val jobId: String
-):ViewModel(), ApiInstance.WebSocketEventListener {
+):ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _jobCard = MutableStateFlow<JobCard?>(null)
     val jobCard = _jobCard.asStateFlow()
 
@@ -41,7 +41,7 @@ class JobCardDetailsViewModel(
     val statusLoadingState = _statusLoadingState.asStateFlow()
 
     init {
-        ApiInstance.addWebSocketListener(this)
+        WebSocketInstance.addWebSocketListener(this)
 
         // Add event bus collection
         viewModelScope.launch {
@@ -253,7 +253,7 @@ class JobCardDetailsViewModel(
             try {
                 jobCardRepository.deleteJobCard(jobCard.value!!.id)
                 EventBus.emit(EventBus.JobCardCRUDEvent.JobCardDeleted(jobCard.value!!.id))
-                ApiInstance.sendWebSocketMessage("DELETE_JOB_CARD", jobCard.value!!.id )
+                WebSocketInstance.sendWebSocketMessage("DELETE_JOB_CARD", jobCard.value!!.id )
             } catch (e:Exception) {
                 throw e
             }
@@ -286,13 +286,14 @@ class JobCardDetailsViewModel(
         data class Error(val message: String): LoadingState()
     }
 
-    override fun onJobCardUpdate(update: WebSocketUpdate) {
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
         viewModelScope.launch {
             when(update){
                 is WebSocketUpdate.JobCardCreated -> refreshJobCard()
                 is WebSocketUpdate.JobCardUpdated -> refreshJobCard()
                 is WebSocketUpdate.StatusChanged -> refreshStatusList()
                 is WebSocketUpdate.JobCardDeleted -> refreshJobCard()
+                else -> {}
             }
         }
     }

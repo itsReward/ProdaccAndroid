@@ -3,7 +3,7 @@ package com.example.prodacc.ui.jobcards.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prodacc.data.SignedInUser
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardReport
@@ -25,7 +25,7 @@ class JobCardViewModel(
     private val jobCardReportRepository: JobCardReportRepository = JobCardReportRepository(),
     private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
     private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository()
-) : ViewModel(), ApiInstance.WebSocketEventListener {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _jobCards = MutableStateFlow<List<JobCard>>(emptyList())
 
     private val _filteredJobCards = MutableStateFlow<List<JobCard>>(emptyList())
@@ -94,7 +94,7 @@ class JobCardViewModel(
 
 
     init {
-        ApiInstance.addWebSocketListener(this)
+        WebSocketInstance.addWebSocketListener(this)
 
         _jobCardLoadState.value = LoadingState.Loading
 
@@ -222,8 +222,8 @@ class JobCardViewModel(
                             is JobCardTechnicianRepository.LoadingResult.Success -> {
                                 val jobCards = mutableListOf<JobCard>()
                                 result.list.let {
-                                    it.forEach {
-                                        when (val response = jobCardRepository.getJobCard(it)) {
+                                    it.forEach { id ->
+                                        when (val response = jobCardRepository.getJobCard(id)) {
                                             is JobCardRepository.LoadingResult.Error -> jobCardLoadState.value =
                                                 LoadingState.Error(response.message)
 
@@ -495,21 +495,26 @@ class JobCardViewModel(
         data class Frozen(val name: String = "frozen") : JobCardsFilter()
     }
 
-    override fun onJobCardUpdate(update: WebSocketUpdate) {
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
         viewModelScope.launch {
             when (update) {
                 is WebSocketUpdate.JobCardCreated -> refreshJobCards()
                 is WebSocketUpdate.JobCardUpdated -> refreshJobCards()
-                is WebSocketUpdate.StatusChanged -> refreshJobCards()
+                is WebSocketUpdate.StatusChanged -> refreshSingleJobCardStatus(update.jobCardId)
                 is WebSocketUpdate.JobCardDeleted -> {
                     // Remove the job card from the list
                     _jobCards.value = _jobCards.value.filter { it.id != update.jobCardId }
                     // Update filtered list
                     filterJobCards()
                     // Clean up related data
-                    _reportsMap.value = _reportsMap.value - update.jobCardId
-                    _statusMap.value = _statusMap.value - update.jobCardId
+                    _reportsMap.value -= update.jobCardId
+                    _statusMap.value -= update.jobCardId
                 }
+                is WebSocketUpdate.NewReport -> refreshSingleJobCardReport(update.id)
+                is WebSocketUpdate.UpdateReport -> refreshSingleJobCardReport(update.id)
+                is WebSocketUpdate.DeleteReport -> refreshSingleJobCardReport(update.id)
+
+                else -> {}
             }
         }
     }
@@ -520,7 +525,7 @@ class JobCardViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        ApiInstance.removeWebSocketListener(this)
+        WebSocketInstance.removeWebSocketListener(this)
     }
 
 

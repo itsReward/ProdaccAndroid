@@ -8,7 +8,6 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
-import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.services.ClientService
 import com.prodacc.data.remote.services.ControlChecklistService
 import com.prodacc.data.remote.services.EmployeeService
@@ -34,7 +33,6 @@ import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
-import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -45,23 +43,10 @@ import java.util.logging.Logger
 object ApiInstance {
     private val logger = Logger.getLogger(ApiInstance::class.java.name)
 
-    var WSURL = MutableStateFlow("not changed")
-
     @Volatile
     var BASE_URL = "http://192.168.122.123:5000"
-        set
 
-    //WebSocket
-    private var webSocket: WebSocket? = null
-    private val webSocketListeners = mutableListOf<WebSocketEventListener>()
-
-    // Interface for WebSocket events
-    interface WebSocketEventListener {
-        fun onJobCardUpdate(update: WebSocketUpdate)
-        fun onWebSocketError(error: Throwable)
-    }
-
-    // Add a method to initialize with context
+    // Api Connection Initialisation
     fun initialize(context: Context, baseUrl: String = BASE_URL) {
         BASE_URL = baseUrl
         // Recreate the Retrofit instance with the provided context
@@ -82,143 +67,7 @@ object ApiInstance {
         _stateChecklistService = _retrofitBuilder.create(StateChecklistService::class.java)
         _timesheetService = _retrofitBuilder.create(TimesheetService::class.java)
 
-        setupWebSocket()
     }
-
-    fun reconnectWebSocket() {
-        setupWebSocket()
-    }
-
-    fun sendWebSocketMessage(type: String, data: Any) {
-        webSocket?.let { ws ->
-            try {
-                val jsonObject = JSONObject().apply {
-                    put("type", type)
-                    put("data", data.toString())
-                }
-                Log.e("WebSocket", "Sending message: $jsonObject")
-                ws.send(jsonObject.toString())
-            } catch (e: Exception) {
-                Log.e("WebSocket", "Error sending message", e)
-            }
-        }
-    }
-
-
-    private fun setupWebSocket() {
-        val token = TokenManager.getToken()?.accessToken ?: run {
-            Log.e("WebSocket", "No token available")
-            WSURL.value = "No authentication token"
-            return
-        }
-
-        val wsUrl = try {
-            BASE_URL.replace("http://", "ws://")
-                .replace("https://", "wss://")
-                .let { "$it/websocket?token=$token" }
-        } catch (e: Exception) {
-            Log.e("WebSocket", "Error creating WebSocket URL", e)
-            return
-        }
-
-        WSURL.value = wsUrl
-        Log.d("WebSocket", "Attempting connection to: $wsUrl")
-
-
-        val client = OkHttpClient.Builder()
-            .pingInterval(60, TimeUnit.SECONDS) // Keep connection alive
-            .readTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
-            .writeTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
-            .addInterceptor(
-                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
-            )
-            .build()
-
-        val request = Request.Builder()
-            .url(wsUrl)
-            .addHeader("Origin", BASE_URL)
-            .build()
-
-        webSocket = client.newWebSocket(request, object : WebSocketListener() {
-
-            override fun onOpen(webSocket: WebSocket, response: Response) {
-                Log.d("WebSocket", "Connection established")
-            }
-
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                try {
-                    val jsonObject = JSONObject(text)
-                    val type = jsonObject.getString("type")
-
-                    logger.info("WebSocket Received: $type")
-
-                    when (type) {
-                        "NEW_JOB_CARD" -> {
-                            logger.info("WebSocket Received: $type")
-                            val jobCardId = UUID.fromString(jsonObject.getString("data"))
-                            val update = WebSocketUpdate.JobCardCreated(jobCardId)
-                            webSocketListeners.forEach { listener ->
-                                listener.onJobCardUpdate(update)
-                            }
-                        }
-                        "DELETE_JOB_CARD" -> {
-                            logger.info("WebSocket Received: $type")
-                            val jobCardId = UUID.fromString(jsonObject.getString("data"))  // Parse data as string
-                            val update = WebSocketUpdate.JobCardDeleted(jobCardId)  // or create a new DeletedJobCard update type
-                            webSocketListeners.forEach { listener ->
-                                listener.onJobCardUpdate(update)
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("WebSocket", "Error parsing message", e)
-                }
-
-
-            }
-
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                Log.e("WebSocket", """
-                WebSocket failure:
-                Error: ${t.message}
-                Response code: ${response?.code}
-                Response message: ${response?.message}
-                Response headers: ${response?.headers}
-                Full URL: $wsUrl
-            """.trimIndent())
-                webSocketListeners.forEach { listener ->
-                    listener.onWebSocketError(t)
-                }
-                // Attempt to reconnect after delay
-                Handler(Looper.getMainLooper()).postDelayed({
-                    setupWebSocket()
-                }, 5000)
-            }
-
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                Log.d("WebSocket", "WebSocket closed: $reason")
-            }
-        })
-    }
-
-    // Methods to manage WebSocket listeners
-    fun addWebSocketListener(listener: WebSocketEventListener) {
-        webSocketListeners.add(listener)
-    }
-
-    fun removeWebSocketListener(listener: WebSocketEventListener) {
-        webSocketListeners.remove(listener)
-    }
-
-    // Clean up method
-    fun cleanup() {
-        webSocket?.close(1000, "App closing")
-        webSocket = null
-        webSocketListeners.clear()
-    }
-
-
-
 
     val gson = GsonBuilder()
         .registerTypeAdapter(LocalDateTime::class.java,
@@ -226,10 +75,10 @@ object ApiInstance {
                 JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
             })
         .registerTypeAdapter(LocalDateTime::class.java,
-        JsonDeserializer { json, _, _ ->
-            val dateString = json.asString
-            LocalDateTime.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        })
+            JsonDeserializer { json, _, _ ->
+                val dateString = json.asString
+                LocalDateTime.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            })
         .create()
 
     // Use a private backing field for retrofitBuilder
@@ -349,13 +198,5 @@ object ApiInstance {
         return Retrofit.Builder().baseUrl(BASE_URL).client(client)
             .addConverterFactory(GsonConverterFactory.create(gson)).build()
     }
-}
 
-
-// Define your WebSocket update data class
-sealed class WebSocketUpdate {
-    data class JobCardCreated(val jobCardId: UUID) : WebSocketUpdate()
-    data class JobCardDeleted(val jobCardId: UUID) : WebSocketUpdate()
-    data class JobCardUpdated(val jobCardId: UUID) : WebSocketUpdate()
-    data class StatusChanged(val jobCardId: UUID, val newStatus: String) : WebSocketUpdate()
 }

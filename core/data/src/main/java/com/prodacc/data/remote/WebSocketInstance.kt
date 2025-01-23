@@ -1,0 +1,280 @@
+package com.prodacc.data.remote
+
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import com.prodacc.data.remote.ApiInstance.BASE_URL
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import okhttp3.logging.HttpLoggingInterceptor
+import org.json.JSONObject
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import java.util.logging.Logger
+
+object WebSocketInstance {
+    private val logger = Logger.getLogger(WebSocketInstance::class.java.name)
+
+
+    //WebSocket
+    private var webSocket: WebSocket? = null
+    private val webSocketListeners = mutableListOf<WebSocketEventListener>()
+
+    // Setting up WebSocket Connection
+    private fun setupWebSocket() {
+        val token = TokenManager.getToken()?.accessToken ?: run {
+            Log.e("WebSocket", "No token available")
+            return
+        }
+
+        val wsUrl = try {
+            BASE_URL.replace("http://", "ws://")
+                .replace("https://", "wss://")
+                .let { "$it/websocket?token=$token" }
+        } catch (e: Exception) {
+            Log.e("WebSocket", "Error creating WebSocket URL", e)
+            return
+        }
+
+        Log.d("WebSocket", "Attempting connection to: $wsUrl")
+
+
+        val client = OkHttpClient.Builder()
+            .pingInterval(60, TimeUnit.SECONDS) // Keep connection alive
+            .readTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
+            .writeTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
+            .addInterceptor(
+                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+            )
+            .build()
+
+        val request = Request.Builder()
+            .url(wsUrl)
+            .addHeader("Origin", BASE_URL)
+            .build()
+
+        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                Log.d("WebSocket", "Connection established")
+            }
+
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                try {
+                    val jsonObject = JSONObject(text)
+                    val type = jsonObject.getString("type")
+
+                    logger.info("WebSocket Received: $type")
+
+                    when (type) {
+                        "NEW_JOB_CARD" -> {
+                            logger.info("WebSocket Received: $type")
+                            val jobCardId = UUID.fromString(jsonObject.getString("data"))
+                            val update = WebSocketUpdate.JobCardCreated(jobCardId)
+                            webSocketListeners.forEach { listener ->
+                                listener.onWebSocketUpdate(update)
+                            }
+                        }
+                        "DELETE_JOB_CARD" -> {
+                            logger.info("WebSocket Received: $type")
+                            val jobCardId = UUID.fromString(jsonObject.getString("data"))  // Parse data as string
+                            val update = WebSocketUpdate.JobCardDeleted(jobCardId)  // or create a new DeletedJobCard update type
+                            webSocketListeners.forEach { listener ->
+                                listener.onWebSocketUpdate(update)
+                            }
+                        }
+                        "UPDATE_JOB_CARD" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.JobCardUpdated(id)) }
+                        }
+                        "JOB_CARD_STATUS_CHANGED" -> {
+                            val data = JSONObject(jsonObject.getString("data"))
+                            val id = UUID.fromString(data.getString("id"))
+                            val status = data.getString("status")
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.StatusChanged(id, status)) }
+                        }
+                        "NEW_JOB_CARD_REPORT" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewReport(id)) }
+                        }
+                        "UPDATE_JOB_CARD_REPORT" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.UpdateReport(id)) }
+                        }
+                        "DELETE_JOB_CARD_REPORT" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteReport(id)) }
+                        }
+                        "NEW_JOB_CARD_TECHNICIAN" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewTechnician(id)) }
+                        }
+                        "DELETE_JOB_CARD_TECHNICIAN" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteTechnician(id)) }
+                        }
+                        "NEW_SERVICE_CHECKLIST" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewServiceChecklist(id)) }
+                        }
+                        "UPDATE_SERVICE_CHECKLIST" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.UpdateServiceChecklist(id)) }
+                        }
+                        "DELETE_SERVICE_CHECKLIST" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteServiceChecklist(id)) }
+                        }
+                        "NEW_STATE_CHECKLIST" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewStateChecklist(id)) }
+                        }
+                        "UPDATE_STATE_CHECKLIST" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.UpdateStateChecklist(id)) }
+                        }
+                        "DELETE_STATE_CHECKLIST" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteStateChecklist(id)) }
+                        }
+                        "NEW_CONTROL_CHECKLIST" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewControlChecklist(id)) }
+                        }
+                        "UPDATE_CONTROL_CHECKLIST" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.UpdateControlChecklist(id)) }
+                        }
+                        "DELETE_CONTROL_CHECKLIST" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteControlChecklist(id)) }
+                        }
+                        "NEW_TIMESHEET" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewTimesheet(id)) }
+                        }
+                        "UPDATE_TIMESHEET" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.UpdateTimesheet(id)) }
+                        }
+                        "DELETE_TIMESHEET" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteTimesheet(id)) }
+                        }
+                        "NEW_CLIENT" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewClient(id)) }
+                        }
+                        "UPDATE_CLIENT" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.UpdateClient(id)) }
+                        }
+                        "DELETE_CLIENT" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteClient(id)) }
+                        }
+                        "NEW_VEHICLE" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewVehicle(id)) }
+                        }
+                        "UPDATE_VEHICLE" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.UpdateVehicle(id)) }
+                        }
+                        "DELETE_VEHICLE" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteVehicle(id)) }
+                        }
+                        "NEW_EMPLOYEE" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewEmployee(id)) }
+                        }
+                        "UPDATE_EMPLOYEE" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.UpdateEmployee(id)) }
+                        }
+                        "DELETE_EMPLOYEE" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteEmployee(id)) }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("WebSocket", "Error parsing message", e)
+                }
+
+
+            }
+
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                Log.e("WebSocket", """
+                WebSocket failure:
+                Error: ${t.message}
+                Response code: ${response?.code}
+                Response message: ${response?.message}
+                Response headers: ${response?.headers}
+                Full URL: $wsUrl
+            """.trimIndent())
+                webSocketListeners.forEach { listener ->
+                    listener.onWebSocketError(t)
+                }
+                // Attempt to reconnect after delay
+                Handler(Looper.getMainLooper()).postDelayed({
+                    setupWebSocket()
+                }, 5000)
+            }
+
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                Log.d("WebSocket", "WebSocket closed: $reason")
+            }
+        })
+    }
+
+    // Connecting to WebSocket
+    fun reconnectWebSocket() {
+        setupWebSocket()
+    }
+
+    // Interface for WebSocket events
+    interface WebSocketEventListener {
+        fun onWebSocketUpdate(update: WebSocketUpdate)
+        fun onWebSocketError(error: Throwable)
+    }
+
+    // Methods to manage WebSocket listeners
+    fun addWebSocketListener(listener: WebSocketEventListener) {
+        webSocketListeners.add(listener)
+    }
+
+    fun removeWebSocketListener(listener: WebSocketEventListener) {
+        webSocketListeners.remove(listener)
+    }
+
+    // Send WebSocket Message
+    fun sendWebSocketMessage(type: String, data: Any) {
+        webSocket?.let { ws ->
+            try {
+                val jsonObject = JSONObject().apply {
+                    put("type", type)
+                    put("data", data.toString())
+                }
+                Log.e("WebSocket", "Sending message: $jsonObject")
+                ws.send(jsonObject.toString())
+            } catch (e: Exception) {
+                Log.e("WebSocket", "Error sending message", e)
+            }
+        }
+    }
+
+    // Clean up method
+    fun cleanup() {
+        webSocket?.close(1000, "App closing")
+        webSocket = null
+        webSocketListeners.clear()
+    }
+
+    // Define your WebSocket update data class
+
+}

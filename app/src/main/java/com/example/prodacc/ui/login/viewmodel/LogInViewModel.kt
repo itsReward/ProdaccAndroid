@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.repositories.LogInRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -59,7 +60,7 @@ class LogInViewModel(
                                 println(SignedInUser.user)
                             }
                         }
-                        ApiInstance.reconnectWebSocket()
+                        WebSocketInstance.reconnectWebSocket()
                         _loginState.value = LogInState.Success(result.token)
                     }
 
