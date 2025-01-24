@@ -520,7 +520,6 @@ class JobCardViewModel(
     }
 
     override fun onWebSocketError(error: Throwable) {
-        _jobCardLoadState.value = LoadingState.Error("Connection Error: ${error.message}")
     }
 
     override fun onCleared() {

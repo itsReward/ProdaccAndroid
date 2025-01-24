@@ -2,7 +2,6 @@ package com.prodacc.data.repositories
 
 import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.dao.Client
-import com.prodacc.data.remote.dao.ClientVehicle
 import com.prodacc.data.remote.dao.NewClient
 import java.io.IOException
 import java.util.UUID
@@ -21,7 +20,7 @@ class ClientRepository {
                     return LoadingResult.SingleEntity(response.body(), null)
                 }
             } else{
-                return LoadingResult.Error(response.raw().message())
+                return LoadingResult.Error(response.raw().message)
             }
         } catch (e : Exception){
             when (e) {
@@ -37,7 +36,7 @@ class ClientRepository {
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body() ?: emptyList())
             } else {
-                LoadingResult.Error(response.raw().message())
+                LoadingResult.Error(response.raw().message)
             }
         } catch (e: Exception) {
             when (e) {
@@ -57,7 +56,7 @@ class ClientRepository {
                     LoadingResult.SingleEntity(response.body(), null)
                 }
             } else {
-                LoadingResult.Error(response.raw().message())
+                LoadingResult.Error(response.raw().message)
             }
         } catch (e: Exception) {
             when (e) {
@@ -77,7 +76,7 @@ class ClientRepository {
                     LoadingResult.SingleEntity(response.body(), null)
                 }
             } else {
-                LoadingResult.Error(response.raw().message())
+                LoadingResult.Error(response.raw().message)
             }
         } catch (e: Exception) {
             when (e) {
@@ -93,7 +92,7 @@ class ClientRepository {
             if (response.isSuccessful) {
                 LoadingResult.Success(emptyList(), response.body() ?: "Client deleted successfully")
             } else {
-                LoadingResult.Error(response.raw().message())
+                LoadingResult.Error(response.raw().message)
             }
         } catch (e: Exception) {
             when (e) {

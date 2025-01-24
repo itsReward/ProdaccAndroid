@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -78,6 +79,7 @@ import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.checklistIcon
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.ControlChecklistViewModel
@@ -197,6 +199,7 @@ fun JobCardDetailScreen(
                         .fillMaxSize()
                         .navigationBarsPadding()
 
+
                 ) {
                     TopBar(
                         jobCardName = jobCard!!.jobCardName,
@@ -262,6 +265,9 @@ fun JobCardDetailScreen(
                             .padding(horizontal = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
+
+
+
                         Row(
                             modifier = Modifier
                                 .padding(top = 20.dp)

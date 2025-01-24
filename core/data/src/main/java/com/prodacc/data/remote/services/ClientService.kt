@@ -7,6 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import java.util.UUID
 
@@ -20,7 +21,7 @@ interface ClientService {
     @POST("/clients/new")
     suspend fun createClient(@Body client: NewClient): Response<Client>
 
-    @POST("/clients/update/{id}")
+    @PUT("/clients/update/{id}")
     suspend fun updateClient(@Path("id") id: UUID, @Body client: Client): Response<Client>
 
     @DELETE("/clients/delete/{id}")

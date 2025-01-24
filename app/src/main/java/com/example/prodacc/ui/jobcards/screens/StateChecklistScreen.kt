@@ -52,6 +52,7 @@ import com.example.designsystem.designComponents.OptionDropdown
 import com.example.designsystem.theme.DarkRed
 import com.example.designsystem.theme.Orange
 import com.example.designsystem.theme.Red
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.jobcards.viewModels.StateChecklistViewModel
 import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.dao.StateChecklist
@@ -119,6 +120,7 @@ fun StateChecklistSection(
                             Text(text = "Technician has not created State checklist")
                         }
                     } else {
+
                         StateChecklistSectionContent(
                             existingChecklist = stateChecklist,
                             onClose = onClose,

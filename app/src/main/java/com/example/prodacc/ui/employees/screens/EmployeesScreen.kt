@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +37,7 @@ import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.BlueA700
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
@@ -58,20 +60,24 @@ fun EmployeesScreen(
     SwipeRefresh(state = refreshing, onRefresh = viewModel::refreshEmployees) {
         Scaffold(
             topBar = {
-                TopBar(
-                    title = "Employees",
-                    onSearchClick = {
-                        navController.navigate(
-                            Route.Search.path.replace(
-                                "{title}", "Employees"
+                Column(modifier = Modifier.statusBarsPadding()){
+                    WebSocketStateIndicator()
+                    TopBar(
+                        title = "Employees",
+                        onSearchClick = {
+                            navController.navigate(
+                                Route.Search.path.replace(
+                                    "{title}", "Employees"
+                                )
                             )
-                        )
-                    },
-                    logOut = {
-                        TokenManager.saveToken(null)
-                        navController.navigate(Route.LogIn.path)
-                    }
-                )
+                        },
+                        logOut = {
+                            TokenManager.saveToken(null)
+                            navController.navigate(Route.LogIn.path)
+                        }
+                    )
+                }
+
             },
             bottomBar = { NavigationBar(navController) },
             floatingActionButton = {

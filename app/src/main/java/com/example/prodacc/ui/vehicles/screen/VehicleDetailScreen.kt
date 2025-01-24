@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,6 +47,7 @@ import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.LightCardGrey
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModel
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModelFactory
 import com.prodacc.data.SignedInUser
@@ -69,13 +71,14 @@ fun VehicleDetailsScreen(
         modifier = Modifier
             .background(Color.White)
             .fillMaxSize()
-
+            .systemBarsPadding()
     ) {
+        WebSocketStateIndicator()
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(bottomEnd = 30.dp))
                 .wrapContentSize()
-                .systemBarsPadding()
+
                 .fillMaxWidth()
                 .padding(top = 20.dp)
                 .drawBehind {
@@ -90,6 +93,7 @@ fun VehicleDetailsScreen(
             horizontalArrangement = Arrangement.SpaceBetween
 
         ) {
+
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(30.dp))

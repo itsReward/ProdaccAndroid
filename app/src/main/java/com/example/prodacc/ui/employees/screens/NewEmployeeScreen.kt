@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,6 +40,7 @@ import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.contactDetails
 import com.example.designsystem.theme.workIcon
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.employees.viewModels.NewEmployeeViewModel
 import kotlinx.coroutines.delay
 
@@ -52,27 +54,35 @@ fun NewEmployeeScreen(
     val scroll = rememberScrollState()
 
     AnimatedVisibility(visible = true, enter = slideInHorizontally()) {
-        Scaffold(topBar = {
-            TopAppBar(title = {
-                LargeTitleText(name = "New Employee")
-            }, navigationIcon = {
-                IconButton(onClick = {
-                    navController.navigateUp()
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "Navigate Back"
+        Scaffold(
+            topBar = {
+                Column(modifier = Modifier.statusBarsPadding()){
+                    WebSocketStateIndicator()
+                    TopAppBar(
+                        title = {
+                            LargeTitleText(name = "New Employee")
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.navigateUp() }){
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Navigate Back"
+                                )
+                            }
+                        },
+                        actions = {
+                            Button(
+                                onClick = { viewModel.saveEmployee() },
+                                modifier = Modifier.clip(RoundedCornerShape(40.dp))
+                            ) {
+                                Text(text = "Save")
+                            }
+                        }
                     )
                 }
-            }, actions = {
 
-                Button(onClick = {
-                    viewModel.saveEmployee()
-                }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
-                    Text(text = "Save")
-                }
-            })
-        }) { innerPadding ->
+            }
+        ) { innerPadding ->
 
             when (viewModel.loadState.collectAsState().value) {
                 is NewEmployeeViewModel.SaveState.Error -> {
@@ -213,14 +223,15 @@ fun NewEmployeeScreen(
                         navController.navigateUp()
                     }
                     Column(
-                        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
 
                     ) {
                         Text(text = "New Employee Successfully created")
                     }
-
 
 
                 }

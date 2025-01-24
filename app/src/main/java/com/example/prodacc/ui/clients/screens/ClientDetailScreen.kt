@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -59,6 +60,7 @@ import com.example.designsystem.theme.companyIcon
 import com.example.designsystem.theme.errorIcon
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModel
 import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModelFactory
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
@@ -79,45 +81,49 @@ fun ClientDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.navigateUp()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate Back"
-                        )
-                    }
-                },
-                actions = {
-
-                    when (SignedInUser.role){
-                        is SignedInUser.Role.Admin -> {
-                            IconButton(onClick = {
-                                navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
-                            }) {
-                                Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
-                            }
-
-                            IconButton(onClick = {viewModel.toggleDeleteClientConfirmation()}) {
-                                Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
-                            }
+            Column(modifier =Modifier.statusBarsPadding()) {
+                WebSocketStateIndicator(modifier = Modifier)
+                TopAppBar(
+                    title = {},
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            navController.navigateUp()
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Navigate Back"
+                            )
                         }
-                        is SignedInUser.Role.ServiceAdvisor -> {
-                            IconButton(onClick = {
-                                navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
-                            }) {
-                                Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
+                    },
+                    actions = {
+
+                        when (SignedInUser.role){
+                            is SignedInUser.Role.Admin -> {
+                                IconButton(onClick = {
+                                    navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
+                                }) {
+                                    Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
+                                }
+
+                                IconButton(onClick = {viewModel.toggleDeleteClientConfirmation()}) {
+                                    Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
+                                }
                             }
+                            is SignedInUser.Role.ServiceAdvisor -> {
+                                IconButton(onClick = {
+                                    navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
+                                }) {
+                                    Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
+                                }
+                            }
+                            else -> {}
                         }
-                        else -> {}
+
+
                     }
+                )
+            }
 
-
-                }
-            )
         }
     ) { innerPadding ->
 

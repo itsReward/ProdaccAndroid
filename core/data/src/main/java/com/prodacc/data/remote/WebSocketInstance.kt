@@ -4,6 +4,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.prodacc.data.remote.ApiInstance.BASE_URL
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -17,7 +19,15 @@ import java.util.logging.Logger
 
 object WebSocketInstance {
     private val logger = Logger.getLogger(WebSocketInstance::class.java.name)
+    private val _webSocketState = MutableStateFlow<WebSocketState>(WebSocketState.Disconnected(""))
+    val webSocketState = _webSocketState.asStateFlow()
 
+    private val _websocketIndicator = MutableStateFlow(true)
+    val webSocketIndicator = _websocketIndicator
+
+    fun websocketIndicatorToggle(state : Boolean){
+        _websocketIndicator.value = state
+    }
 
     //WebSocket
     private var webSocket: WebSocket? = null
@@ -59,7 +69,9 @@ object WebSocketInstance {
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
 
             override fun onOpen(webSocket: WebSocket, response: Response) {
+                _webSocketState.value = WebSocketState.Connected("Connected")
                 Log.d("WebSocket", "Connection established")
+                websocketIndicatorToggle(true)
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -209,6 +221,7 @@ object WebSocketInstance {
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                _webSocketState.value = WebSocketState.Error("Error: ${t.message}")
                 Log.e("WebSocket", """
                 WebSocket failure:
                 Error: ${t.message}
@@ -227,6 +240,7 @@ object WebSocketInstance {
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                _webSocketState.value = WebSocketState.Disconnected("Closed: $reason")
                 Log.d("WebSocket", "WebSocket closed: $reason")
             }
         })
@@ -234,6 +248,7 @@ object WebSocketInstance {
 
     // Connecting to WebSocket
     fun reconnectWebSocket() {
+        _webSocketState.value = WebSocketState.Reconnecting("Reconnecting")
         setupWebSocket()
     }
 
@@ -275,6 +290,12 @@ object WebSocketInstance {
         webSocketListeners.clear()
     }
 
-    // Define your WebSocket update data class
+
+    sealed class WebSocketState {
+        data class Connected(val message: String) : WebSocketState()
+        data class Disconnected(val message: String) : WebSocketState()
+        data class Reconnecting(val message: String) : WebSocketState()
+        data class Error(val message: String) : WebSocketState()
+    }
 
 }

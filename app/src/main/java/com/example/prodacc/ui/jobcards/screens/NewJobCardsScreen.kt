@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -21,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,6 +44,7 @@ import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.car
 import com.example.designsystem.theme.person
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.jobcards.viewModels.NewJobCardViewModel
 import com.example.prodacc.ui.jobcards.viewModels.NewJobCardViewModelFactory
 import com.prodacc.data.SignedInUser
@@ -61,29 +65,34 @@ fun NewJobCardScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    LargeTitleText(name = "New Job")
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.navigateUp()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Navigate Back"
-                        )
-                    }
-                },
-                actions = {
+            Column(modifier = Modifier.statusBarsPadding()){
+                WebSocketStateIndicator()
+                TopAppBar(
+                    title = {
+                        LargeTitleText(name = "New Job")
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            navController.navigateUp()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Navigate Back"
+                            )
+                        }
+                    },
+                    actions = {
 
-                    Button(onClick = {
-                        viewModel.saveJob()
-                    }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
-                        Text(text = "Save")
-                    }
-                }
-            )
+                        Button(onClick = {
+                            viewModel.saveJob()
+                        }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
+                            Text(text = "Save")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                )
+            }
+
         }
     ) { innerPadding ->
 
@@ -98,12 +107,15 @@ fun NewJobCardScreen(
                 )
             }
             is NewJobCardViewModel.LoadingState.Idle -> {
+
                 Column(
                     modifier = Modifier
                         .padding(innerPadding)
                         .padding(horizontal = 10.dp, vertical = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
+
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center

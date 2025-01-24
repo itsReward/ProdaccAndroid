@@ -1,6 +1,10 @@
 package com.example.prodacc.ui.jobcards.screens
 
 import android.graphics.Paint.Align
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -26,16 +31,23 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.CategoryHeader
@@ -44,14 +56,18 @@ import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
+import com.example.designsystem.theme.Orange
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
 import com.example.prodacc.ui.jobcards.viewModels.LoadingState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.TokenManager
+import com.prodacc.data.remote.WebSocketInstance
+import kotlinx.coroutines.delay
 
 @Composable
 fun JobCardsScreen(
@@ -71,18 +87,22 @@ fun JobCardsScreen(
         state = swipeRefreshState,
         onRefresh = { viewModel.refreshJobCards() }
     ) {
-        Scaffold(topBar = {
-            TopBar(title = "Job Cards", onSearchClick = {
-                navController.navigate(
-                    Route.Search.path.replace(
-                        "{title}", "Job Cards"
+        Scaffold(
+            topBar = {
+                Column(modifier = Modifier.statusBarsPadding()){
+                    WebSocketStateIndicator()
+                    TopBar(
+                        title = "Job Cards",
+                        onSearchClick = { navController.navigate( Route.Search.path.replace("{title}", "Job Cards")) },
+                        logOut = {
+                            TokenManager.saveToken(null)
+                            navController.navigate(Route.LogIn.path)
+                        }
                     )
-                )
-            }, logOut = {
-                TokenManager.saveToken(null)
-                navController.navigate(Route.LogIn.path)
-            })
-        }, bottomBar = { NavigationBar(navController) }, floatingActionButton = {
+                }
+
+            }
+            , bottomBar = { NavigationBar(navController) }, floatingActionButton = {
 
             when(SignedInUser.role){
                 SignedInUser.Role.Supervisor -> {}
@@ -161,25 +181,7 @@ fun JobCardsScreen(
                                 .padding(innerPadding)
                                 .verticalScroll(scroll)
                         ) {
-                            /*Column(
-                                modifier = Modifier.padding(horizontal = 10.dp)
-                            ) {
-                                CustomSearchBar(
-                                    query = "", onQueryChange = {}, onSearch = {},
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 10.dp)
-                                        .clip(RoundedCornerShape(50.dp))
-                                        .clickable {
-                                            navController.navigate(
-                                                Route.Search.path.replace(
-                                                    "{title}", "Job Cards"
-                                                )
-                                            )
-                                        },
-                                    placeHolder = "Search JobCards"
-                                )
-                            }*/
+
 
                             JobStatusFilters(
                                 onClickAll = { viewModel.onToggleAllFilterChip() },

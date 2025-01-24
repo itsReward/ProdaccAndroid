@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -47,6 +48,7 @@ import com.example.designsystem.theme.contactDetails
 import com.example.designsystem.theme.female
 import com.example.designsystem.theme.male
 import com.example.designsystem.theme.workIcon
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.clients.viewModels.EditClientDetailsViewModel
 import com.example.prodacc.ui.clients.viewModels.EditClientDetailsViewModelFactory
 import java.util.UUID
@@ -67,27 +69,30 @@ fun EditClientDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    LargeTitleText(name = "Edit Client")
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.navigateUp()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Navigate Back"
-                        )
-                    }
-                },
-                actions = {
+            Column(modifier = Modifier.statusBarsPadding()) {
+                WebSocketStateIndicator(modifier = Modifier)
+                TopAppBar(
+                    title = {
+                        LargeTitleText(name = "Edit Client")
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            navController.navigateUp()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Navigate Back"
+                            )
+                        }
+                    },
+                    actions = {
 
-                    Button(onClick = { viewModel.saveClientDetails() }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
-                        Text(text = "Save")
+                        Button(onClick = { viewModel.saveClientDetails() }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
+                            Text(text = "Save")
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
 

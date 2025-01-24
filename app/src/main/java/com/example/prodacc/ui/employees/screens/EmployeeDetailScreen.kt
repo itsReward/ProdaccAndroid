@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,6 +55,7 @@ import com.example.designsystem.theme.companyIcon
 import com.example.designsystem.theme.errorIcon
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModelFactory
 import com.prodacc.data.SignedInUser
@@ -72,37 +74,44 @@ fun EmployeeDetailScreen(
     val jobCards = viewModel.jobCards.collectAsState()
 
 
-    Scaffold(topBar = {
-        TopAppBar(title = {}, navigationIcon = {
-            IconButton(onClick = {
-                navController.navigateUp()
-            }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Navigate Back"
+    Scaffold(
+        topBar = {
+            Column(modifier = Modifier.statusBarsPadding()) {
+                WebSocketStateIndicator()
+                TopAppBar(
+                    title = {},
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { navController.navigateUp() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Navigate Back"
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                navController.navigate( Route.EditEmployee.path.replace("{employeeId}", employee?.id.toString()))
+                            }
+                        ) {
+                            Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
+                        }
+
+                        if (SignedInUser.role == SignedInUser.Role.Admin) {
+                            IconButton(onClick = { viewModel.toggleDeleteConfirmation() }) {
+                                Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
+                            }
+                        }
+
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             }
-        }, actions = {
-            IconButton(onClick = {
-                navController.navigate(
-                    Route.EditEmployee.path.replace(
-                        "{employeeId}", employee?.id.toString()
-                    )
-                )
-            }) {
-                Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
-            }
 
-            if (SignedInUser.role == SignedInUser.Role.Admin) {
-                IconButton(onClick = { viewModel.toggleDeleteConfirmation() }) {
-                    Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
-                }
-            }
-
-        },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-            )
-    }) { innerPadding ->
+        }
+    ) { innerPadding ->
 
         when (viewModel.employeeLoadState.collectAsState().value) {
             is EmployeeDetailsViewModel.EmployeeLoadState.Error -> {

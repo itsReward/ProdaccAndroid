@@ -18,7 +18,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
@@ -30,6 +33,7 @@ import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.people
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
 import com.prodacc.data.SignedInUser
 
@@ -42,21 +46,26 @@ fun TopBar(
     onClickDelete: () -> Unit,
     saveState: JobCardDetailsViewModel.SaveState
 ) {
-    Column {
+    Column (
+        modifier = Modifier.statusBarsPadding()
+    ) {
+        WebSocketStateIndicator(modifier = Modifier)
         Row(
             modifier = Modifier
-                .shadow(
-                    elevation = 4.dp,
-                    shape = RectangleShape,
-                    clip = false,
-                    ambientColor = Color.Black,
-                    spotColor = Color.Black
-                )
+
                 .background(Color.White)
                 .wrapContentSize()
                 .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(top = 20.dp),
+                .padding(top = 20.dp)
+                .drawBehind {
+                    drawLine(
+                        color = Color.LightGray,
+                        strokeWidth = 2f,
+                        start = Offset(0f, size.height),
+                        end = Offset(size.width, size.height)
+                    )
+                }
+            ,
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
 

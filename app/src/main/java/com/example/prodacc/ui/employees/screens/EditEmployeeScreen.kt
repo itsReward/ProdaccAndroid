@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -50,6 +51,7 @@ import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.contactDetails
 import com.example.designsystem.theme.workIcon
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.employees.viewModels.EditEmployeeViewModel
 import com.example.prodacc.ui.vehicles.viewModels.EditVehicleDetailsViewModel
 import kotlinx.coroutines.delay
@@ -72,30 +74,35 @@ fun EditEmployeeScreen(
 
     AnimatedVisibility(visible = true, enter = slideInHorizontally()) {
         Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        LargeTitleText(name = "Edit Employee")
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            navController.navigateUp()
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Navigate Back"
-                            )
-                        }
-                    },
-                    actions = {
 
-                        Button(onClick = {
-                            viewModel.updateEmployee()
-                        }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
-                            Text(text = "Save")
+            topBar = {
+                Column(modifier = Modifier.statusBarsPadding()){
+                    WebSocketStateIndicator()
+                    TopAppBar(
+                        title = {
+                            LargeTitleText(name = "Edit Employee")
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = {
+                                navController.navigateUp()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Navigate Back"
+                                )
+                            }
+                        },
+                        actions = {
+
+                            Button(onClick = {
+                                viewModel.updateEmployee()
+                            }, modifier = Modifier.clip(RoundedCornerShape(40.dp))) {
+                                Text(text = "Save")
+                            }
                         }
-                    }
-                )
+                    )
+                }
+
             }
         ) { innerPadding ->
 

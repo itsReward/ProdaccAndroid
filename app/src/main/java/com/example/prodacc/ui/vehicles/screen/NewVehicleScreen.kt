@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +42,7 @@ import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.vehicles.viewModels.NewVehicleViewModel
 
 @Composable
@@ -61,14 +63,15 @@ fun NewVehicleScreen(
         modifier = Modifier
             .background(Color.White)
             .fillMaxSize()
+            .systemBarsPadding()
 
 
     ) {
+        WebSocketStateIndicator(modifier = Modifier.statusBarsPadding())
         Row(
             modifier = Modifier
                 //.background(Color.Blue)
                 .wrapContentSize()
-                .systemBarsPadding()
                 .fillMaxWidth()
                 .padding(top = 20.dp),
             verticalAlignment = Alignment.CenterVertically,

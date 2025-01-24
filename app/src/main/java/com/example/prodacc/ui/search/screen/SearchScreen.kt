@@ -1,6 +1,7 @@
 package com.example.prodacc.ui.search.screen
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -26,6 +27,7 @@ import com.example.designsystem.designComponents.VehiclesList
 import com.example.designsystem.theme.LightCardGrey
 import com.example.designsystem.theme.LightGrey
 import com.example.prodacc.navigation.Route
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
@@ -42,6 +44,7 @@ fun SearchScreen(
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = viewModel.refreshing.collectAsState().value)
 
     SwipeRefresh(state = swipeRefreshState, onRefresh = viewModel::refreshData) {
+        WebSocketStateIndicator(modifier = Modifier.systemBarsPadding())
         SearchBar(
             query = viewModel.searchQueryState.collectAsState().value,
             colors = SearchBarDefaults.colors(
