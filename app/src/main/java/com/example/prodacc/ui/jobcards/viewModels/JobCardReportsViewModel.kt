@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel.LoadingState
 import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCardReport
 import com.prodacc.data.repositories.JobCardReportRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,11 +18,12 @@ import java.util.UUID
 class JobCardReportsViewModel(
     private val jobCardReportRepository: JobCardReportRepository = JobCardReportRepository(),
     val jobId: String
-): ViewModel() {
+): ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _jobCardReports = MutableStateFlow<List<JobCardReport>>(emptyList())
     private val jobCardReports = _jobCardReports.asStateFlow()
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
         viewModelScope.launch {
             fetchJobCardReports()
         }
@@ -108,6 +111,7 @@ class JobCardReportsViewModel(
                         is JobCardReportRepository.LoadingResult.SingleEntitySuccess -> {
                             EventBus.emit(EventBus.JobCardEvent.ReportCRUD(UUID.fromString(jobId)))
                             _serviceAdvisorReport.value = response.response
+                            WebSocketInstance.sendWebSocketMessage("UPDATE_JOB_CARD_REPORT", response.response.jobCardId)
                             _serviceAdvisorReportLoadingState.value = LoadingState.Success
                         }
                         is JobCardReportRepository.LoadingResult.Success -> {
@@ -121,6 +125,7 @@ class JobCardReportsViewModel(
                         is JobCardReportRepository.LoadingResult.Error -> _serviceAdvisorReportLoadingState.value = LoadingState.Error(response.message)
                         is JobCardReportRepository.LoadingResult.SingleEntitySuccess -> {
                             EventBus.emit(EventBus.JobCardEvent.ReportCRUD(UUID.fromString(jobId)))
+                            WebSocketInstance.sendWebSocketMessage("NEW_JOB_CARD_REPORT", response.response.jobCardId)
                             _serviceAdvisorReport.value = response.response
                         }
                         is JobCardReportRepository.LoadingResult.Success -> {
@@ -141,6 +146,26 @@ class JobCardReportsViewModel(
         data object Loading: LoadingState()
         data object Success: LoadingState()
         data class Error(val message: String): LoadingState()
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.NewReport -> {
+                if (update.id == UUID.fromString(jobId)){
+                    refreshReports()
+                }
+            }
+            is WebSocketUpdate.UpdateReport -> {
+                if (update.id == UUID.fromString(jobId)){
+                    refreshReports()
+                }
+            }
+            else -> {}
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+        //nothing to do here
     }
 }
 

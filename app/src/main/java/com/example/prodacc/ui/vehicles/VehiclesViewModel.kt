@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prodacc.MyApplication
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.VehicleRepository
@@ -17,7 +19,7 @@ import java.util.UUID
 
 class VehiclesViewModel (
     private val vehicleRepository: VehicleRepository = VehicleRepository()
-) : ViewModel()  {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _vehicles: MutableStateFlow<List<Vehicle>> = MutableStateFlow(emptyList())
     val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
 
@@ -31,6 +33,8 @@ class VehiclesViewModel (
     val activeVehicles: StateFlow<List<Vehicle>> = _activeVehicles
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
+
         viewModelScope.launch {
             EventBus.vehicleEvent.collect{ event ->
                 when(event){
@@ -108,6 +112,25 @@ class VehiclesViewModel (
         data object Success : VehicleLoadState()
         data class Error(val message: String) : VehicleLoadState()
 
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.NewVehicle -> {
+                refreshVehicles()
+            }
+            is WebSocketUpdate.UpdateVehicle -> {
+                refreshVehicles()
+            }
+            is WebSocketUpdate.DeleteVehicle -> {
+                refreshVehicles()
+            }
+            else -> {}
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+        TODO("Not yet implemented")
     }
 }
 

@@ -226,7 +226,8 @@ fun JobCardDetailScreen(
                             onUpdateServiceAdvisor = {},
                             technicians = jobCardTechnicianViewModel.technicians.collectAsState().value,
                             techniciansLoadingState = jobCardTechnicianViewModel.loadingState.collectAsState().value,
-                            techniciansList = employeesViewModel.technicians.collectAsState().value
+                            techniciansList = employeesViewModel.technicians.collectAsState().value,
+                            removeTechnician = jobCardTechnicianViewModel::removeTechnician
                         )
                     }
 

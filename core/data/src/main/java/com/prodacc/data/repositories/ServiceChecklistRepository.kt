@@ -1,6 +1,8 @@
 package com.prodacc.data.repositories
 
 import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.NewServiceChecklist
 import com.prodacc.data.remote.dao.ServiceChecklist
 import java.io.IOException
@@ -38,6 +40,7 @@ class ServiceChecklistRepository {
         return try {
             val response = service.createServiceChecklist(serviceChecklist)
             if (response.isSuccessful){
+                WebSocketInstance.sendWebSocketMessage("NEW_SERVICE_CHECKLIST", serviceChecklist.jobCardId.toString())
                 LoadingResult.Success(response.body())
             } else {
                 LoadingResult.Error(response.message())
@@ -55,6 +58,7 @@ class ServiceChecklistRepository {
         return try {
             val response = service.updateServiceChecklist(id, serviceChecklist)
             if (response.isSuccessful){
+                WebSocketInstance.sendWebSocketMessage("UPDATE_SERVICE_CHECKLIST", serviceChecklist.jobCardId.toString())
                 LoadingResult.Success(response.body())
             } else {
                 LoadingResult.Error(response.message())

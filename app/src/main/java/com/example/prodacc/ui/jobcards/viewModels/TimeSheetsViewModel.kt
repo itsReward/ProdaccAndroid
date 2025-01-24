@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.CreateTimesheet
 import com.prodacc.data.remote.dao.NewTimesheet
 import com.prodacc.data.remote.dao.Timesheet
@@ -23,7 +25,7 @@ class TimeSheetsViewModel(
     private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
     private val signedInUser: SignedInUser = SignedInUser,
     private val jobCardId: String
-) : ViewModel() {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _timeSheets = MutableStateFlow<List<Timesheet>>(emptyList())
     val timeSheets = _timeSheets.asStateFlow()
 
@@ -114,6 +116,8 @@ class TimeSheetsViewModel(
     val isTimesheetEdited= _isTimesheetEdited.asStateFlow()
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
+
         viewModelScope.launch {
             EventBus.events.collect { event ->
                 when (event) {
@@ -390,9 +394,9 @@ class TimeSheetsViewModel(
             }
 
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
-                _newDiagnosticsTimeSheetLoadState.value = LoadingState.Success
                 _diagnosticsTimeSheet.value = response.timesheet
-                fetchTimeSheets()
+                WebSocketInstance.sendWebSocketMessage("NEW_TIMESHEET", response.timesheet.jobCardId)
+                _newDiagnosticsTimeSheetLoadState.value = LoadingState.Success
             }
         }
     }
@@ -418,7 +422,7 @@ class TimeSheetsViewModel(
 
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
                 _controlTimeSheet.value = response.timesheet
-                fetchTimeSheets()
+                WebSocketInstance.sendWebSocketMessage("NEW_TIMESHEET", response.timesheet.jobCardId)
                 _newControlTimesheetLoadState.value = LoadingState.Success
             }
         }
@@ -462,6 +466,7 @@ class TimeSheetsViewModel(
 
                 is TimeSheetRepository.LoadingResult.TimeSheet -> {
                     EventBus.emitTimeSheetEvent(EventBus.TimesheetEvent.NewTimesheet)
+                    WebSocketInstance.sendWebSocketMessage("NEW_TIMESHEET", response.timesheet.jobCardId)
                     _newTimeSheetLoadState.value =
                         LoadingState.Success
                 }
@@ -491,6 +496,7 @@ class TimeSheetsViewModel(
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
                 _diagnosticsTimeSheet.value = response.timesheet
                 _diagnosticsClockOut.value = _diagnosticsTimeSheet.value!!.clockOutDateAndTime
+                WebSocketInstance.sendWebSocketMessage("UPDATE_TIMESHEET", response.timesheet.jobCardId)
                 _updateLoadingState.value =
                     LoadingState.Success
             }
@@ -518,6 +524,7 @@ class TimeSheetsViewModel(
 
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
                 _controlTimeSheet.value = response.timesheet
+                WebSocketInstance.sendWebSocketMessage("UPDATE_TIMESHEET", response.timesheet.jobCardId)
                 _updateLoadingState.value =
                     LoadingState.Success
             }
@@ -545,7 +552,9 @@ class TimeSheetsViewModel(
                 }
 
                 is TimeSheetRepository.LoadingResult.TimeSheet -> {
+                    timeSheetDialogDismissRequest()
                     _timesheet.value = response.timesheet
+                    WebSocketInstance.sendWebSocketMessage("UPDATE_TIMESHEET", response.timesheet.jobCardId)
                     _updateLoadingState.value = LoadingState.Success
                 }
             }
@@ -562,6 +571,7 @@ class TimeSheetsViewModel(
                 is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value = LoadingState.Error(response.message)
                 is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value = LoadingState.Loading
                 is JobCardStatusRepository.LoadingResult.Success -> {
+                    WebSocketInstance.sendWebSocketMessage("JOB_CARD_STATUS_CHANGED", jobCardId)
                     _statusLoadingState.value = LoadingState.Success
                 }
             }
@@ -613,6 +623,32 @@ class TimeSheetsViewModel(
 
     fun resetNewTimeSheetLoadState() {
         _newTimeSheetLoadState.value = LoadingState.Idle
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.NewTimesheet -> {
+                if (update.id == UUID.fromString(jobCardId)){
+                    newTimeSheetCount++
+                    refreshTimeSheets()
+                }
+            }
+            is WebSocketUpdate.UpdateTimesheet -> {
+                if (update.id == UUID.fromString(jobCardId)){
+                    refreshTimeSheets()
+                }
+            }
+            is WebSocketUpdate.DeleteTimesheet -> {
+                if (update.id == UUID.fromString(jobCardId)){
+                    refreshTimeSheets()
+                }
+            }
+            else -> {}
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+       //nothing to do here
     }
 }
 

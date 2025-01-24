@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prodacc.ui.employees.stateClasses.NewEmployeeState
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.NewEmployee
 import com.prodacc.data.repositories.EmployeeRepository
 import kotlinx.coroutines.Dispatchers
@@ -87,6 +88,8 @@ class NewEmployeeViewModel(
                         is EmployeeRepository.LoadingResult.Success -> {
                             // Save was successful
                             EventBus.emitEmployeeEvent(EventBus.EmployeeEvent.EmployeeCreated)
+                            result.employees?.get(0)
+                                ?.let { WebSocketInstance.sendWebSocketMessage("NEW_EMPLOYEE", it.id) }
                             _loadState.value = SaveState.Success
                         }
                         is EmployeeRepository.LoadingResult.Error -> {

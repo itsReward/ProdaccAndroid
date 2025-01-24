@@ -22,6 +22,6 @@ interface JobCardTechniciansService {
     @POST("job-card-technicians/add-technician")
     suspend fun addTechnicianToJobCard(@Body jobCardTechnician: JobCardTechnician): Response<JobCardTechnician>
 
-    @HTTP(method = "DELETE", path = "job-card-technicians/remove-technician", hasBody = true)
-    suspend fun removeTechnicianFromJobCard(@Body jobCardTechnician: JobCardTechnician): Response<String>
+    @HTTP(method = "DELETE", path = "job-card-technicians/remove-technician/", hasBody = true)
+    suspend fun removeTechnicianFromJobCard(@Body jobCardTechnician: JobCardTechnician): Response<Unit>
 }

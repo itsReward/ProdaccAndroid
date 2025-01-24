@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.designsystem.designComponents.ListCategory
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class ClientsViewModel(
     private val clientRepository: ClientRepository = ClientRepository()
-) : ViewModel() {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _clients = MutableStateFlow<List<Client>>(emptyList())
     val clients = _clients.asStateFlow()
 
@@ -24,6 +26,8 @@ class ClientsViewModel(
     val loadState = _loadState.asStateFlow()
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
+
         viewModelScope.launch {
             EventBus.clientEvent.collect{ event ->
                 when(event){
@@ -88,6 +92,32 @@ class ClientsViewModel(
         data object Success : LoadState()
         data class Error(val message: String) : LoadState()
 
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.NewClient -> {
+                viewModelScope.launch {
+                    fetchClients()
+                }
+            }
+            is WebSocketUpdate.UpdateClient -> {
+                viewModelScope.launch {
+                    fetchClients()
+                }
+            }
+            is WebSocketUpdate.DeleteClient -> {
+                viewModelScope.launch {
+                    fetchClients()
+                }
+            }
+            else -> {
+                //do nothing
+            }
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
     }
 
 }

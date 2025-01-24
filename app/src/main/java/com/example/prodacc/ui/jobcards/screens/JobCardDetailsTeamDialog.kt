@@ -59,7 +59,8 @@ fun TeamDialog(
     onUpdateServiceAdvisor: (UUID) -> Unit,
     onUpdateSupervisor: (UUID) -> Unit,
     techniciansLoadingState: JobCardTechnicianViewModel.LoadingState,
-    techniciansList: List<Employee>
+    techniciansList: List<Employee>,
+    removeTechnician: (UUID) -> Unit
 ) {
     Dialog(
         onDismissRequest = onDismiss
@@ -103,7 +104,13 @@ fun TeamDialog(
                 onSelectNewEmployee = onUpdateSupervisor
             )
 
-            TechnicianRow(technicians = technicians, employees = techniciansList, onAddNewTechnician = onAddNewTechnician, techniciansLoadingState = techniciansLoadingState)
+            TechnicianRow(
+                technicians = technicians,
+                employees = techniciansList,
+                onAddNewTechnician = onAddNewTechnician,
+                techniciansLoadingState = techniciansLoadingState,
+                removeTechnician = removeTechnician
+            )
 
 
             Row(
@@ -140,7 +147,7 @@ fun TeamDialogCard(
             color = Color.DarkGray
         )
 
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(50.dp))
@@ -186,7 +193,8 @@ fun TechnicianRow(
     technicians: List<Employee>,
     employees: List<Employee>,
     onAddNewTechnician: (UUID) -> Unit,
-    techniciansLoadingState: JobCardTechnicianViewModel.LoadingState
+    techniciansLoadingState: JobCardTechnicianViewModel.LoadingState,
+    removeTechnician: (UUID) -> Unit
 ) {
     var dropdownMenu by remember {
         mutableStateOf(false)
@@ -200,7 +208,7 @@ fun TechnicianRow(
         ) {
             MediumTitleText("Technicians: ")
 
-            when(SignedInUser.role){
+            when (SignedInUser.role) {
                 SignedInUser.Role.Technician -> {}
                 else -> {
                     TextButton(onClick = { dropdownMenu = true }) {
@@ -217,7 +225,9 @@ fun TechnicianRow(
             DropdownMenu(
                 expanded = dropdownMenu,
                 onDismissRequest = { dropdownMenu = false },
-                modifier = Modifier.padding(10.dp).fillMaxWidth()
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth()
             ) {
                 employees.forEach {
                     DropdownMenuItem(
@@ -238,16 +248,17 @@ fun TechnicianRow(
 
         when (techniciansLoadingState) {
             is JobCardTechnicianViewModel.LoadingState.Loading -> {
-                Row (
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp),
                     horizontalArrangement = Arrangement.Center
-                ){
+                ) {
                     LoadingStateColumn(title = "Loading Technicians")
                 }
 
             }
+
             is JobCardTechnicianViewModel.LoadingState.Error -> {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -256,6 +267,7 @@ fun TechnicianRow(
                     Text(text = techniciansLoadingState.message)
                 }
             }
+
             else -> {
                 FlowRow(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -263,7 +275,7 @@ fun TechnicianRow(
                     //maxItemsInEachRow = 4,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (technicians.isNotEmpty()){
+                    if (technicians.isNotEmpty()) {
                         technicians.forEach {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -277,12 +289,23 @@ fun TechnicianRow(
                                         end = 30.dp,
                                         top = 10.dp,
                                         bottom = 10.dp
-                                    )
-                                ,
+                                    ),
                                 horizontalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
-                                ProfileAvatar(initials = it.employeeName.first().toString() + it.employeeSurname.first().toString())
+                                ProfileAvatar(
+                                    initials = it.employeeName.first()
+                                        .toString() + it.employeeSurname.first().toString()
+                                )
                                 Text(text = it.employeeName, color = Color.DarkGray)
+                                when(SignedInUser.role){
+                                    SignedInUser.Role.Technician -> {}
+                                    SignedInUser.Role.ServiceAdvisor -> {}
+                                    else -> {
+                                        Button(onClick = { removeTechnician(it.id) }) {
+                                            Text(text = "Remove")
+                                        }
+                                    }
+                                }
                             }
 
                         }

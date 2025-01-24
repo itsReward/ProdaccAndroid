@@ -25,6 +25,6 @@ interface ClientService {
     suspend fun updateClient(@Path("id") id: UUID, @Body client: Client): Response<Client>
 
     @DELETE("/clients/delete/{id}")
-    suspend fun deleteClient(@Path("id") id: UUID): Response<String>
+    suspend fun deleteClient(@Path("id") id: UUID): Response<Unit>
 
 }

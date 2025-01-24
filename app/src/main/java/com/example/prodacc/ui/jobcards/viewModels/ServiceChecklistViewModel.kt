@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.NewServiceChecklist
 import com.prodacc.data.remote.dao.ServiceChecklist
 import com.prodacc.data.remote.dao.User
@@ -20,7 +22,7 @@ class ServiceChecklistViewModel(
     private val serviceChecklistRepository: ServiceChecklistRepository = ServiceChecklistRepository(),
     private val signedInUser: User? = SignedInUser.user,
     private val jobCardId: String
-) : ViewModel() {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _serviceChecklist = MutableStateFlow<ServiceChecklist?>(null)
     val serviceChecklist = _serviceChecklist.asStateFlow()
 
@@ -33,6 +35,8 @@ class ServiceChecklistViewModel(
 
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
+
         viewModelScope.launch {
             fetchServiceChecklist()
         }
@@ -130,6 +134,32 @@ class ServiceChecklistViewModel(
         data object Loading : ServiceChecklistLoadingState()
         data object Success : ServiceChecklistLoadingState()
         data class Error(val message: String) : ServiceChecklistLoadingState()
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.NewServiceChecklist -> {
+                if (update.id == UUID.fromString(jobCardId)){
+                    refreshServiceChecklist()
+                }
+            }
+            is WebSocketUpdate.UpdateServiceChecklist -> {
+                if (update.id == UUID.fromString(jobCardId)) {
+                    refreshServiceChecklist()
+                }
+            }
+            is WebSocketUpdate.DeleteServiceChecklist -> {
+                if (update.id == UUID.fromString(jobCardId)) {
+                    _loadingState.value = ServiceChecklistLoadingState.Error("Service Checklist deleted")
+                    refreshServiceChecklist()
+                }
+            }
+            else -> {}
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+        //to do something here
     }
 }
 

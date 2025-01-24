@@ -3,8 +3,10 @@ package com.example.prodacc.ui.clients.viewModels
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.clients.stateClasses.AddClientState
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.NewClient
 import com.prodacc.data.repositories.ClientRepository
@@ -100,6 +102,7 @@ class NewClientViewModel(
                         if (result.client == null) {
                             _saveState.value = SaveState.Error("Returned Null Value")
                         } else {
+                            WebSocketInstance.sendWebSocketMessage("NEW_CLIENT", result.client!!.id)
                             _saveState.value = SaveState.Success(result.client!!)
                         }
 

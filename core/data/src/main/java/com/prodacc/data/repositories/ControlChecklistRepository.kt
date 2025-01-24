@@ -1,6 +1,7 @@
 package com.prodacc.data.repositories
 
 import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.ControlChecklist
 import com.prodacc.data.remote.dao.NewControlChecklist
 import java.io.IOException
@@ -23,8 +24,6 @@ class ControlChecklistRepository {
             ){
                 LoadingResult.Success(null)
             } else {
-                println("Error: rarara" + response.raw().message())
-
                 LoadingResult.Error(response.message())
             }
 
@@ -42,6 +41,7 @@ class ControlChecklistRepository {
         return try {
             val response = service.createControlChecklist(controlChecklist)
             if (response.isSuccessful){
+                WebSocketInstance.sendWebSocketMessage("NEW_CONTROL_CHECKLIST", controlChecklist.jobCardId)
                 LoadingResult.Success(response.body()!!)
             }else {
                 LoadingResult.Error(response.message())
@@ -58,6 +58,7 @@ class ControlChecklistRepository {
         return try {
             val response = service.updateControlChecklist(id , controlChecklist)
             if (response.isSuccessful){
+                WebSocketInstance.sendWebSocketMessage("UPDATE_CONTROL_CHECKLIST", controlChecklist.jobCardId)
                 LoadingResult.Success(response.body()!!)
             }else {
                 LoadingResult.Error(response.message())

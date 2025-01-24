@@ -32,5 +32,5 @@ interface JobCardReportService {
     ): Response<JobCardReport>
 
     @DELETE("/job-card-reports/delete/{id}")
-    suspend fun deleteReport(@Path("id") id: UUID): Response<String>
+    suspend fun deleteReport(@Path("id") id: UUID): Response<Unit>
 }

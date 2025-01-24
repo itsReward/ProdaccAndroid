@@ -25,6 +25,6 @@ interface JobCardService {
     suspend fun updateJobCard(@Path("id") id: UUID, @Body jobCard: JobCard): Response<JobCard>
 
     @DELETE("/jobCards/delete/{id}")
-    suspend fun deleteJobCard(@Path("id") id: UUID): Response<String>
+    suspend fun deleteJobCard(@Path("id") id: UUID): Response<Unit>
 
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.example.prodacc.ui.vehicles.stateClasses.NewVehicleStateClass
 import com.google.android.libraries.mapsplatform.transportation.consumer.model.Vehicle
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.VehicleRepository
@@ -110,8 +111,8 @@ class NewVehicleViewModel(
                         }
                         is VehicleRepository.LoadingResult.SingleEntity -> {
                             EventBus.emitVehicleEvents(EventBus.VehicleEvent.VehicleCreated)
+                            WebSocketInstance.sendWebSocketMessage("NEW_VEHICLE", vehicle.vehicle!!.id)
                             _saveState.value = SaveState.Success(vehicle.vehicle!!)
-                            EventBus.emitVehicleEvents(EventBus.VehicleEvent.VehicleCreated)
                         }
                         is VehicleRepository.LoadingResult.Success -> {
                             //will never happen

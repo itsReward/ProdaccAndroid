@@ -4,11 +4,13 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -95,7 +97,7 @@ fun JobCardDisplayCard(
                         FormattedTime(time = jobCard.jobCardDeadline!!)
                     }
 
-                } else if ( jobCard.jobCardDeadline != null && (jobCard.jobCardDeadline)!! < LocalDateTime.now().toLocalDate().atStartOfDay()) {
+                } else if ( jobCard.jobCardDeadline != null && (jobCard.jobCardDeadline)!! < LocalDateTime.now()) {
                     Row(
                         verticalAlignment = Alignment.Bottom
                     ) {
@@ -105,8 +107,8 @@ fun JobCardDisplayCard(
                             color = Color.Red,
                             modifier = Modifier.padding(top = 2.dp)
                         )
-                        DurationText(timeSpentMinutes = Duration.between(jobCard.jobCardDeadline, LocalDate.now().atStartOfDay()).toMinutes())
-
+                        DurationText(timeSpentMinutes = Duration.between(jobCard.jobCardDeadline, LocalDateTime.now()).toMinutes())
+                        Spacer(modifier = Modifier.width(5.dp))
 
                         FormattedTime(time = jobCard.jobCardDeadline!!)
                     }

@@ -498,7 +498,15 @@ class JobCardViewModel(
     override fun onWebSocketUpdate(update: WebSocketUpdate) {
         viewModelScope.launch {
             when (update) {
-                is WebSocketUpdate.JobCardCreated -> refreshJobCards()
+                is WebSocketUpdate.JobCardCreated -> {
+                    when(SignedInUser.role){
+                        is SignedInUser.Role.Technician -> {
+                            fetchJobCards()
+                        }
+                        else -> refreshJobCards()
+                    }
+
+                }
                 is WebSocketUpdate.JobCardUpdated -> refreshJobCards()
                 is WebSocketUpdate.StatusChanged -> refreshSingleJobCardStatus(update.jobCardId)
                 is WebSocketUpdate.JobCardDeleted -> {
@@ -513,6 +521,22 @@ class JobCardViewModel(
                 is WebSocketUpdate.NewReport -> refreshSingleJobCardReport(update.id)
                 is WebSocketUpdate.UpdateReport -> refreshSingleJobCardReport(update.id)
                 is WebSocketUpdate.DeleteReport -> refreshSingleJobCardReport(update.id)
+                is WebSocketUpdate.NewTechnician -> {
+                    when(SignedInUser.role){
+                        is SignedInUser.Role.Technician -> {
+                            fetchJobCards()
+                        }
+                        else -> refreshJobCards()
+                    }
+                }
+                is WebSocketUpdate.DeleteTechnician -> {
+                    when(SignedInUser.role){
+                        is SignedInUser.Role.Technician -> {
+                            fetchJobCards()
+                        }
+                        else -> refreshJobCards()
+                    }
+                }
 
                 else -> {}
             }

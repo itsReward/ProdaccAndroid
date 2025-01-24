@@ -21,7 +21,7 @@ class JobCardDetailsViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
     private val jobId: String
-):ViewModel(), WebSocketInstance.WebSocketEventListener {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _jobCard = MutableStateFlow<JobCard?>(null)
     val jobCard = _jobCard.asStateFlow()
 
@@ -51,6 +51,7 @@ class JobCardDetailsViewModel(
                         // Refresh job card status when event is received
                         refreshJobCardStatus()
                     }
+
                     is EventBus.JobCardEvent.Error -> {
                         _statusLoadingState.value = LoadingState.Error(event.message)
                     }
@@ -61,9 +62,11 @@ class JobCardDetailsViewModel(
         }
 
         viewModelScope.launch {
-            EventBus.timesheetEvent.collect{ event ->
-                when(event){
-                    EventBus.TimesheetEvent.Error -> _statusLoadingState.value = LoadingState.Error("Encountered error, refresh Job Card")
+            EventBus.timesheetEvent.collect { event ->
+                when (event) {
+                    EventBus.TimesheetEvent.Error -> _statusLoadingState.value =
+                        LoadingState.Error("Encountered error, refresh Job Card")
+
                     EventBus.TimesheetEvent.NewTimesheet -> refreshJobCardStatus()
                 }
             }
@@ -86,7 +89,7 @@ class JobCardDetailsViewModel(
         }
     }
 
-    private fun refreshJobCardStatus(){
+    private fun refreshJobCardStatus() {
         _statusLoadingState.value = LoadingState.Loading
         _jobCardStatusList.value = emptyList()
         viewModelScope.launch {
@@ -95,43 +98,56 @@ class JobCardDetailsViewModel(
     }
 
 
-
     private suspend fun fetchJobCardCardStatus() {
         _statusLoadingState.value = LoadingState.Loading
         try {
-            when(val response = jobCardStatusRepository.getJobCardStatusesByJobId(UUID.fromString(jobId))){
-                is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value = LoadingState.Error(response.message)
-                is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value = LoadingState.Loading
+            when (val response =
+                jobCardStatusRepository.getJobCardStatusesByJobId(UUID.fromString(jobId))) {
+                is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value =
+                    LoadingState.Error(response.message)
+
+                is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value =
+                    LoadingState.Loading
+
                 is JobCardStatusRepository.LoadingResult.Success -> {
                     _jobCardStatusList.value = response.status
                     _statusLoadingState.value = LoadingState.Success
                 }
             }
 
-        }catch (e: Exception){
-            when (e){
+        } catch (e: Exception) {
+            when (e) {
                 is IOException -> LoadingState.Error("Network Error")
-                else -> LoadingState.Error(e.message?:"Unknown Error")
+                else -> LoadingState.Error(e.message ?: "Unknown Error")
             }
         }
     }
 
-    private suspend fun updateJobCardsStatus(newStatus: String){
+    private suspend fun updateJobCardsStatus(newStatus: String) {
         _statusLoadingState.value = LoadingState.Loading
         try {
-            when(val response = jobCardStatusRepository.addNewJobCardStatus(UUID.fromString(jobId), newStatus)){
-                is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value = LoadingState.Error(response.message)
-                is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value = LoadingState.Loading
+            when (val response =
+                jobCardStatusRepository.addNewJobCardStatus(UUID.fromString(jobId), newStatus)) {
+                is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value =
+                    LoadingState.Error(response.message)
+
+                is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value =
+                    LoadingState.Loading
+
                 is JobCardStatusRepository.LoadingResult.Success -> {
                     EventBus.emit(EventBus.JobCardEvent.StatusChanged(UUID.fromString(jobId)))
+                    WebSocketInstance.sendWebSocketMessage(
+                        "JOB_CARD_STATUS_CHANGED",
+                        UUID.fromString(jobId)
+                    )
                     _jobCardStatusList.value = response.status
                     _statusLoadingState.value = LoadingState.Success
                 }
             }
-        } catch (e: Exception){
-            when (e){
+        } catch (e: Exception) {
+            when (e) {
                 is IOException -> LoadingState.Error("Network Error")
-                else -> LoadingState.Error(e.message?:"Unknown Error")
+                else -> LoadingState.Error(e.message ?: "Unknown Error")
             }
         } finally {
             fetchJobCardCardStatus()
@@ -141,13 +157,12 @@ class JobCardDetailsViewModel(
     private val _deleteJobCardConfirmation = MutableStateFlow(false)
     val deleteJobCardConfirmation = _deleteJobCardConfirmation.asStateFlow()
 
-    fun setDeleteJobCardConfirmation(value: Boolean){
+    fun setDeleteJobCardConfirmation(value: Boolean) {
         _deleteJobCardConfirmation.value = value
     }
 
 
-
-    private fun updateJobCard(update: JobCard.() -> JobCard){
+    private fun updateJobCard(update: JobCard.() -> JobCard) {
         _jobCard.value = _jobCard.value?.update()
         saveJobCard()
     }
@@ -160,8 +175,13 @@ class JobCardDetailsViewModel(
     }
 
     fun updateEstimatedTimeOfCompletion(newDateTime: LocalDateTime) {
-        if (_jobCard.value?.jobCardDeadline == null){
-            updateJobCard { copy(estimatedTimeOfCompletion = newDateTime, jobCardDeadline = newDateTime) }
+        if (_jobCard.value?.jobCardDeadline == null) {
+            updateJobCard {
+                copy(
+                    estimatedTimeOfCompletion = newDateTime,
+                    jobCardDeadline = newDateTime
+                )
+            }
         } else {
             updateJobCard { copy(estimatedTimeOfCompletion = newDateTime) }
         }
@@ -186,59 +206,76 @@ class JobCardDetailsViewModel(
         }
     }
 
-    private suspend fun fetchJobCard(){
+    private suspend fun fetchJobCard() {
         _loadingState.value = LoadingState.Loading
         try {
-            when (val response = jobCardRepository.getJobCard(UUID.fromString(jobId))){
+            when (val response = jobCardRepository.getJobCard(UUID.fromString(jobId))) {
                 is JobCardRepository.LoadingResult.Error -> {
                     _loadingState.value = LoadingState.Error(response.message)
                 }
+
                 is JobCardRepository.LoadingResult.ErrorSingleMessage -> {
                     _loadingState.value = LoadingState.Error(response.message)
                 }
+
                 is JobCardRepository.LoadingResult.NetworkError -> {
                     _loadingState.value = LoadingState.Error("Network Error")
                 }
+
                 is JobCardRepository.LoadingResult.SingleEntity -> {
                     _jobCard.value = response.jobCard
                     _loadingState.value = LoadingState.Success
                 }
+
                 is JobCardRepository.LoadingResult.Success -> {
                     //will never happen for as single entity
                 }
             }
 
-        } catch (e: Exception){
+        } catch (e: Exception) {
             when (e) {
                 is IOException -> {
                     _loadingState.value = LoadingState.Error(e.message ?: "Network Error")
                 }
-                else -> _loadingState.value = LoadingState.Error(e.message?:"Unknown Error")
+
+                else -> _loadingState.value = LoadingState.Error(e.message ?: "Unknown Error")
             }
         }
     }
 
 
-    fun saveJobCard(){
+    fun saveJobCard() {
         viewModelScope.launch {
             _savingState.value = SaveState.Saving
             try {
-                when (val response = jobCardRepository.updateJobCard(_jobCard.value!!.id, _jobCard.value!!)){
-                    is JobCardRepository.LoadingResult.Error -> _savingState.value = SaveState.Error(response.message)
-                    is JobCardRepository.LoadingResult.ErrorSingleMessage -> _savingState.value = SaveState.Error(response.message)
-                    is JobCardRepository.LoadingResult.NetworkError -> _savingState.value = SaveState.Error("Network Error")
+                when (val response =
+                    jobCardRepository.updateJobCard(_jobCard.value!!.id, _jobCard.value!!)) {
+                    is JobCardRepository.LoadingResult.Error -> _savingState.value =
+                        SaveState.Error(response.message)
+
+                    is JobCardRepository.LoadingResult.ErrorSingleMessage -> _savingState.value =
+                        SaveState.Error(response.message)
+
+                    is JobCardRepository.LoadingResult.NetworkError -> _savingState.value =
+                        SaveState.Error("Network Error")
+
                     is JobCardRepository.LoadingResult.SingleEntity -> {
                         _jobCard.value = response.jobCard
-
+                        WebSocketInstance.sendWebSocketMessage(
+                            "UPDATE_JOB_CARD",
+                            response.jobCard.id
+                        )
                         _savingState.value = SaveState.Success
                     }
-                    is JobCardRepository.LoadingResult.Success -> _savingState.value = SaveState.Error("Returned list instead of single entity")
+
+                    is JobCardRepository.LoadingResult.Success -> _savingState.value =
+                        SaveState.Error("Returned list instead of single entity")
                 }
 
-            } catch (e: Exception){
-                when (e){
+            } catch (e: Exception) {
+                when (e) {
                     is IOException -> _savingState.value = SaveState.Error("Network Error")
-                    else -> _savingState.value = SaveState.Error(e.message?:"Unknown Error")
+                    else -> _savingState.value = SaveState.Error(e.message ?: "Unknown Error")
                 }
             } finally {
                 fetchJobCardCardStatus()
@@ -253,8 +290,8 @@ class JobCardDetailsViewModel(
             try {
                 jobCardRepository.deleteJobCard(jobCard.value!!.id)
                 EventBus.emit(EventBus.JobCardCRUDEvent.JobCardDeleted(jobCard.value!!.id))
-                WebSocketInstance.sendWebSocketMessage("DELETE_JOB_CARD", jobCard.value!!.id )
-            } catch (e:Exception) {
+                WebSocketInstance.sendWebSocketMessage("DELETE_JOB_CARD", jobCard.value!!.id)
+            } catch (e: Exception) {
                 throw e
             }
 
@@ -272,23 +309,23 @@ class JobCardDetailsViewModel(
         }
     }
 
-    sealed class SaveState{
-        data object Idle: SaveState()
-        data object Saving: SaveState()
-        data object Success: SaveState()
-        data class Error(val message: String): SaveState()
+    sealed class SaveState {
+        data object Idle : SaveState()
+        data object Saving : SaveState()
+        data object Success : SaveState()
+        data class Error(val message: String) : SaveState()
     }
 
-    sealed class LoadingState{
-        data object Idle: LoadingState()
-        data object Loading: LoadingState()
-        data object Success: LoadingState()
-        data class Error(val message: String): LoadingState()
+    sealed class LoadingState {
+        data object Idle : LoadingState()
+        data object Loading : LoadingState()
+        data object Success : LoadingState()
+        data class Error(val message: String) : LoadingState()
     }
 
     override fun onWebSocketUpdate(update: WebSocketUpdate) {
         viewModelScope.launch {
-            when(update){
+            when (update) {
                 is WebSocketUpdate.JobCardCreated -> refreshJobCard()
                 is WebSocketUpdate.JobCardUpdated -> refreshJobCard()
                 is WebSocketUpdate.StatusChanged -> refreshStatusList()
@@ -299,7 +336,7 @@ class JobCardDetailsViewModel(
     }
 
     override fun onWebSocketError(error: Throwable) {
-        _loadingState.value = LoadingState.Error(error.message?:"Unknown Error")
+        _loadingState.value = LoadingState.Error(error.message ?: "Unknown Error")
     }
 }
 

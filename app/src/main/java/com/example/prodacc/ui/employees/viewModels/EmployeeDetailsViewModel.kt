@@ -8,6 +8,8 @@ import com.example.designsystem.theme.female
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.example.prodacc.ui.search.screen.SearchViewModel.LoadingState
 import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.repositories.EmployeeRepository
@@ -24,7 +26,7 @@ class EmployeeDetailsViewModel (
     private val employeeRepository: EmployeeRepository = EmployeeRepository(),
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository()
-): ViewModel() {
+): ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _employee = MutableStateFlow<Employee?>(null)
     val employee = _employee.asStateFlow()
 
@@ -44,6 +46,8 @@ class EmployeeDetailsViewModel (
     var jobCards = _jobCards.asStateFlow()
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
+
         _jobCardLoadState.value = LoadingState.Loading
         _employeeLoadState.value = EmployeeLoadState.Loading
         viewModelScope.launch {
@@ -154,6 +158,7 @@ class EmployeeDetailsViewModel (
                 when (val result = employeeRepository.deleteEmployee(UUID.fromString(employeeId))) {
                     EmployeeRepository.LoadingResult.Success() -> {
                         EventBus.emitEmployeeEvent(EventBus.EmployeeEvent.EmployeeDeleted)
+                        WebSocketInstance.sendWebSocketMessage("DELETE_EMPLOYEE", UUID.fromString(employeeId))
                         _deleteState.value = DeleteState.Success
                     }
                     is EmployeeRepository.LoadingResult.Error -> {
@@ -211,6 +216,28 @@ class EmployeeDetailsViewModel (
         data object Loading : DeleteState()
         data object Success : DeleteState()
         data class Error(val message: String) : DeleteState()
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.UpdateEmployee -> {
+                if(update.id == UUID.fromString(employeeId)){
+                    refreshEmployee()
+                }
+            }
+            is WebSocketUpdate.DeleteEmployee -> {
+                if(update.id == UUID.fromString(employeeId)){
+                    _employeeLoadState.value = EmployeeLoadState.Error("Employee deleted")
+                }
+            }
+            else -> {
+                // Ignore
+            }
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+
     }
 
 }

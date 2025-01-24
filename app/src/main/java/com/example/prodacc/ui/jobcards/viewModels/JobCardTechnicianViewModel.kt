@@ -32,6 +32,8 @@ class JobCardTechnicianViewModel(
 
 
     init{
+        WebSocketInstance.addWebSocketListener(this)
+
         _loadingState.value = LoadingState.Loading
         viewModelScope.launch {
             fetchJobCardTechnicians()
@@ -49,7 +51,7 @@ class JobCardTechnicianViewModel(
                     is JobCardTechnicianRepository.LoadingResult.Error -> _loadingState.value = LoadingState.Error(response.message)
                     is JobCardTechnicianRepository.LoadingResult.Loading -> _loadingState.value = LoadingState.Loading
                     is JobCardTechnicianRepository.LoadingResult.Success -> {
-                        refreshJobCardTechnicians()
+                        WebSocketInstance.sendWebSocketMessage("NEW_JOB_CARD_TECHNICIAN", jobCardId)
                     }
                 }
             } catch (e: Exception) {
@@ -61,6 +63,31 @@ class JobCardTechnicianViewModel(
         }
 
 
+    }
+
+    fun removeTechnician(technicianId: UUID){
+        _loadingState.value = LoadingState.Loading
+        viewModelScope.launch {
+            try {
+                val currentTechnicians = _technicians.value.toMutableList()
+                when (val response = jobCardTechnicianRepository.removeTechnician(
+                    JobCardTechnician(jobCardId = UUID.fromString(jobCardId), technicianId = technicianId)
+                )
+                ){
+                    is JobCardTechnicianRepository.LoadingResult.Error -> _loadingState.value = LoadingState.Error(response.message)
+                    is JobCardTechnicianRepository.LoadingResult.Loading -> _loadingState.value = LoadingState.Loading
+                    is JobCardTechnicianRepository.LoadingResult.Success -> {
+                        WebSocketInstance.sendWebSocketMessage("DELETE_JOB_CARD_TECHNICIAN", jobCardId)
+                        _loadingState.value = LoadingState.Success
+                    }
+                }
+            } catch (e: Exception) {
+                when (e){
+                    is IOException ->_loadingState.value = LoadingState.Error("Network Error")
+                    else -> _loadingState.value = LoadingState.Error(e.message ?: "Unknown Error")
+                }
+            }
+        }
     }
 
 
@@ -85,11 +112,12 @@ class JobCardTechnicianViewModel(
     private suspend fun fetchTechnicians() {
         try {
             try{
+                val tempTechnicians = mutableListOf<Employee>()
                 _jobCardTechnicians.value.forEach { technicianId ->
                     try {
                         when (val response = employeeRepository.getEmployee(technicianId)){
-                            is EmployeeRepository.LoadingResult.EmployeeEntity -> {
-                                _technicians.value += response.employee
+                            is EmployeeRepository.LoadingResult.EmployeeEntity ->{
+                                tempTechnicians.add(response.employee)
                             }
                             is EmployeeRepository.LoadingResult.Error -> {
                                 _loadingState.value = LoadingState.Error(response.message)
@@ -108,7 +136,7 @@ class JobCardTechnicianViewModel(
                         }
                     }
                 }
-                println(technicians)
+                _technicians.value = tempTechnicians
                 _loadingState.value = LoadingState.Success
             } catch (e:Exception) {
                 _loadingState.value = LoadingState.Error(e.message?:"No technicians found")

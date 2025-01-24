@@ -25,6 +25,6 @@ interface EmployeeService {
     suspend fun updateEmployee(@Path("id") id: UUID, @Body employee: NewEmployee): Response<Employee>
 
     @DELETE("/employees/delete/{id}")
-    suspend fun deleteEmployee(@Path("id") id: String): Response<String>
+    suspend fun deleteEmployee(@Path("id") id: String): Response<Unit>
 
 }

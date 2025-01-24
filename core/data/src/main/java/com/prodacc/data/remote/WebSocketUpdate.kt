@@ -7,7 +7,7 @@ sealed class WebSocketUpdate {
     data class JobCardDeleted(val jobCardId: UUID) : WebSocketUpdate()
     data class JobCardUpdated(val jobCardId: UUID) : WebSocketUpdate()
 
-    data class StatusChanged(val jobCardId: UUID, val newStatus: String) : WebSocketUpdate()
+    data class StatusChanged(val jobCardId: UUID) : WebSocketUpdate()
 
     data class NewReport(val id: UUID): WebSocketUpdate()
     data class UpdateReport(val id: UUID): WebSocketUpdate()

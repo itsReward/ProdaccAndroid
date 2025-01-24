@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -60,9 +61,9 @@ fun WebSocketStateIndicator(modifier: Modifier = Modifier){
                         verticalAlignment = Alignment.CenterVertically
                     ){
                         Text(
-                            text = "Connected",
+                            text = "Online",
                             color = Blue50,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(end = 5.dp)
                         )
                     }
@@ -80,14 +81,13 @@ fun WebSocketStateIndicator(modifier: Modifier = Modifier){
                 ){
                     Text(
                         text = "Disconnected, ",
-                        color = Blue50,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(end = 5.dp)
                     )
                     Text(
                         text = "click to reconnect",
                         color = Blue50,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier
                             .padding(end = 5.dp)
                             .clickable(onClick = { WebSocketInstance.reconnectWebSocket() }),
@@ -109,13 +109,13 @@ fun WebSocketStateIndicator(modifier: Modifier = Modifier){
                     Text(
                         text = "Connection Error, ",
                         color = Blue50,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(end = 5.dp)
                     )
                     Text(
                         text = "refresh",
                         color = Blue50,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier
                             .padding(end = 5.dp)
                             .clickable(onClick = { WebSocketInstance.reconnectWebSocket() }),
@@ -149,8 +149,8 @@ fun WebSocketStateIndicator(modifier: Modifier = Modifier){
                     ) {
                         Text(
                             text = "Reconnecting, ",
-                            color = Blue50,
-                            fontWeight = FontWeight.Bold,
+                            color = Color.DarkGray,
+                            fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(end = 5.dp)
                         )
                     }

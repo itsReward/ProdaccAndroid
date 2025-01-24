@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.ControlChecklist
 import com.prodacc.data.remote.dao.NewControlChecklist
 import com.prodacc.data.remote.dao.User
@@ -20,7 +22,7 @@ class ControlChecklistViewModel(
     private val controlChecklistRepository: ControlChecklistRepository = ControlChecklistRepository(),
     private val signedInUser: User = SignedInUser.user!!,
     private val jobCardId: String
-): ViewModel() {
+): ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _controlChecklist = MutableStateFlow<ControlChecklist?>(null)
     val controlChecklist = _controlChecklist.asStateFlow()
 
@@ -31,6 +33,7 @@ class ControlChecklistViewModel(
     val savingState = _savingState.asStateFlow()
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
         viewModelScope.launch {
             fetchControlChecklist()
         }
@@ -119,6 +122,26 @@ class ControlChecklistViewModel(
         data object Success : ControlChecklistLoadingState()
         data class Error(val message: String) : ControlChecklistLoadingState()
 
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.NewControlChecklist -> {
+                if (update.id == UUID.fromString(jobCardId)){
+                    refreshControlChecklist()
+                }
+            }
+            is WebSocketUpdate.UpdateControlChecklist -> {
+                if (update.id == UUID.fromString(jobCardId)){
+                    refreshControlChecklist()
+                }
+            }
+            else -> {}
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+        //nothing to do here
     }
 
 }

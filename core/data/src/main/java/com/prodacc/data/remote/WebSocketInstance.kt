@@ -103,10 +103,8 @@ object WebSocketInstance {
                             webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.JobCardUpdated(id)) }
                         }
                         "JOB_CARD_STATUS_CHANGED" -> {
-                            val data = JSONObject(jsonObject.getString("data"))
-                            val id = UUID.fromString(data.getString("id"))
-                            val status = data.getString("status")
-                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.StatusChanged(id, status)) }
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.StatusChanged(id)) }
                         }
                         "NEW_JOB_CARD_REPORT" -> {
                             val id = UUID.fromString(jsonObject.getString("data"))

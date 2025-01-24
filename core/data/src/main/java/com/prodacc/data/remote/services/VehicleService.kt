@@ -26,7 +26,7 @@ interface VehicleService {
     suspend fun updateVehicle(@Path("id") id: UUID, @Body vehicle: NewVehicle): Response<Vehicle>
 
     @DELETE("/vehicles/delete/{id}")
-    suspend fun deleteVehicle(@Path("id") id: UUID): Response<String>
+    suspend fun deleteVehicle(@Path("id") id: UUID): Response<Unit>
 
     @GET("/vehicles/search")
     suspend fun searchVehicles(

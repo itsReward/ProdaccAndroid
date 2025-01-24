@@ -8,6 +8,8 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.designsystem.designComponents.EmployeeListCategory
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.repositories.EmployeeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +19,7 @@ import kotlinx.coroutines.launch
 
 class EmployeesViewModel(
     private val employeeRepository: EmployeeRepository = EmployeeRepository()
-) : ViewModel() {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _employees = MutableStateFlow<List<Employee>>(emptyList())
     val employees = _employees.asStateFlow()
 
@@ -31,6 +33,8 @@ class EmployeesViewModel(
     val loadState = _loadState.asStateFlow()
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
+
         _loadState.value = LoadState.Loading
 
         viewModelScope.launch {
@@ -83,6 +87,25 @@ class EmployeesViewModel(
         data object Success : LoadState()
         data class Error(val message: String) : LoadState()
 
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.NewEmployee -> {
+                refreshEmployees()
+            }
+            is WebSocketUpdate.UpdateEmployee -> {
+                refreshEmployees()
+            }
+            is WebSocketUpdate.DeleteEmployee -> {
+                refreshEmployees()
+            }
+            else -> {}
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+        //do nothing
     }
 }
 

@@ -32,5 +32,5 @@ interface TimesheetService {
     ): Response<Timesheet>
 
     @DELETE("timesheets/delete/{id}")
-    suspend fun deleteTimesheet(@Path("id") timesheetId: UUID): Response<String>
+    suspend fun deleteTimesheet(@Path("id") timesheetId: UUID): Response<Unit>
 }

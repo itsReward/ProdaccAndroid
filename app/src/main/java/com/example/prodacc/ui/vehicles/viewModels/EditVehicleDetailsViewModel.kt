@@ -9,6 +9,8 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.clients.viewModels.ClientsViewModel.LoadState
 import com.example.prodacc.ui.clients.viewModels.EditClientDetailsViewModel
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.NewVehicle
 import com.prodacc.data.remote.dao.Vehicle
@@ -24,7 +26,7 @@ class EditVehicleDetailsViewModel(
     private val vehicleRepository: VehicleRepository = VehicleRepository(),
     private val clientRepository: ClientRepository = ClientRepository(),
     private val vehicleId: String
-): ViewModel() {
+): ViewModel(), WebSocketInstance.WebSocketEventListener {
     // State for the vehicle details
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
     val vehicle = _vehicle.asStateFlow()
@@ -62,6 +64,8 @@ class EditVehicleDetailsViewModel(
 
     // Initialize by fetching vehicle details
     init {
+        WebSocketInstance.addWebSocketListener(this)
+
         viewModelScope.launch {
             fetchVehicle()
             fetchClients()
@@ -216,6 +220,7 @@ class EditVehicleDetailsViewModel(
                     when (result) {
                         is VehicleRepository.LoadingResult.SingleEntity -> {
                             _updateState.value = UpdateState.Success
+                            WebSocketInstance.sendWebSocketMessage("UPDATE_VEHICLE", result.vehicle!!.id)
                             _vehicle.value = result.vehicle
                         }
                         is VehicleRepository.LoadingResult.Error -> {
@@ -267,6 +272,29 @@ class EditVehicleDetailsViewModel(
         data object Loading : ClientLoadState()
         data object Success : ClientLoadState()
         data class Error (val message: String) : ClientLoadState()
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.UpdateVehicle -> {
+                if(update.id == UUID.fromString(vehicleId)){
+                    viewModelScope.launch {
+                        fetchVehicle()
+                    }
+                }
+            }
+            is WebSocketUpdate.DeleteVehicle -> {
+                if(update.id == UUID.fromString(vehicleId)){
+                    _loadState.value = LoadState.Error("Vehicle deleted")
+                }
+            }
+            else -> {
+            }
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+        //nothing to do here
     }
 }
 

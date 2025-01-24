@@ -7,6 +7,8 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +21,7 @@ import java.util.UUID
 class ClientDetailsViewModel(
     private val clientRepository: ClientRepository = ClientRepository(),
     private val clientId: String
-): ViewModel() {
+): ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _client = MutableStateFlow<Client?>(null)
     val client = _client.asStateFlow()
 
@@ -33,6 +35,8 @@ class ClientDetailsViewModel(
     val deleteClientConfirmation = _deleteClientConfirmation.asStateFlow()
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
+
         viewModelScope.launch {
             EventBus.vehicleEvent.collect{ event ->
                 when (event){
@@ -120,10 +124,10 @@ class ClientDetailsViewModel(
             _deleteState.value = DeleteState.Loading
             try {
                 val clientId = UUID.fromString(clientId)
-                val result = clientRepository.deleteClient(clientId)
-                when (result) {
+                when (val result = clientRepository.deleteClient(clientId)) {
                     is ClientRepository.LoadingResult.Success -> {
                         EventBus.emitClientEvent(EventBus.ClientEvent.ClientDeleted)
+                        WebSocketInstance.sendWebSocketMessage("DELETE_CLIENT", clientId)
                         _deleteState.value = DeleteState.Success
 
                     }
@@ -153,6 +157,27 @@ class ClientDetailsViewModel(
         data object Loading: LoadState()
         data object Success: LoadState()
         data class Error(val message: String): LoadState()
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.UpdateClient -> {
+                if (update.id == UUID.fromString(clientId)){
+                    refreshClient()
+                }
+            }
+            is WebSocketUpdate.DeleteClient -> {
+                if (update.id == UUID.fromString(clientId)){
+                    _loadState.value = LoadState.Error("Client Deleted")
+                }
+            }
+            else -> {}
+
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+
     }
 }
 class ClientDetailsViewModelFactory(private val employeeId: String) : ViewModelProvider.Factory {

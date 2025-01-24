@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.NewStateChecklist
 import com.prodacc.data.remote.dao.StateChecklist
 import com.prodacc.data.remote.dao.User
@@ -20,7 +22,7 @@ import java.util.UUID
 class StateChecklistViewModel(
     private val stateChecklistRepository: StateChecklistRepository = StateChecklistRepository(),
     private val jobCardId: String
-) : ViewModel() {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _stateChecklist = MutableStateFlow<StateChecklist?>(null)
     val stateChecklist: StateFlow<StateChecklist?> = _stateChecklist
 
@@ -45,6 +47,8 @@ class StateChecklistViewModel(
 
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
+
         viewModelScope.launch {
             fetchStateChecklist()
         }
@@ -133,7 +137,9 @@ class StateChecklistViewModel(
                     is StateChecklistRepository.LoadingResults.Success -> SaveState.Success
                 }
                 when (_savingState.value) {
-                    is SaveState.Success -> fetchStateChecklist()
+                    is SaveState.Success -> {
+                        fetchStateChecklist()
+                    }
                     else -> {}
                 }
 
@@ -168,6 +174,32 @@ class StateChecklistViewModel(
         data object Loading : StateChecklistLoadingState()
         data class Error(val message: String) : StateChecklistLoadingState()
         data object Success : StateChecklistLoadingState()
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        when(update){
+            is WebSocketUpdate.NewStateChecklist -> {
+                if (update.id == UUID.fromString(jobCardId)){
+                    refreshStateChecklist()
+                }
+            }
+            is WebSocketUpdate.UpdateStateChecklist -> {
+                if (update.id == UUID.fromString(jobCardId)){
+                    refreshStateChecklist()
+                }
+            }
+            is WebSocketUpdate.DeleteStateChecklist -> {
+                if (update.id == UUID.fromString(jobCardId)){
+                    _loadingState.value = StateChecklistLoadingState.Error("State Checklist has been deleted")
+                    _stateChecklist.value = null
+                }
+            }
+            else -> {}
+        }
+    }
+
+    override fun onWebSocketError(error: Throwable) {
+       //nothing to do here
     }
 }
 

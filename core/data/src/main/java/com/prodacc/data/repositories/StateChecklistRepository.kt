@@ -1,6 +1,7 @@
 package com.prodacc.data.repositories
 
 import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.NewStateChecklist
 import com.prodacc.data.remote.dao.StateChecklist
 import java.io.IOException
@@ -33,6 +34,7 @@ class StateChecklistRepository {
         return try {
             val response = service.createStateChecklist(checklist)
             if (response.isSuccessful){
+                WebSocketInstance.sendWebSocketMessage("NEW_STATE_CHECKLIST", checklist.jobCardId.toString())
                 LoadingResults.Success(response.body()!!)
             } else {
                 LoadingResults.Error(response.message())
@@ -49,6 +51,7 @@ class StateChecklistRepository {
         return try {
             val response = service.updateStateChecklist(id, checklist)
             if (response.isSuccessful){
+                WebSocketInstance.sendWebSocketMessage("UPDATE_STATE_CHECKLIST", checklist.jobCardId.toString())
                 LoadingResults.Success(response.body()!!)
             } else {
                 LoadingResults.Error(response.message())

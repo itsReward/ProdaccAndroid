@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
+import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -125,6 +126,7 @@ class EditClientDetailsViewModel(
                         result.client?.let {
                             _client.value = it
                             refreshClient()
+                            WebSocketInstance.sendWebSocketMessage("UPDATE_CLIENT", it.id)
                             _loadingState.value = LoadingState.Success
                         } ?: run {
                             _loadingState.value = LoadingState.Error("Failed to update client")

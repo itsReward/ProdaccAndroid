@@ -60,6 +60,25 @@ class JobCardTechnicianRepository {
         }
     }
 
+    suspend fun removeTechnician(jobCardTechnician: JobCardTechnician): LoadingResult {
+        return try {
+            val response = service.removeTechnicianFromJobCard(jobCardTechnician)
+
+            if (response.isSuccessful) {
+                LoadingResult.Success(emptyList())
+            } else {
+                LoadingResult.Error(response.errorBody()?.string()?:"Unknown Error")
+            }
+        }catch (e: Exception){
+            when (e){
+                is IOException -> {
+                    LoadingResult.Error("Network Error")
+                }
+                else -> LoadingResult.Error(e.message?:"Unknown Error")
+            }
+        }
+    }
+
     sealed class LoadingResult {
         data class Success(val list: List<UUID>) : LoadingResult()
         data class Error(val message: String) : LoadingResult()
