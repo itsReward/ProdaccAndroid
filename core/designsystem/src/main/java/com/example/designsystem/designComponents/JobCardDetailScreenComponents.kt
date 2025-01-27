@@ -324,18 +324,18 @@ fun DurationText(timeSpentMinutes: Long, color: Color = Color.Black) {
             append("$days day${if (days > 1) "s" else ""} ")
         }
         if (hours > 0) {
-            append("$hours hour${if (hours > 1) "s" else ""} ")
+            append("$hours hr${if (hours > 1) "s" else ""} ")
         }
         if (minutes > 0 || days.toInt() == 0 && hours == 0) { // Show minutes if there are any, or if no days/hours
-            append("$minutes minute${if (minutes > 1) "s" else ""}")
+            append("$minutes min${if (minutes > 1) "s" else ""}")
         }
         if (this.isEmpty()) {
-            append("0 minutes") // Handle zero duration case
+            append("0 min") // Handle zero duration case
         }
     }
 
     Text(
-        text = " - $formattedDuration",
+        text = "$formattedDuration",
         style = MaterialTheme.typography.bodyLarge,
         color = color,
         fontWeight = FontWeight.Bold

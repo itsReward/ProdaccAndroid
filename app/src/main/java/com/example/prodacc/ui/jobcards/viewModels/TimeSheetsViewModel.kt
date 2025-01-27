@@ -1,5 +1,6 @@
 package com.example.prodacc.ui.jobcards.viewModels
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -29,6 +30,28 @@ class TimeSheetsViewModel(
     private val _timeSheets = MutableStateFlow<List<Timesheet>>(emptyList())
     val timeSheets = _timeSheets.asStateFlow()
 
+    // Diagnostics timesheet states
+    private val _diagnosticsLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val diagnosticsLoadingState = _diagnosticsLoadingState.asStateFlow()
+
+    private val _savingDiagnosticsState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val savingDiagnosticsState = _savingDiagnosticsState.asStateFlow()
+
+    // Control timesheet states
+    private val _controlLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val controlLoadingState = _controlLoadingState.asStateFlow()
+
+    private val _savingControlState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val savingControlState = _savingControlState.asStateFlow()
+
+    // Regular timesheet states
+    private val _newTimeSheetState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val newTimeSheetState = _newTimeSheetState.asStateFlow()
+
+    private val _updatingTimeSheetState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val updatingTimeSheetState = _updatingTimeSheetState.asStateFlow()
+
+
     private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val loadingState = _loadingState.asStateFlow()
 
@@ -49,13 +72,13 @@ class TimeSheetsViewModel(
     private val _diagnosticsTimeSheet = MutableStateFlow<Timesheet?>(null)
     val diagnosticsTimeSheet = _diagnosticsTimeSheet.asStateFlow()
 
-    private val _diagnosticsClockIn = MutableStateFlow<LocalDateTime?>(_diagnosticsTimeSheet.asStateFlow().value?.clockInDateAndTime)
+    private val _diagnosticsClockIn = MutableStateFlow(_diagnosticsTimeSheet.asStateFlow().value?.clockInDateAndTime)
     val diagnosticsClockIn = _diagnosticsClockIn.asStateFlow()
 
-    private val _diagnosticsClockOut = MutableStateFlow<LocalDateTime?>(_diagnosticsTimeSheet.asStateFlow().value?.clockOutDateAndTime)
+    private val _diagnosticsClockOut = MutableStateFlow(_diagnosticsTimeSheet.asStateFlow().value?.clockOutDateAndTime)
     val diagnosticsClockOut = _diagnosticsClockOut.asStateFlow()
 
-    private val _diagnosticsReport = MutableStateFlow<String>(_diagnosticsTimeSheet.asStateFlow().value?.report ?: "")
+    private val _diagnosticsReport = MutableStateFlow(_diagnosticsTimeSheet.asStateFlow().value?.report ?: "")
     val diagnosticsReport = _diagnosticsReport.asStateFlow()
 
     private val _isDiagnosticsReportEdited = MutableStateFlow(false)
@@ -444,52 +467,51 @@ class TimeSheetsViewModel(
         }
 
         if (_newTimeSheet.value.sheetTitle == null || _newTimeSheet.value.clockInDateAndTime == null) {
-            _newTimeSheetLoadState.value = LoadingState.Error("Missing required fields")
+            _newTimeSheetState.value = LoadingState.Error("Missing required fields")
         } else {
-            _newTimeSheetLoadState.value = LoadingState.Loading
+            _newTimeSheetState.value = LoadingState.Loading
             when (val response =
                 timeSheetRepository.addTimeSheet(_newTimeSheet.value.toNewTimesheet())) {
                 is TimeSheetRepository.LoadingResult.Error -> {
                     println(response.message)
-                    _newTimeSheetLoadState.value = LoadingState.Error(response.message)
+                    _newTimeSheetState.value = LoadingState.Error(response.message)
                 }
 
                 is TimeSheetRepository.LoadingResult.Message -> {
                     println(response.message)
-                    _newTimeSheetLoadState.value = LoadingState.Error("Returned Message")
+                    _newTimeSheetState.value = LoadingState.Error("Returned Message")
                 }
 
                 is TimeSheetRepository.LoadingResult.Success -> {
-                    _newTimeSheetLoadState.value =
+                    _newTimeSheetState.value =
                         LoadingState.Error("Returned list instead of Timesheet")
                 }
 
                 is TimeSheetRepository.LoadingResult.TimeSheet -> {
                     EventBus.emitTimeSheetEvent(EventBus.TimesheetEvent.NewTimesheet)
                     WebSocketInstance.sendWebSocketMessage("NEW_TIMESHEET", response.timesheet.jobCardId)
-                    _newTimeSheetLoadState.value =
+                    _newTimeSheetState.value =
                         LoadingState.Success
+
                 }
             }
         }
     }
 
     private suspend fun updateDiagnosticsTimeSheet(timeSheet: Timesheet){
-        _updateLoadingState.value = LoadingState.Loading
+        _savingDiagnosticsState.value = LoadingState.Loading
         when (val response =
             timeSheetRepository.updateTimesheet(timeSheet.id, timeSheet)) {
             is TimeSheetRepository.LoadingResult.Error -> {
-                println(response.message)
-                _updateLoadingState.value = LoadingState.Error(response.message)
+                _savingDiagnosticsState.value = LoadingState.Error(response.message)
             }
 
             is TimeSheetRepository.LoadingResult.Message -> {
-                println(response.message)
-                _updateLoadingState.value = LoadingState.Error("Returned Message")
+                _savingDiagnosticsState.value = LoadingState.Error("Returned Message")
             }
 
             is TimeSheetRepository.LoadingResult.Success -> {
-                _updateLoadingState.value =
+                _savingDiagnosticsState.value =
                     LoadingState.Error("Returned list instead of Timesheet")
             }
 
@@ -497,57 +519,55 @@ class TimeSheetsViewModel(
                 _diagnosticsTimeSheet.value = response.timesheet
                 _diagnosticsClockOut.value = _diagnosticsTimeSheet.value!!.clockOutDateAndTime
                 WebSocketInstance.sendWebSocketMessage("UPDATE_TIMESHEET", response.timesheet.jobCardId)
-                _updateLoadingState.value =
+                _savingDiagnosticsState.value =
                     LoadingState.Success
             }
         }
     }
 
     private suspend fun updateControlTimeSheet(timeSheet: Timesheet){
-        _updateLoadingState.value = LoadingState.Loading
+        _savingControlState.value = LoadingState.Loading
         when (val response =
             timeSheetRepository.updateTimesheet(timeSheet.id, timeSheet)) {
             is TimeSheetRepository.LoadingResult.Error -> {
                 println(response.message)
-                _updateLoadingState.value = LoadingState.Error(response.message)
+                _savingControlState.value = LoadingState.Error(response.message)
             }
 
             is TimeSheetRepository.LoadingResult.Message -> {
                 println(response.message)
-                _updateLoadingState.value = LoadingState.Error("Returned Message")
+                _savingControlState.value = LoadingState.Error("Returned Message")
             }
 
             is TimeSheetRepository.LoadingResult.Success -> {
-                _updateLoadingState.value =
+                _savingControlState.value =
                     LoadingState.Error("Returned list instead of Timesheet")
             }
 
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
                 _controlTimeSheet.value = response.timesheet
                 WebSocketInstance.sendWebSocketMessage("UPDATE_TIMESHEET", response.timesheet.jobCardId)
-                _updateLoadingState.value =
+                _savingControlState.value =
                     LoadingState.Success
             }
         }
     }
 
     private suspend fun updateTimeSheet(){
-        _updateLoadingState.value = LoadingState.Loading
+        _updatingTimeSheetState.value = LoadingState.Loading
         try {
             when (val response =
                 timeSheetRepository.updateTimesheet(_timesheet.value!!.id, _timesheet.value!!)) {
                 is TimeSheetRepository.LoadingResult.Error -> {
-                    println(response.message)
-                    _updateLoadingState.value = LoadingState.Error(response.message)
+                    _updatingTimeSheetState.value = LoadingState.Error(response.message)
                 }
 
                 is TimeSheetRepository.LoadingResult.Message -> {
-                    println(response.message)
-                    _updateLoadingState.value = LoadingState.Error("Returned Message")
+                    _updatingTimeSheetState.value = LoadingState.Error("Returned Message")
                 }
 
                 is TimeSheetRepository.LoadingResult.Success -> {
-                    _updateLoadingState.value =
+                    _updatingTimeSheetState.value =
                         LoadingState.Error("Returned list instead of Timesheet")
                 }
 
@@ -555,7 +575,7 @@ class TimeSheetsViewModel(
                     timeSheetDialogDismissRequest()
                     _timesheet.value = response.timesheet
                     WebSocketInstance.sendWebSocketMessage("UPDATE_TIMESHEET", response.timesheet.jobCardId)
-                    _updateLoadingState.value = LoadingState.Success
+                    _updatingTimeSheetState.value = LoadingState.Success
                 }
             }
         } finally {
@@ -622,7 +642,12 @@ class TimeSheetsViewModel(
     }
 
     fun resetNewTimeSheetLoadState() {
-        _newTimeSheetLoadState.value = LoadingState.Idle
+        _newTimeSheetState.value = LoadingState.Idle
+        _newTimeSheet.value = CreateTimesheet(
+            technicianId = SignedInUser.employee!!.id,
+            jobCardId = UUID.fromString(jobCardId)
+        )
+
     }
 
     override fun onWebSocketUpdate(update: WebSocketUpdate) {

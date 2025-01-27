@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -79,7 +78,6 @@ import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.checklistIcon
 import com.example.prodacc.navigation.Route
-import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.ControlChecklistViewModel
@@ -507,14 +505,14 @@ fun JobCardDetailScreen(
                                     }
                                 }
                             )
-                            DiagnosticsReportTextField(
+                            ReportTextField(
                                 value = timeSheetViewModel.diagnosticsReport.collectAsState().value,
                                 onValueChange = { timeSheetViewModel.updateDiagnosticsReport(it) },
                                 label = if (timeSheetViewModel.diagnosticsReport.collectAsState().value != "") "Diagnostics Report" else "New Diagnostics Report",
                                 isEdited = timeSheetViewModel.isDiagnosticsReportEdited.collectAsState().value,
                                 onSave = { timeSheetViewModel.onSaveDiagnosticsReport() },
                                 modifier = Modifier.fillMaxWidth(),
-                                loadingState = timeSheetViewModel.updateLoadingState.collectAsState().value,
+                                loadingState = timeSheetViewModel.savingDiagnosticsState.collectAsState().value,
                                 enabled = when(SignedInUser.role){
                                     SignedInUser.Role.Admin -> true
                                     SignedInUser.Role.Technician -> true
@@ -722,14 +720,14 @@ fun JobCardDetailScreen(
                             }
                         )
 
-                        DiagnosticsReportTextField(
+                        ReportTextField(
                             value = timeSheetViewModel.controlReport.collectAsState().value,
                             onValueChange = { timeSheetViewModel.updateControlReport(it) },
                             label = if (timeSheetViewModel.controlReport.collectAsState().value != "") "Control Report" else "New Control Report",
                             isEdited = timeSheetViewModel.isControlReportEdited.collectAsState().value,
                             onSave = { timeSheetViewModel.onSaveControlReport() },
                             modifier = Modifier.fillMaxWidth(),
-                            loadingState = timeSheetViewModel.updateLoadingState.collectAsState().value,
+                            loadingState = timeSheetViewModel.savingControlState.collectAsState().value,
                             enabled = when(SignedInUser.role){
                                 SignedInUser.Role.Admin -> true
                                 SignedInUser.Role.Supervisor -> true
@@ -816,7 +814,7 @@ fun JobCardDetailScreen(
                 onReportChange = timeSheetViewModel::onReportChange,
                 onClockInChange = timeSheetViewModel::clockIn,
                 onClockOutChange = timeSheetViewModel::clockOut,
-                saveState = timeSheetViewModel.newTimeSheetLoadState.collectAsState().value,
+                saveState = timeSheetViewModel.newTimeSheetState.collectAsState().value,
                 resetState = timeSheetViewModel::resetNewTimeSheetLoadState
             )
 
@@ -1068,7 +1066,7 @@ fun ReportTextField(
     }
 }
 @Composable
-fun DiagnosticsReportTextField(
+fun ReportTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
