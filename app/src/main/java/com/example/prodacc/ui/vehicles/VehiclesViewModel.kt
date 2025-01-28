@@ -3,19 +3,15 @@ package com.example.prodacc.ui.vehicles
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.prodacc.MyApplication
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
-import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.VehicleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class VehiclesViewModel (
     private val vehicleRepository: VehicleRepository = VehicleRepository()
@@ -130,7 +126,7 @@ class VehiclesViewModel (
     }
 
     override fun onWebSocketError(error: Throwable) {
-        TODO("Not yet implemented")
+        //
     }
 }
 

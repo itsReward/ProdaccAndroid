@@ -302,12 +302,15 @@ fun NewVehicleScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        viewModel.clients.collectAsState().value.clients?.let {
+                        viewModel.filteredClients.collectAsState().value?.let {
                             ClientsDropDown(
                                 expanded = clientExpanded,
                                 onDismissRequest = { clientExpanded = !clientExpanded },
                                 clients = it,
-                                onClientSelected = viewModel::updateClientId
+                                onClientSelected = viewModel::updateClientId,
+                                query = viewModel.searchQuery.collectAsState().value,
+                                onQueryUpdate = viewModel::onQueryUpdate
+
                             )
                         }
 

@@ -188,6 +188,10 @@ class JobCardDetailsViewModel(
 
     }
 
+    fun togglePriority(){
+        updateJobCard { copy(priority = !_jobCard.value?.priority!!) }
+    }
+
     fun updateJobCardDeadline(newDateTime: LocalDateTime) {
         updateJobCard { copy(jobCardDeadline = newDateTime) }
     }

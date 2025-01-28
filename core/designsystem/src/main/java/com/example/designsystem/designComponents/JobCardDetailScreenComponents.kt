@@ -311,7 +311,7 @@ fun StepIndicator(
 }
 
 @Composable
-fun DurationText(timeSpentMinutes: Long, color: Color = Color.Black) {
+fun DurationText(timeSpentMinutes: Long, color: Color = Color.Black, fontWeight: FontWeight = FontWeight.Bold) {
 
     val duration = Duration.ofMinutes(timeSpentMinutes)
 
@@ -335,10 +335,10 @@ fun DurationText(timeSpentMinutes: Long, color: Color = Color.Black) {
     }
 
     Text(
-        text = "$formattedDuration",
+        text = formattedDuration,
         style = MaterialTheme.typography.bodyLarge,
         color = color,
-        fontWeight = FontWeight.Bold
+        fontWeight = fontWeight
     )
 }
 

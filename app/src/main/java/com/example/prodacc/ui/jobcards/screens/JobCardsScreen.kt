@@ -1,15 +1,10 @@
 package com.example.prodacc.ui.jobcards.screens
 
-import android.graphics.Paint.Align
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,38 +20,24 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.designsystem.designComponents.AllJobCardListItem
-import com.example.designsystem.designComponents.CategoryHeader
-import com.example.designsystem.designComponents.CustomSearchBar
-import com.example.designsystem.designComponents.HistorySection
 import com.example.designsystem.designComponents.TopBar
-import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
-import com.example.designsystem.theme.Orange
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.WebSocketStateIndicator
@@ -66,8 +47,6 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.TokenManager
-import com.prodacc.data.remote.WebSocketInstance
-import kotlinx.coroutines.delay
 
 @Composable
 fun JobCardsScreen(
@@ -83,26 +62,23 @@ fun JobCardsScreen(
     val isRefreshing = viewModel.refreshing.collectAsState().value
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
 
-    SwipeRefresh(
-        state = swipeRefreshState,
-        onRefresh = { viewModel.refreshJobCards() }
-    ) {
-        Scaffold(
-            topBar = {
-                Column(modifier = Modifier.statusBarsPadding()){
-                    WebSocketStateIndicator()
-                    TopBar(
-                        title = "Job Cards",
-                        onSearchClick = { navController.navigate( Route.Search.path.replace("{title}", "Job Cards")) },
-                        logOut = {
-                            TokenManager.saveToken(null)
-                            navController.navigate(Route.LogIn.path)
-                        }
-                    )
-                }
 
+    Scaffold(
+        topBar = {
+            Column(modifier = Modifier.statusBarsPadding()){
+                WebSocketStateIndicator()
+                TopBar(
+                    title = "Job Cards",
+                    onSearchClick = { navController.navigate( Route.Search.path.replace("{title}", "Job Cards")) },
+                    logOut = {
+                        TokenManager.saveToken(null)
+                        navController.navigate(Route.LogIn.path)
+                    }
+                )
             }
-            , bottomBar = { NavigationBar(navController) }, floatingActionButton = {
+
+        }
+        , bottomBar = { NavigationBar(navController) }, floatingActionButton = {
 
             when(SignedInUser.role){
                 SignedInUser.Role.Supervisor -> {}
@@ -121,8 +97,15 @@ fun JobCardsScreen(
             }
 
 
-        }) { innerPadding ->
+        },
+        containerColor = Color.White
+    ) { innerPadding ->
 
+        SwipeRefresh(
+            state = swipeRefreshState,
+            onRefresh = { viewModel.refreshJobCards() },
+            indicatorPadding = PaddingValues(80.dp)
+        ) {
 
             viewModel.jobCardLoadState.collectAsState().value.let { state ->
                 when (state) {
@@ -192,7 +175,7 @@ fun JobCardsScreen(
                                 onClickDone = { viewModel.onToggleDoneChip() },
                                 onClickFrozen = { viewModel.onToggleFrozenChip() },
                                 onClickTesting = { viewModel.onToggleTesting() },
-                                onClickWaitingForPayment = {viewModel.onToggleWaitingForPayment()},
+                                onClickWaitingForPayment = { viewModel.onToggleWaitingForPayment() },
                                 jobCardFilterState = viewModel.jobCardsFilter.collectAsState().value
                             )
 
@@ -206,14 +189,14 @@ fun JobCardsScreen(
                                     .padding(horizontal = 20.dp)
                             ) {
 
-                                if (jobCards.value.isNotEmpty()){
+                                if (jobCards.value.isNotEmpty()) {
                                     items(jobCards.value) { jobCard ->
-                                        if (jobCards.value.any{it.id == jobCard.id}){
+                                        if (jobCards.value.any { it.id == jobCard.id }) {
                                             viewModel.fetchJobCardReports(jobCard.id)
                                             viewModel.fetchJobCardStatus(jobCard.id)
                                         }
 
-                                        if (jobCard == jobCards.value.first()){
+                                        if (jobCard == jobCards.value.first()) {
                                             Spacer(modifier = Modifier.height(5.dp))
                                         }
 
@@ -224,7 +207,7 @@ fun JobCardsScreen(
                                             navController = navController
                                         )
 
-                                        if (jobCard == jobCards.value.last()){
+                                        if (jobCard == jobCards.value.last()) {
                                             Spacer(modifier = Modifier.height(30.dp))
                                         }
                                     }
@@ -243,23 +226,21 @@ fun JobCardsScreen(
                                 }
 
 
-
                             }
 
-                            when(SignedInUser.role){
+                            when (SignedInUser.role) {
                                 is SignedInUser.Role.Technician -> {
                                     Spacer(modifier = Modifier.height(10.dp))
                                 }
-                                else -> {
-                                    Row (
-                                        modifier  = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 20.dp, vertical = 10.dp)
 
-                                        ,
+                                else -> {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 20.dp, vertical = 10.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(5.dp)
-                                    ){
+                                    ) {
                                         Row(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(10f))
@@ -274,7 +255,7 @@ fun JobCardsScreen(
                                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Icon(Icons.Default.List, "All JobCards")
+                                            Icon(Icons.AutoMirrored.Filled.List, "All JobCards")
                                             Text(text = "All JobCards")
                                         }
 
@@ -309,6 +290,7 @@ fun JobCardsScreen(
 
         }
     }
+
 }
 
 

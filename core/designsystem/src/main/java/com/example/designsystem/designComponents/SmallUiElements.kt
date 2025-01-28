@@ -62,6 +62,7 @@ fun IconButton(
     onClick : ()-> Unit,
     icon: ImageVector,
     color: Color,
+    enabled: Boolean = true
 
 ){
     androidx.compose.material3.IconButton(
@@ -71,7 +72,8 @@ fun IconButton(
             contentColor = color,
             disabledContentColor = color,
             disabledContainerColor = Color.Transparent
-        )
+        ),
+        enabled = enabled
     ) {
         Icon(icon, "Back Arrow")
 

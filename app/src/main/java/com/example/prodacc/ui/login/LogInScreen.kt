@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -27,14 +29,19 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,6 +54,7 @@ import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.White
+import com.example.designsystem.theme.pretendard
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.login.viewmodel.LogInState
 import com.example.prodacc.ui.login.viewmodel.LogInViewModel
@@ -59,7 +67,19 @@ fun LogInScreen(
     navController: NavController,
     viewModel: LogInViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val focusManager = LocalFocusManager.current
     val context = LocalContext.current
+    val shouldNavigate by viewModel.navigateToJobCards.collectAsState()
+
+    // Handle navigation
+    LaunchedEffect(shouldNavigate) {
+        if (shouldNavigate) {
+            navController.navigate(Route.JobCards.path) {
+                popUpTo(Route.LogIn.path) { inclusive = true }
+            }
+            viewModel.onNavigatedToJobCards()
+        }
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -70,41 +90,61 @@ fun LogInScreen(
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(bottomEnd = 50.dp, bottomStart = 50.dp))
-                .background(BlueA700)
+                //.background(BlueA700)
                 .weight(1.5f)
                 .fillMaxWidth()
                 .systemBarsPadding()
-                .padding(top = 1.dp),
-            verticalArrangement = Arrangement.Center,
+                .padding(top = 1.dp, bottom = 60.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(com.example.designsystem.R.drawable.jobkeep_logo),
-                contentDescription = "logo",
-                modifier = Modifier.width(800.dp)
-            )
+
+            Row {
+                Text(
+                    text = "jobkeep",
+                    fontFamily = pretendard,
+                    fontWeight = FontWeight.Medium,
+                    color = BlueA700
+                    ,
+                    fontSize = 55.sp
+
+                )
+
+                Image(
+                    painter = painterResource(com.prodacc.data.R.drawable.jobkeep_round_icon),
+                    contentDescription = "logo",
+                    modifier = Modifier.width(20.dp),
+                    colorFilter = ColorFilter.tint(BlueA700)
+                )
+
+            }
+
 
         }
 
         Column(
             modifier = Modifier
                 .weight(2.5f)
-                .padding(start = 20.dp, end = 20.dp),
+                .clip(RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
+                .background(LightGrey)
+                .padding(start = 20.dp, end = 20.dp, top = 35.dp)
+
+                ,
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
 
-            Text(
-                text = "Welcome, Log in",
+            /*Text(
+                text = " ",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = BlueA700,
+                color = Color.DarkGray,
                 modifier = Modifier
                     .padding(start = 13.dp, top = 35.dp, bottom = 10.dp)
                     .fillMaxWidth(),
                 textAlign = TextAlign.Start
             )
-
+*/
             TextField(
                 value = viewModel.usernameState.collectAsState().value,
                 onValueChange = viewModel::onUsernameChange,
@@ -115,15 +155,24 @@ fun LogInScreen(
                 ,
                 label = { Text("username") },
                 colors = TextFieldDefaults.colors(
-                    unfocusedIndicatorColor = LightGrey,
+                    unfocusedIndicatorColor = Color.LightGray,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent
                 ),
                 singleLine = true,
                 isError = when(viewModel.loginState.collectAsState().value ){
                     is LogInState.Error -> true
                     else -> false
                 },
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.moveFocus(FocusDirection.Down) }
+                )
             )
-            
+             Spacer(modifier = Modifier.height(5.dp))
 
             PasswordTextField(
                 password = viewModel.passwordState.collectAsState().value,
@@ -132,7 +181,23 @@ fun LogInScreen(
                     is LogInState.Error -> true
                     else -> false
                 },
-
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.LightGray,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent
+                ),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Go
+                ),
+                keyboardActions = KeyboardActions(
+                    onGo = {
+                        val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        val currentFocus = (context as? Activity)?.currentFocus
+                        inputMethodManager.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
+                        viewModel.logIn()
+                    }
+                )
             )
 
             when (viewModel.loginState.collectAsState().value){
@@ -171,6 +236,18 @@ fun LogInScreen(
             }
 
 
+
+
+
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                //.navigationBarsPadding()
+                .background(LightGrey),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             Text(
                 text = "If you do not have an account, consult the system administrator",
                 fontWeight = FontWeight.Normal,
@@ -182,46 +259,12 @@ fun LogInScreen(
                     .fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
-
-
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            //Text(text = ApiInstance.WSURL.collectAsState().value, color = Grey)
-            /*TextField(
-                value = viewModel.APIAddress.collectAsState().value,
-                onValueChange = viewModel::onAPIAddressChange,
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 5.dp),
-                label = { Text("API Address") },
-                colors = TextFieldDefaults.colors(
-                    unfocusedIndicatorColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
-                ),
-                singleLine = true,
-                trailingIcon = {
-                    IconButton(
-                        onClick = { viewModel.saveAPIAddress() }
-                    ){
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "save"
-                        )
-                    }
-                },
-            )*/
             Text(
                 textAlign = TextAlign.Center,
                 text = "Version 1.0 created with ❤ by Render Creative",
                 color = Grey,
                 fontSize = 12.sp,
+                modifier = Modifier.navigationBarsPadding()
             )
         }
 

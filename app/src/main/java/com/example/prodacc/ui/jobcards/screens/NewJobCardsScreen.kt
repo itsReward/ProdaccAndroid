@@ -159,16 +159,26 @@ fun NewJobCardScreen(
                                             contentDescription = "Drop down"
                                         )
                                     }
+
                                     VehiclesDropDown(
-                                        vehicles = viewModel.vehicles.collectAsState().value,
+                                        vehicles = viewModel.filteredVehicles.collectAsState().value,
                                         expanded = viewModel.vehiclesDropdown.value,
                                         onDismissRequest = {
                                             viewModel.toggleVehiclesDropDown()
                                         },
                                         onVehicleSelected = viewModel::updateVehicle,
-                                        newVehicle = { navController.navigate(Route.NewVehicle.path) }
+                                        newVehicle = { navController.navigate(Route.NewVehicle.path) },
+                                        query = viewModel.searchQuery.collectAsState().value,
+                                        onQueryUpdate = viewModel::onSearchQueryUpdate
                                     )
-                                }
+                                },
+                                enabled = false,
+                                colors = TextFieldDefaults.colors(
+                                    disabledContainerColor = Color.Transparent,
+                                    disabledTextColor = Color.DarkGray,
+                                    disabledLeadingIconColor = Color.DarkGray,
+                                    disabledLabelColor = Color.DarkGray,
+                                )
                             )
 
 
@@ -180,7 +190,14 @@ fun NewJobCardScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 readOnly = true,
-                                label = { Text(text = "Client") }
+                                label = { Text(text = "Client") },
+                                enabled = false,
+                                colors = TextFieldDefaults.colors(
+                                    disabledContainerColor = Color.Transparent,
+                                    disabledTextColor = Color.DarkGray,
+                                    disabledLeadingIconColor = Color.DarkGray,
+                                    disabledLabelColor = Color.DarkGray,
+                                )
                             )
 
                         }

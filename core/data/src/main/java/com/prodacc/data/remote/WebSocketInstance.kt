@@ -1,9 +1,13 @@
 package com.prodacc.data.remote
 
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.prodacc.data.NotificationManager
 import com.prodacc.data.remote.ApiInstance.BASE_URL
+import com.prodacc.data.repositories.JobCardRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import okhttp3.OkHttpClient
@@ -21,6 +25,12 @@ object WebSocketInstance {
     private val logger = Logger.getLogger(WebSocketInstance::class.java.name)
     private val _webSocketState = MutableStateFlow<WebSocketState>(WebSocketState.Disconnected(""))
     val webSocketState = _webSocketState.asStateFlow()
+    private lateinit var applicationContext: Context
+
+    fun initialize(context: Context){
+        applicationContext = context.applicationContext
+        NotificationManager.createNotificationChannel(applicationContext)
+    }
 
     private val _websocketIndicator = MutableStateFlow(true)
     val webSocketIndicator = _websocketIndicator
@@ -78,6 +88,11 @@ object WebSocketInstance {
                 try {
                     val jsonObject = JSONObject(text)
                     val type = jsonObject.getString("type")
+                    val data = jsonObject.getString("data")
+                    val uuid = UUID.fromString(data)
+
+                    // Show notification first
+                    showNotificationForType(type, uuid)
 
                     logger.info("WebSocket Received: $type")
 
@@ -296,4 +311,71 @@ object WebSocketInstance {
         data class Error(val message: String) : WebSocketState()
     }
 
+    private fun showNotificationForType(type: String, id: UUID) {
+        val (title, message) = when (type) {
+            "NEW_JOB_CARD" -> Pair(
+                "New Job Card",
+                "Job Card #$id has been created"
+            )
+            "DELETE_JOB_CARD" -> Pair(
+                "Job Card Deleted",
+                "Job Card #$id has been deleted"
+            )
+            "JOB_CARD_STATUS_CHANGED" -> Pair(
+                "Status Update",
+                "Job Card #$id status has been updated"
+            )
+            "NEW_JOB_CARD_TECHNICIAN" -> Pair(
+                "New Assignment",
+                "You have been assigned to Job Card #$id"
+            )
+            "DELETE_JOB_CARD_TECHNICIAN" -> Pair(
+                "Assignment Removed",
+                "You have been removed from Job Card #$id"
+            )
+            "NEW_TIMESHEET" -> Pair(
+                "New Timesheet",
+                "A new timesheet has been added to Job Card #$id"
+            )
+            "UPDATE_TIMESHEET" -> Pair(
+                "Timesheet Updated",
+                "A timesheet has been updated on Job Card #$id"
+            )
+            "NEW_SERVICE_CHECKLIST" -> Pair(
+                "New Service Checklist",
+                "A service checklist has been created for Job Card #$id"
+            )
+            "UPDATE_SERVICE_CHECKLIST" -> Pair(
+                "Service Checklist Updated",
+                "Service checklist has been updated for Job Card #$id"
+            )
+            "NEW_STATE_CHECKLIST" -> Pair(
+                "New State Checklist",
+                "A state checklist has been created for Job Card #$id"
+            )
+            "UPDATE_STATE_CHECKLIST" -> Pair(
+                "State Checklist Updated",
+                "State checklist has been updated for Job Card #$id"
+            )
+            "NEW_CONTROL_CHECKLIST" -> Pair(
+                "New Control Checklist",
+                "A control checklist has been created for Job Card #$id"
+            )
+            "UPDATE_CONTROL_CHECKLIST" -> Pair(
+                "Control Checklist Updated",
+                "Control checklist has been updated for Job Card #$id"
+            )
+            else -> return // No notification for other types
+        }
+
+        NotificationManager.showNotification(
+            context = applicationContext,
+            title = title,
+            message = message,
+            type = type,
+            entityId = id
+        )
+    }
+
 }
+

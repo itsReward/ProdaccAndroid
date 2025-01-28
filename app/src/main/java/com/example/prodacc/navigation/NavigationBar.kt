@@ -43,21 +43,33 @@ fun NavigationBar(navController: NavController) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     var selectedItem = when (currentRoute) {
-        com.example.prodacc.navigation.Route.JobCards.path -> 0
-        com.example.prodacc.navigation.Route.Vehicles.path -> 1
-        com.example.prodacc.navigation.Route.Clients.path -> 2
-        com.example.prodacc.navigation.Route.Employees.path -> 3
+        Route.JobCards.path -> 0
+        Route.Vehicles.path -> 1
+        Route.Clients.path -> 2
+        Route.Employees.path -> {
+            if (SignedInUser.role == SignedInUser.Role.Supervisor) {
+                2
+            } else {
+                3
+            }
+        }
         else -> 4 // Default to Job Cards
     }
 
 
-    val items = if (SignedInUser.role == SignedInUser.Role.Admin) {
-        listOf("Job Cards", "Vehicles", "Clients", "Employees")
-    } else if (SignedInUser.role == SignedInUser.Role.Technician){
-        listOf("Job Cards", "Profile")
-    }
-    else {
-        listOf("Job Cards", "Vehicles", "Clients", "Profile")
+    val items = when (SignedInUser.role) {
+        SignedInUser.Role.Admin -> {
+            listOf("Job Cards", "Vehicles", "Clients", "Employees")
+        }
+        SignedInUser.Role.Technician -> {
+            listOf("Job Cards", "Profile")
+        }
+        SignedInUser.Role.Supervisor -> {
+            listOf("Job Cards", "Vehicles", "Technicians", "Profile")
+        }
+        else -> {
+            listOf("Job Cards", "Vehicles", "Clients", "Profile")
+        }
     }
     NavigationBar(
         containerColor = Color.Transparent,
@@ -120,7 +132,7 @@ fun NavigationBar(navController: NavController) {
                         }
 
                         "Vehicles" -> {
-                            navController.navigate(com.example.prodacc.navigation.Route.Vehicles.path) {
+                            navController.navigate(Route.Vehicles.path) {
                                 popUpTo(
                                     com.example.prodacc.navigation.Route.JobCards.path
                                 )
@@ -128,7 +140,7 @@ fun NavigationBar(navController: NavController) {
                         }
 
                         "Clients" -> {
-                            navController.navigate(com.example.prodacc.navigation.Route.Clients.path) {
+                            navController.navigate(Route.Clients.path) {
                                 popUpTo(
                                     com.example.prodacc.navigation.Route.JobCards.path
                                 )
@@ -136,7 +148,15 @@ fun NavigationBar(navController: NavController) {
                         }
 
                         "Employees" -> {
-                            navController.navigate(com.example.prodacc.navigation.Route.Employees.path) {
+                            navController.navigate(Route.Employees.path) {
+                                popUpTo(
+                                    com.example.prodacc.navigation.Route.JobCards.path
+                                )
+                            }
+                        }
+
+                        "Technicians" -> {
+                            navController.navigate(Route.Employees.path) {
                                 popUpTo(
                                     com.example.prodacc.navigation.Route.JobCards.path
                                 )
@@ -182,6 +202,12 @@ fun NavigationBarItemIcon(item: String, modifier: Modifier) {
         }
 
         "Employees" -> {
+            Icon(
+                imageVector = people, contentDescription = "Employees", modifier = modifier
+            )
+        }
+
+        "Technicians" -> {
             Icon(
                 imageVector = people, contentDescription = "Employees", modifier = modifier
             )

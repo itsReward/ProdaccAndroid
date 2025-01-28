@@ -1,14 +1,10 @@
 package com.example.prodacc.ui.vehicles.viewModels
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.clients.viewModels.ClientsViewModel.LoadState
-import com.example.prodacc.ui.clients.viewModels.EditClientDetailsViewModel
-import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Client
@@ -26,7 +22,7 @@ class EditVehicleDetailsViewModel(
     private val vehicleRepository: VehicleRepository = VehicleRepository(),
     private val clientRepository: ClientRepository = ClientRepository(),
     private val vehicleId: String
-): ViewModel(), WebSocketInstance.WebSocketEventListener {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     // State for the vehicle details
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
     val vehicle = _vehicle.asStateFlow()
@@ -48,6 +44,12 @@ class EditVehicleDetailsViewModel(
 
     private val _updateConfirmation = MutableStateFlow(false)
     val updateConfirmation = _updateConfirmation.asStateFlow()
+
+    private val _filteredClients = MutableStateFlow(_clients.value)
+    val filteredClients = _filteredClients.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
 
     // Dropdown states
     val vehicleMakeDropdown = MutableStateFlow(false)
@@ -72,11 +74,11 @@ class EditVehicleDetailsViewModel(
         }
     }
 
-    fun toggleUpdateConfirmation(){
+    fun toggleUpdateConfirmation() {
         _updateConfirmation.value = true
     }
 
-    fun resetUpdateConfirmation(){
+    fun resetUpdateConfirmation() {
         _updateConfirmation.value = false
     }
 
@@ -140,18 +142,23 @@ class EditVehicleDetailsViewModel(
                     _vehicle.value = result.vehicle
                     _loadState.value = LoadState.Success
                 }
+
                 is VehicleRepository.LoadingResult.Error -> {
-                    _loadState.value = LoadState.Error(result.message?: "Some Error Occurred")
+                    _loadState.value = LoadState.Error(result.message ?: "Some Error Occurred")
                 }
+
                 is VehicleRepository.LoadingResult.ErrorSingleMessage -> {
                     _loadState.value = LoadState.Error(result.message)
                 }
+
                 VehicleRepository.LoadingResult.NetworkError -> {
                     _loadState.value = LoadState.Error("Network Error")
                 }
+
                 is VehicleRepository.LoadingResult.Success -> {
                     _loadState.value = LoadState.Error("Unexpected result type")
                 }
+
                 null -> {
                     _loadState.value = LoadState.Error("Vehicle not found")
                 }
@@ -164,6 +171,20 @@ class EditVehicleDetailsViewModel(
         }
     }
 
+    fun onQueryUpdate(query: String) {
+        _searchQuery.value = query
+        if (_searchQuery.value == "") {
+            _filteredClients.value = clients.value
+        } else {
+            _filteredClients.value = clients.value.filter {
+                it.clientName.contains(
+                    query,
+                    true
+                ) || it.clientSurname.contains(query)
+            } ?: emptyList()
+        }
+    }
+
     suspend fun fetchClients() {
         _clientLoadState.value = ClientLoadState.Loading
         try {
@@ -171,10 +192,12 @@ class EditVehicleDetailsViewModel(
                 is ClientRepository.LoadingResult.Success -> {
                     _clientLoadState.value = ClientLoadState.Success
                     _clients.value = clients.clients
+                    _filteredClients.value = clients.clients
                 }
 
                 is ClientRepository.LoadingResult.Error -> {
-                    _clientLoadState.value = ClientLoadState.Error(clients.message ?: "Unknown Error")
+                    _clientLoadState.value =
+                        ClientLoadState.Error(clients.message ?: "Unknown Error")
                 }
 
                 is ClientRepository.LoadingResult.ErrorSingleMessage -> {
@@ -187,7 +210,8 @@ class EditVehicleDetailsViewModel(
 
                 is ClientRepository.LoadingResult.SingleEntity -> {
                     //will never happen
-                    _clientLoadState.value = ClientLoadState.Error("returned a single entity instead of a list")
+                    _clientLoadState.value =
+                        ClientLoadState.Error("returned a single entity instead of a list")
                 }
             }
         } catch (e: Exception) {
@@ -215,20 +239,28 @@ class EditVehicleDetailsViewModel(
                         clientSurname = currentVehicle.clientSurname
                     )
 
-                    val result = vehicleRepository.updateVehicle(UUID.fromString(vehicleId), newVehicle)
+                    val result =
+                        vehicleRepository.updateVehicle(UUID.fromString(vehicleId), newVehicle)
 
                     when (result) {
                         is VehicleRepository.LoadingResult.SingleEntity -> {
                             _updateState.value = UpdateState.Success
-                            WebSocketInstance.sendWebSocketMessage("UPDATE_VEHICLE", result.vehicle!!.id)
+                            WebSocketInstance.sendWebSocketMessage(
+                                "UPDATE_VEHICLE",
+                                result.vehicle!!.id
+                            )
                             _vehicle.value = result.vehicle
                         }
+
                         is VehicleRepository.LoadingResult.Error -> {
-                            _updateState.value = UpdateState.Error(result.message?: "Some Error occurred")
+                            _updateState.value =
+                                UpdateState.Error(result.message ?: "Some Error occurred")
                         }
+
                         VehicleRepository.LoadingResult.NetworkError -> {
                             _updateState.value = UpdateState.Error("Network Error")
                         }
+
                         else -> {
                             _updateState.value = UpdateState.Error("Unknown Error")
                         }
@@ -267,27 +299,29 @@ class EditVehicleDetailsViewModel(
         data class Error(val message: String) : UpdateState()
     }
 
-    sealed class ClientLoadState{
+    sealed class ClientLoadState {
         data object Idle : ClientLoadState()
         data object Loading : ClientLoadState()
         data object Success : ClientLoadState()
-        data class Error (val message: String) : ClientLoadState()
+        data class Error(val message: String) : ClientLoadState()
     }
 
     override fun onWebSocketUpdate(update: WebSocketUpdate) {
-        when(update){
+        when (update) {
             is WebSocketUpdate.UpdateVehicle -> {
-                if(update.id == UUID.fromString(vehicleId)){
+                if (update.id == UUID.fromString(vehicleId)) {
                     viewModelScope.launch {
                         fetchVehicle()
                     }
                 }
             }
+
             is WebSocketUpdate.DeleteVehicle -> {
-                if(update.id == UUID.fromString(vehicleId)){
+                if (update.id == UUID.fromString(vehicleId)) {
                     _loadState.value = LoadState.Error("Vehicle deleted")
                 }
             }
+
             else -> {
             }
         }
@@ -298,7 +332,8 @@ class EditVehicleDetailsViewModel(
     }
 }
 
-class EditVehicleDetailsViewModelFactory(private val vehicleId: String) : ViewModelProvider.Factory {
+class EditVehicleDetailsViewModelFactory(private val vehicleId: String) :
+    ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(
         modelClass: Class<T>,

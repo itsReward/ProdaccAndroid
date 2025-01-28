@@ -1,5 +1,6 @@
 package com.example.prodacc.ui.jobcards.screens
 
+import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,8 @@ import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
+import com.example.designsystem.theme.bookmarkFull
+import com.example.designsystem.theme.bookmarkOutline
 import com.example.designsystem.theme.people
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
@@ -41,12 +44,14 @@ import com.prodacc.data.SignedInUser
 @Composable
 fun TopBar(
     jobCardName: String,
+    priority: Boolean,
     navController: NavController,
     onClickPeople: () -> Unit,
     onClickDelete: () -> Unit,
+    onClickPriority: () -> Unit,
     saveState: JobCardDetailsViewModel.SaveState
 ) {
-    Column (
+    Column(
         modifier = Modifier.statusBarsPadding()
     ) {
         WebSocketStateIndicator(modifier = Modifier)
@@ -64,8 +69,7 @@ fun TopBar(
                         start = Offset(0f, size.height),
                         end = Offset(size.width, size.height)
                     )
-                }
-            ,
+                },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
 
@@ -92,12 +96,24 @@ fun TopBar(
                 horizontalArrangement = Arrangement.End
             ) {
 
+                IconButton(
+                    onClick = onClickPriority,
+                    icon = if (priority) bookmarkFull else bookmarkOutline,
+                    color = DarkGrey,
+                    enabled = when (SignedInUser.role) {
+                        SignedInUser.Role.Supervisor -> false
+                        SignedInUser.Role.Technician -> false
+                        else -> {
+                            true
+                        }
+                    }
+                )
 
                 IconButton(
                     onClick = onClickPeople, icon = people, color = DarkGrey
                 )
 
-                when(SignedInUser.role){
+                when (SignedInUser.role) {
                     SignedInUser.Role.Supervisor -> {}
                     SignedInUser.Role.Technician -> {}
                     SignedInUser.Role.ServiceAdvisor -> {}
@@ -113,10 +129,15 @@ fun TopBar(
 
         }
 
-        when (saveState){
+        when (saveState) {
             is JobCardDetailsViewModel.SaveState.Saving -> {
-                LinearProgressIndicator(color = BlueA700, trackColor = Color.Transparent, modifier = Modifier.fillMaxWidth())
+                LinearProgressIndicator(
+                    color = BlueA700,
+                    trackColor = Color.Transparent,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
+
             else -> {}
         }
     }

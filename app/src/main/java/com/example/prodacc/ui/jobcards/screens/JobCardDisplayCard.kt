@@ -3,20 +3,27 @@ package com.example.prodacc.ui.jobcards.screens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -44,8 +51,10 @@ import com.example.designsystem.theme.DarkBlue
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.DarkOrange
+import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGreen
 import com.example.designsystem.theme.LightGrey
+import com.example.designsystem.theme.LightOrange
 import com.example.designsystem.theme.LightRed
 import com.example.designsystem.theme.Orange
 import com.example.designsystem.theme.Red
@@ -64,7 +73,7 @@ fun JobCardDisplayCard(
     reportsMap: Map<UUID, ReportLoadingState>,
     statusMap: Map<UUID, StatusLoadingState>,
     navController: NavController
-){
+) {
     Card(
         onClick = {
             navController.navigate(
@@ -76,13 +85,13 @@ fun JobCardDisplayCard(
         },
         modifier = Modifier
             .wrapContentHeight()
-            .fillMaxWidth()
-        ,
+            .fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = CardGrey
         )
     ) {
+
         Column(
             modifier = Modifier
                 .padding(vertical = 15.dp, horizontal = 20.dp)
@@ -94,8 +103,28 @@ fun JobCardDisplayCard(
                     .fillMaxWidth()
                     .padding(top = 5.dp),
             ) {
-                LargeTitleText(name = jobCard.jobCardName)
-                if (jobCard.jobCardDeadline != null && (jobCard.jobCardDeadline)!! > LocalDateTime.now().toLocalDate().atStartOfDay() && jobCard.dateAndTimeClosed == null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    if (jobCard.priority && jobCard.dateAndTimeClosed == null) {
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(100))
+                                .background(LightOrange)
+                                .padding(horizontal = 8.dp)
+                        ) {
+                            Text(text = "priority")
+                        }
+                    }
+                    LargeTitleText(name = jobCard.jobCardName)
+
+                }
+
+                Spacer(modifier = Modifier.height(2.dp))
+                if (jobCard.jobCardDeadline != null && (jobCard.jobCardDeadline)!! > LocalDateTime.now()
+                        .toLocalDate().atStartOfDay() && jobCard.dateAndTimeClosed == null
+                ) {
 
                     Row(
                         verticalAlignment = Alignment.Bottom
@@ -107,7 +136,7 @@ fun JobCardDisplayCard(
                         FormattedTime(time = jobCard.jobCardDeadline!!)
                     }
 
-                } else if ( jobCard.jobCardDeadline != null && (jobCard.jobCardDeadline)!! < LocalDateTime.now() && jobCard.dateAndTimeClosed == null) {
+                } else if (jobCard.jobCardDeadline != null && (jobCard.jobCardDeadline)!! < LocalDateTime.now() && jobCard.dateAndTimeClosed == null) {
                     Row(
                         verticalAlignment = Alignment.Bottom
                     ) {
@@ -117,17 +146,22 @@ fun JobCardDisplayCard(
                             color = Color.Red,
                             modifier = Modifier.padding(top = 2.dp)
                         )
-                        DurationText(timeSpentMinutes = Duration.between(jobCard.jobCardDeadline, LocalDateTime.now()).toMinutes())
+                        DurationText(
+                            timeSpentMinutes = Duration.between(
+                                jobCard.jobCardDeadline,
+                                LocalDateTime.now()
+                            ).toMinutes()
+                        )
                         Spacer(modifier = Modifier.width(5.dp))
 
                         FormattedTime(time = jobCard.jobCardDeadline!!)
                     }
 
-                } else if (jobCard.dateAndTimeFrozen == null && jobCard.dateAndTimeClosed == null){
-                    Row (
+                } else if (jobCard.dateAndTimeFrozen == null && jobCard.dateAndTimeClosed == null) {
+                    Row(
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                         verticalAlignment = Alignment.CenterVertically
-                    ){
+                    ) {
                         Text(
                             text = "No Set Deadline",
                             style = MaterialTheme.typography.bodyLarge,
@@ -136,7 +170,7 @@ fun JobCardDisplayCard(
                         )
                     }
 
-                } else if (jobCard.dateAndTimeFrozen != null && jobCard.dateAndTimeClosed == null){
+                } else if (jobCard.dateAndTimeFrozen != null && jobCard.dateAndTimeClosed == null) {
                     Row(
                         verticalAlignment = Alignment.Bottom
                     ) {
@@ -156,14 +190,13 @@ fun JobCardDisplayCard(
 
                         FormattedTime(time = jobCard.dateAndTimeClosed!!)
 
-                        if (jobCard.dateAndTimeClosed!! > jobCard.jobCardDeadline){
+                        if (jobCard.dateAndTimeClosed!! > jobCard.jobCardDeadline) {
                             Spacer(modifier = Modifier.width(5.dp))
                             /*Text(text = "over due by: ", color = Color.Red, fontWeight = FontWeight.Medium)
                             DurationText(timeSpentMinutes = Duration.between(jobCard.jobCardDeadline, jobCard.dateAndTimeClosed!!).toMinutes())*/
                         }
                     }
                 }
-
 
 
             }
@@ -176,9 +209,11 @@ fun JobCardDisplayCard(
                     is ReportLoadingState.Error -> {
                         BodyTextItalic(text = reportState.message)
                     }
+
                     is ReportLoadingState.Idle -> {
                         BodyTextItalic(text = "Load Report")
                     }
+
                     is ReportLoadingState.Loading -> {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -194,8 +229,12 @@ fun JobCardDisplayCard(
                             Text(text = "Loading Report...", color = DarkGrey)
                         }
                     }
+
                     is ReportLoadingState.Success -> {
-                        BodyTextItalic(text = reportState.response?.jobReport ?: "${jobCard.serviceAdvisorName}'s report missing")
+                        BodyTextItalic(
+                            text = reportState.response?.jobReport
+                                ?: "${jobCard.serviceAdvisorName}'s report missing"
+                        )
                     }
 
                 }
@@ -217,13 +256,15 @@ fun JobCardDisplayCard(
                 )
                 //Text("Progress:", color = DarkGrey, modifier = Modifier.weight(2f))
 
-                when (val status = statusMap[jobCard.id]){
+                when (val status = statusMap[jobCard.id]) {
                     is StatusLoadingState.Error -> {
                         Text(text = status.message, color = Orange, fontSize = 12.sp)
                     }
+
                     is StatusLoadingState.Idle -> {
                         Text(text = "Load Status", color = Orange, fontSize = 10.sp)
                     }
+
                     is StatusLoadingState.Loading -> {
                         LinearProgressIndicator(
                             color = BlueA700,
@@ -233,23 +274,30 @@ fun JobCardDisplayCard(
                                 .clip(RoundedCornerShape(50.dp))
                         )
                     }
+
                     is StatusLoadingState.Success -> {
                         if (status.response?.status != null && status.response.status.isNotBlank()) {
-                            if (jobCard.dateAndTimeClosed != null && jobCard.jobCardDeadline!= null){
-                                Row (
+                            if (jobCard.dateAndTimeClosed != null && jobCard.jobCardDeadline != null) {
+                                Row(
                                     modifier = Modifier
                                         //.shadow(5.dp, RoundedCornerShape(20.dp))
                                         .clip(RoundedCornerShape(100))
-                                        .background(if (jobCard.dateAndTimeClosed!! < jobCard.jobCardDeadline) BlueA700 else Orange)
-                                        .padding(horizontal = 8.dp, vertical = 2.dp)
-
-                                    ,
+                                        .padding(horizontal = 8.dp, vertical = 2.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(5.dp)
-                                ){
-                                    if (jobCard.dateAndTimeClosed!! < jobCard.jobCardDeadline){
-                                        Text(text = "on time")
-                                        Row (
+                                ) {
+                                    if (jobCard.dateAndTimeClosed!! < jobCard.jobCardDeadline) {
+                                        Icon(
+                                            imageVector = Icons.Filled.CheckCircle,
+                                            contentDescription = "Done tick",
+                                            tint = if (jobCard.dateAndTimeClosed!! < jobCard.jobCardDeadline) BlueA700 else Orange
+                                        )
+                                        Text(
+                                            text = "on time",
+                                            color = if (jobCard.dateAndTimeClosed!! < jobCard.jobCardDeadline) BlueA700 else Orange,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Row(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(100))
                                                 .background(Color.White)
@@ -259,12 +307,23 @@ fun JobCardDisplayCard(
                                                 timeSpentMinutes = Duration.between(
                                                     jobCard.dateAndTimeClosed,
                                                     jobCard.jobCardDeadline
-                                                ).toMinutes()
+                                                ).toMinutes(),
+                                                fontWeight = FontWeight.Medium,
+                                                color = Grey
                                             )
                                         }
                                     } else {
-                                        Text(text = "late")
-                                        Row (
+                                        Icon(
+                                            imageVector = Icons.Filled.CheckCircle,
+                                            contentDescription = "Done tick",
+                                            tint = Red
+                                        )
+                                        Text(
+                                            text = "late",
+                                            color = Red,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Row(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(100))
                                                 .background(Color.White)
@@ -274,7 +333,9 @@ fun JobCardDisplayCard(
                                                 timeSpentMinutes = Duration.between(
                                                     jobCard.jobCardDeadline,
                                                     jobCard.dateAndTimeClosed
-                                                ).toMinutes()
+                                                ).toMinutes(),
+                                                fontWeight = FontWeight.Medium,
+                                                color = Grey
                                             )
                                         }
                                     }
@@ -283,7 +344,7 @@ fun JobCardDisplayCard(
                             } else {
                                 LinearProgressIndicator(
                                     progress = {
-                                        when (status.response.status){
+                                        when (status.response.status) {
                                             "opened" -> 0.15f / 6f
                                             "diagnostics" -> 1f / 6f
                                             "approval" -> 2f / 6f
@@ -298,7 +359,7 @@ fun JobCardDisplayCard(
                                     modifier = Modifier
                                         .height(5.dp)
                                         .clip(RoundedCornerShape(10.dp)),
-                                    color = when (status.response.status){
+                                    color = when (status.response.status) {
                                         "done" -> DarkGreen
                                         "frozen" -> Red
                                         else -> BlueA700
@@ -316,6 +377,7 @@ fun JobCardDisplayCard(
                         }
 
                     }
+
                     null -> {
                         Text(text = "HUGE ERROR ", color = Color.Red, fontSize = 10.sp)
                     }

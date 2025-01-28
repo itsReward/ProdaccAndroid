@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.room.util.copy
 import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.NewJobCard
@@ -27,7 +29,7 @@ class NewJobCardViewModel(
     private val jobCardRepository: JobCardRepository = JobCardRepository(),
     private val employeeRepository: EmployeeRepository = EmployeeRepository(),
     private val vehicleRepository: VehicleRepository = VehicleRepository(),
-) : ViewModel() {
+) : ViewModel(), WebSocketInstance.WebSocketEventListener{
 
     val clients = emptyList<Client>()
 
@@ -41,7 +43,9 @@ class NewJobCardViewModel(
     val supervisors = _supervisors.asStateFlow()
 
     private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
-    val vehicles = _vehicles.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
 
     private val _employeeLoadingState =
         MutableStateFlow<EmployeeLoadingResult>(EmployeeLoadingResult.Idle)
@@ -53,6 +57,9 @@ class NewJobCardViewModel(
 
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
     val vehicle = _vehicle.asStateFlow()
+
+    private val _filteredVehicles = MutableStateFlow(_vehicles.value)
+    val filteredVehicles = _filteredVehicles.asStateFlow()
 
     private val _supervisor = MutableStateFlow<Employee?>(null)
     val supervisor = _supervisor.asStateFlow()
@@ -82,6 +89,7 @@ class NewJobCardViewModel(
     val vehiclesDropdown = mutableStateOf(false)
 
     init {
+        WebSocketInstance.addWebSocketListener(this)
 
         viewModelScope.launch {
             EventBus.crudEvents.collect()
@@ -91,6 +99,16 @@ class NewJobCardViewModel(
             getEmployees()
             getVehicles()
         }
+    }
+
+    fun onSearchQueryUpdate(query: String){
+        _searchQuery.value = query
+        if (query == ""){
+            _filteredVehicles.value = _vehicles.value
+        } else {
+            _filteredVehicles.value = _vehicles.value.filter { it.regNumber.contains(query, ignoreCase = true) || it.chassisNumber.contains(query, ignoreCase = true) }
+        }
+
     }
 
     fun toggleSupervisorDropdown() {
@@ -162,6 +180,7 @@ class NewJobCardViewModel(
 
                 is VehicleRepository.LoadingResult.Success -> {
                     _vehicles.value = vehicles.vehicles
+                    _filteredVehicles.value = vehicles.vehicles
                     _vehiclesLoadingState.value = LoadingState.Success(vehicles.vehicles)
                 }
             }
@@ -172,6 +191,12 @@ class NewJobCardViewModel(
                     LoadingState.Error(e.message ?: "Unknown Error")
             }
         }
+    }
+
+    private suspend fun refreshVehicles(){
+        _vehicles.value = emptyList()
+        _vehiclesLoadingState.value = LoadingState.Loading
+        getVehicles()
     }
 
     private suspend fun getVehicleEntity(id: String) {
@@ -306,6 +331,24 @@ class NewJobCardViewModel(
         data class Success(val entity: Any) : LoadingState()
         data class Error(val message: String) : LoadingState()
         data object NetworkError : LoadingState()
+    }
+
+    override fun onWebSocketUpdate(update: WebSocketUpdate) {
+        viewModelScope.launch {
+            when (update) {
+                is WebSocketUpdate.NewVehicle -> refreshVehicles()
+                is WebSocketUpdate.DeleteVehicle -> refreshVehicles()
+                is WebSocketUpdate.UpdateVehicle -> refreshVehicles()
+                else -> {
+
+                }
+
+            }
+        }
+
+    }
+
+    override fun onWebSocketError(error: Throwable) {
     }
 
 

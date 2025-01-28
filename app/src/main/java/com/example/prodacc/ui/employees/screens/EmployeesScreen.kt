@@ -41,6 +41,7 @@ import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.TokenManager
 
 
@@ -51,9 +52,15 @@ fun EmployeesScreen(
     viewModel: EmployeesViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
 
-    val employees = viewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }
-        .groupBy { it.employeeName.first() }.toSortedMap()
-        .map { EmployeeListCategory(name = it.key.toString(), items = it.value) }
+    val employees = if (SignedInUser.role != SignedInUser.Role.Supervisor){
+        viewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }
+            .groupBy { it.employeeName.first() }.toSortedMap()
+            .map { EmployeeListCategory(name = it.key.toString(), items = it.value) }
+    } else {
+        viewModel.technicians.collectAsState().value.sortedBy { it.employeeName.first() }
+            .groupBy { it.employeeName.first() }.toSortedMap()
+            .map { EmployeeListCategory(name = it.key.toString(), items = it.value) }
+    }
 
     val refreshing = rememberSwipeRefreshState(isRefreshing = viewModel.refreshing.collectAsState().value)
 

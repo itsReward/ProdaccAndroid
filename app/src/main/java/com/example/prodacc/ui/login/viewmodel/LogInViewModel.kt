@@ -15,6 +15,13 @@ class LogInViewModel(
     private val logInRepository: LogInRepository = LogInRepository()
 ) : ViewModel() {
 
+    private val _navigateToJobCards = MutableStateFlow(false)
+    val navigateToJobCards = _navigateToJobCards.asStateFlow()
+
+    fun onNavigatedToJobCards() {
+        _navigateToJobCards.value = false
+    }
+
     private var username = MutableStateFlow("")
     val usernameState = username
 
@@ -56,12 +63,12 @@ class LogInViewModel(
 
                             is SignedInUser.UserSignInResult.Error -> LogInState.Error(user.message)
                             is SignedInUser.UserSignInResult.Success -> {
-                                signedInScreenShow()
-                                println(SignedInUser.user)
+                                WebSocketInstance.reconnectWebSocket()
+                                _loginState.value = LogInState.Success(result.token)
+                                // Set navigation state instead of directly navigating
+                                _navigateToJobCards.value = true
                             }
                         }
-                        WebSocketInstance.reconnectWebSocket()
-                        _loginState.value = LogInState.Success(result.token)
                     }
 
                     is LogInRepository.LoginResult.Error -> {

@@ -199,12 +199,15 @@ fun JobCardDetailScreen(
 
 
                 ) {
+
                     TopBar(
                         jobCardName = jobCard!!.jobCardName,
                         navController = navController,
                         onClickPeople = { showDialog = !showDialog },
                         onClickDelete = { viewModel.setDeleteJobCardConfirmation(true) },
-                        saveState = viewModel.savingState.collectAsState().value
+                        saveState = viewModel.savingState.collectAsState().value,
+                        priority = jobCard.priority,
+                        onClickPriority = { viewModel.togglePriority() }
                     )
 
                     if (showDialog) {

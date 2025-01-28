@@ -53,7 +53,6 @@ fun EditVehicleDetailsScreen(
 ) {
 
     val vehicle by viewModel.vehicle.collectAsState()
-    val clients by viewModel.clients.collectAsState()
 
 
     Column(
@@ -305,8 +304,10 @@ fun EditVehicleDetailsScreen(
                                 ClientsDropDown(
                                     expanded = viewModel.vehicleClientDropdown.collectAsState().value,
                                     onDismissRequest = { viewModel.onVehicleClientToggle() },
-                                    clients = clients,
-                                    onClientSelected = viewModel::updateClientId
+                                    clients = viewModel.filteredClients.collectAsState().value,
+                                    onClientSelected = viewModel::updateClientId,
+                                    onQueryUpdate = viewModel::onQueryUpdate,
+                                    query = viewModel.searchQuery.collectAsState().value
                                 )
 
 
@@ -344,7 +345,7 @@ fun EditVehicleDetailsScreen(
         }
 
 
-        when (viewModel.updateState.collectAsState().value){
+        when (viewModel.updateState.collectAsState().value) {
             is EditVehicleDetailsViewModel.UpdateState.Error -> {
                 AlertDialog(
                     onDismissRequest = { viewModel.resetUpdateState() },
@@ -362,15 +363,18 @@ fun EditVehicleDetailsScreen(
                     text = { Text(text = (viewModel.updateState.collectAsState().value as EditVehicleDetailsViewModel.UpdateState.Error).message) }
                 )
             }
+
             is EditVehicleDetailsViewModel.UpdateState.Idle -> {
 
             }
+
             is EditVehicleDetailsViewModel.UpdateState.Loading -> {
-                Dialog(onDismissRequest = {}){
+                Dialog(onDismissRequest = {}) {
                     LoadingStateColumn(title = "Updating Vehicle")
                 }
 
             }
+
             is EditVehicleDetailsViewModel.UpdateState.Success -> {
                 AlertDialog(
                     onDismissRequest = { navController.navigateUp() },

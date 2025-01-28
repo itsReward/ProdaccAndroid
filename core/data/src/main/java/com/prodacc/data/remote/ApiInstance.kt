@@ -44,7 +44,7 @@ object ApiInstance {
     private val logger = Logger.getLogger(ApiInstance::class.java.name)
 
     @Volatile
-    var BASE_URL = "http://172.30.211.123:5000"
+    var BASE_URL = "http://192.168.99.123:5000"
 
     // Api Connection Initialisation
     fun initialize(context: Context, baseUrl: String = BASE_URL) {

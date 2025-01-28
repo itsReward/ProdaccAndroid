@@ -9,6 +9,7 @@ import dagger.hilt.android.HiltAndroidApp
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        WebSocketInstance.initialize(this)
         ApiInstance.initialize(this)
     }
 
