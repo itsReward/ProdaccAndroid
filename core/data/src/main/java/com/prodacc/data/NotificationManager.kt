@@ -3,6 +3,7 @@ package com.prodacc.data
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.PendingIntent
 import android.content.Context
@@ -17,20 +18,34 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.Person
 import androidx.core.content.ContextCompat
 import com.prodacc.data.repositories.JobCardTechnicianRepository
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
 
 object NotificationManager {
-    // Create separate channels for different types of notifications
-    private const val WORKSHOP_CHANNEL_ID = "workshop_notifications"
-    private const val SERVICE_CHANNEL_ID = "foreground_service_channel"
-    private var notificationId = 100  // Start workshop notifications from 100
+    const val WORKSHOP_CHANNEL_ID = "workshop_notifications"
+    const val SERVICE_CHANNEL_ID = "foreground_service_channel"
+    private var notificationId = 100
 
-    fun createNotificationChannel(context: Context) {
-        // Workshop notifications channel
-        val workshopChannel = NotificationChannel(
+    fun createNotificationChannels(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+            // Create all channels
+            val channels = listOf(
+                createWorkshopChannel(),
+                createServiceChannel()
+            )
+
+            notificationManager.createNotificationChannels(channels)
+            Log.d("NotificationManager", "Notification channels created successfully")
+        }
+    }
+
+    private fun createWorkshopChannel(): NotificationChannel {
+        return NotificationChannel(
             WORKSHOP_CHANNEL_ID,
             "Workshop Notifications",
             android.app.NotificationManager.IMPORTANCE_HIGH
@@ -49,9 +64,10 @@ object NotificationManager {
             setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttributes)
             setAllowBubbles(true)
         }
+    }
 
-        // Service notification channel
-        val serviceChannel = NotificationChannel(
+    private fun createServiceChannel(): NotificationChannel {
+        return NotificationChannel(
             SERVICE_CHANNEL_ID,
             "Connection Service",
             android.app.NotificationManager.IMPORTANCE_LOW
@@ -60,14 +76,12 @@ object NotificationManager {
             setShowBadge(false)
             enableVibration(false)
             enableLights(false)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            setSound(null, null)
+            importance = android.app.NotificationManager.IMPORTANCE_LOW
+            setAllowBubbles(false)
         }
-
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
-        notificationManager.createNotificationChannels(listOf(workshopChannel, serviceChannel))
-
     }
-
-
 
     fun showNotification(
         context: Context,
@@ -76,8 +90,6 @@ object NotificationManager {
         type: String,
         entityId: UUID
     ) {
-
-        // Check permissions first
         if (!checkNotificationPermission(context)) {
             (context as? Activity)?.let { activity ->
                 showNotificationPermissionDialog(activity)
@@ -85,12 +97,14 @@ object NotificationManager {
             return
         }
 
-        // Check if user should receive this notification based on role
         if (!runBlocking { shouldShowNotification(type, entityId) }) return
 
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("notification_type", type)
+            putExtra("entity_id", entityId.toString())
         }
+
         val pendingIntent = PendingIntent.getActivity(
             context,
             0,
@@ -98,34 +112,53 @@ object NotificationManager {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val person = Person.Builder()
+            .setName("Workshop App")
+            .setImportant(true)
+            .build()
 
-        //Create vibration patter
-        val vibrationPattern = longArrayOf(0, 500, 200, 500)
-
-        //get default notification sound
-        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val messagingStyle = NotificationCompat.MessagingStyle(person)
+            .addMessage(message, System.currentTimeMillis(), person)
 
         val notification = NotificationCompat.Builder(context, WORKSHOP_CHANNEL_ID)
             .setSmallIcon(R.drawable.jobkeep_round_icon)
-            .setContentTitle(title)
-            .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setSound(soundUri)
-            .setVibrate(vibrationPattern)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setStyle(messagingStyle)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setTimeoutAfter(30000)
             .setContentIntent(pendingIntent)
+            .setFullScreenIntent(pendingIntent, true)
             .build()
 
         try {
             val notificationManagerCompat = NotificationManagerCompat.from(context)
             notificationManagerCompat.notify(notificationId++, notification)
             Log.d("NotificationManager", "Notification shown successfully: $title")
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Log.e("NotificationManager", "Error showing notification: ${e.message}")
             e.printStackTrace()
         }
+    }
 
+    fun createServiceNotification(context: Context, stopIntent: PendingIntent): Notification {
+        return NotificationCompat.Builder(context, SERVICE_CHANNEL_ID)
+            .setContentTitle("Workshop App")
+            .setContentText("Staying connected for updates")
+            .setSmallIcon(R.drawable.jobkeep_round_icon)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+            .setSilent(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .addAction(0, "Stop", stopIntent)
+            .build()
     }
 
     private suspend fun shouldShowNotification(type: String, entityId: UUID): Boolean {

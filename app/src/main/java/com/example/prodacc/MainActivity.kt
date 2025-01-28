@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity(){
             // Permission is granted
             Log.d("Permissions", "Notification permission granted")
             // Initialize your notification channel here if needed
-            NotificationManager.createNotificationChannel(this)
+            NotificationManager.createNotificationChannels(this)
         } else {
             // Show settings dialog if permission is denied
             if (!shouldShowRequestPermissionRationale(POST_NOTIFICATIONS)) {
@@ -123,7 +123,7 @@ class MainActivity : ComponentActivity(){
                     POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     // Permission is already granted
-                    NotificationManager.createNotificationChannel(this)
+                    NotificationManager.createNotificationChannels(this)
                 }
                 shouldShowRequestPermissionRationale(POST_NOTIFICATIONS) -> {
                     // Show in-app rationale about why notification is needed

@@ -29,7 +29,7 @@ object WebSocketInstance {
 
     fun initialize(context: Context){
         applicationContext = context.applicationContext
-        NotificationManager.createNotificationChannel(applicationContext)
+        NotificationManager.createNotificationChannels(applicationContext)
     }
 
     private val _websocketIndicator = MutableStateFlow(true)
