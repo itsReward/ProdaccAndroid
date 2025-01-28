@@ -31,6 +31,8 @@ class NotificationService : Service() {
         NotificationManager.createNotificationChannel(this)
         startForeground(serviceNotificationId, createServiceNotification())
         WebSocketInstance.initialize(applicationContext)
+
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -38,6 +40,14 @@ class NotificationService : Service() {
         when (intent?.action) {
             stopServiceAction -> stopSelf()
             else -> {
+
+                // Always update the notification to ensure it's non-dismissible
+                val stopIntent = PendingIntent.getService(
+                    this,
+                    0,
+                    Intent(this, NotificationService::class.java).apply { action = intent?.action },
+                    PendingIntent.FLAG_IMMUTABLE
+                )
                 // Schedule service stop after 1 hour
                 serviceJob = serviceScope.launch {
                     delay(TimeUnit.HOURS.toMillis(1))
@@ -79,9 +89,12 @@ class NotificationService : Service() {
             .setSmallIcon(R.drawable.jobkeep_round_icon)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
+            .setAutoCancel(false)  // Prevents auto-cancellation
             .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
             .setSound(soundUri)
             .setVibrate(vibrationPattern)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)  // Explicitly mark as service
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(0, "Stop", stopIntent)
             .build()
     }
