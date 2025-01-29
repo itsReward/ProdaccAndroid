@@ -30,18 +30,16 @@ object NotificationManager {
     private var notificationId = 100
 
     fun createNotificationChannels(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
 
-            // Create all channels
-            val channels = listOf(
-                createWorkshopChannel(),
-                createServiceChannel()
-            )
+        // Create all channels
+        val channels = listOf(
+            createWorkshopChannel(),
+            createServiceChannel()
+        )
 
-            notificationManager.createNotificationChannels(channels)
-            Log.d("NotificationManager", "Notification channels created successfully")
-        }
+        notificationManager.createNotificationChannels(channels)
+        Log.d("NotificationManager", "Notification channels created successfully")
     }
 
     private fun createWorkshopChannel(): NotificationChannel {
@@ -113,7 +111,7 @@ object NotificationManager {
         )
 
         val person = Person.Builder()
-            .setName("Workshop App")
+            .setName("Workshop Updates")
             .setImportant(true)
             .build()
 
@@ -259,3 +257,4 @@ object NotificationManager {
     }
 
 }
+
