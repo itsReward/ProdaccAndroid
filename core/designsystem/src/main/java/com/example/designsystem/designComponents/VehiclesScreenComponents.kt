@@ -89,8 +89,10 @@ fun VehiclesList(
             Spacer(modifier = Modifier.width(10.dp))
             if (clientInitials.size > 1){
                 ProfileAvatar(initials = "${clientInitials[0].first()}${clientInitials[1].first()}", textSize = 16.sp)
-            } else {
+            } else if (clientInitials.size == 1){
                 ProfileAvatar(initials = "${clientInitials[0].first()}", textSize = 16.sp)
+            } else {
+                ProfileAvatar(initials = "--", textSize = 16.sp, color = Color.LightGray)
             }
 
 

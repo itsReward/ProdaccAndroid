@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -37,6 +39,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -63,6 +70,7 @@ fun NewClientScreen(
 ) {
     val state = viewModel.uiState.collectAsState().value
     val scroll = rememberScrollState()
+    val focusManager = LocalFocusManager.current
 
     AnimatedVisibility(visible = true, enter = slideInHorizontally()) {
         Scaffold(
@@ -141,13 +149,29 @@ fun NewClientScreen(
                                 value = state.firstName,
                                 onValueChange = viewModel::updateFirstName,
                                 label = { Text(text = "First Name") },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    capitalization = KeyboardCapitalization.Words,
+                                    imeAction = ImeAction.Next
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                )
                             )
                             OutlinedTextField(
                                 value = state.secondName,
                                 onValueChange = viewModel::updateSurname,
                                 label = { Text(text = "Surname") },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    capitalization = KeyboardCapitalization.Words,
+                                    imeAction = ImeAction.Next
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                )
                             )
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -226,19 +250,44 @@ fun NewClientScreen(
                                 value = state.phoneNumber,
                                 onValueChange = viewModel::updatePhone,
                                 label = { Text(text = "Phone Number") },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    capitalization = KeyboardCapitalization.Words,
+                                    imeAction = ImeAction.Next,
+                                    keyboardType = KeyboardType.Phone
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                )
                             )
                             OutlinedTextField(
                                 value = state.email,
                                 onValueChange = viewModel::updateEmail,
                                 label = { Text(text = "Email") },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    capitalization = KeyboardCapitalization.None,
+                                    imeAction = ImeAction.Next,
+                                    keyboardType = KeyboardType.Email
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                )
                             )
                             OutlinedTextField(
                                 value = state.address,
                                 onValueChange = viewModel::updateAddress,
                                 label = { Text(text = "Home Address") },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(
+                                    capitalization = KeyboardCapitalization.Words,
+                                    imeAction = ImeAction.Next
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                )
                             )
 
 
@@ -258,13 +307,29 @@ fun NewClientScreen(
                                 value = state.jobTitle,
                                 onValueChange = viewModel::updateJobTitle,
                                 label = { Text(text = "Job Title") },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    capitalization = KeyboardCapitalization.Words,
+                                    imeAction = ImeAction.Next
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                )
                             )
                             OutlinedTextField(
                                 value = state.company,
                                 onValueChange = viewModel::updateCompany,
                                 label = { Text(text = "Company") },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    capitalization = KeyboardCapitalization.Words,
+                                    imeAction = ImeAction.Next
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                )
                             )
                         }
                     }

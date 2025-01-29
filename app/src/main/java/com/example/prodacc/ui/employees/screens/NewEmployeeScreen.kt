@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -38,6 +40,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -61,6 +68,7 @@ fun NewEmployeeScreen(
     val scroll = rememberScrollState()
     var expanded by remember { mutableStateOf(false) }
     val roles = listOf("Service Advisor", "Technician", "Supervisor")
+    val focusManager = LocalFocusManager.current
 
     AnimatedVisibility(visible = true, enter = slideInHorizontally()) {
         Scaffold(
@@ -146,13 +154,29 @@ fun NewEmployeeScreen(
                                         value = state.value.employeeName ?: "",
                                         onValueChange = viewModel::updateFirstName,
                                         label = { Text(text = "First Name") },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
                                     OutlinedTextField(
                                         value = state.value.employeeSurname ?: "",
                                         onValueChange = viewModel::updateSurname,
                                         label = { Text(text = "Surname") },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
 
 
@@ -176,13 +200,28 @@ fun NewEmployeeScreen(
                                         value = state.value.phoneNumber ?: "",
                                         onValueChange = viewModel::updatePhone,
                                         label = { Text(text = "Phone Number") },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            keyboardType = KeyboardType.Phone,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
                                     OutlinedTextField(
                                         value = state.value.homeAddress ?: "",
                                         onValueChange = viewModel::updateAddress,
                                         label = { Text(text = "Home Address") },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
 
 
@@ -205,7 +244,15 @@ fun NewEmployeeScreen(
                                         onValueChange = viewModel::updateDepartment,
                                         label = { Text(text = "Department") },
                                         readOnly = false,
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
 
                                     ExposedDropdownMenuBox(

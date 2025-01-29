@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -32,6 +34,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
@@ -62,7 +69,7 @@ fun EditClientDetailScreen(
         factory = EditClientDetailsViewModelFactory(clientId = clientId)
     )
 ) {
-
+    val focusManager = LocalFocusManager.current
     val client = viewModel.client.collectAsState().value
 
 
@@ -159,13 +166,21 @@ fun EditClientDetailScreen(
                                     value = client?.clientName?: "",
                                     onValueChange = viewModel::updateFirstName,
                                     label = { Text(text = "First Name") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words
+                                    )
                                 )
                                 OutlinedTextField(
                                     value = client?.clientSurname?: "",
                                     onValueChange = viewModel::updateSurname,
-                                    label = { Text(text = "First Name") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    label = { Text(text = "Surname") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words
+                                    )
                                 )
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -259,19 +274,44 @@ fun EditClientDetailScreen(
                                     value = client?.phone?: "",
                                     onValueChange = viewModel::updatePhone,
                                     label = { Text(text = "Phone Number") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words,
+                                        imeAction = ImeAction.Next,
+                                        keyboardType = KeyboardType.Phone
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                    )
                                 )
                                 OutlinedTextField(
                                     value = client?.email?: "",
                                     onValueChange = viewModel::updateEmail,
                                     label = { Text(text = "Email") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.None,
+                                        imeAction = ImeAction.Next,
+                                        keyboardType = KeyboardType.Email
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                    )
                                 )
                                 OutlinedTextField(
                                     value = client?.address?: "",
                                     onValueChange = viewModel::updateAddress,
                                     label = { Text(text = "Home Address") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                    )
                                 )
 
 
@@ -291,28 +331,35 @@ fun EditClientDetailScreen(
                                     value = client?.jobTitle?: "",
                                     onValueChange = viewModel::updateJobTitle,
                                     label = { Text(text = "Job Title") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                    )
                                 )
                                 OutlinedTextField(
                                     value = client?.company?: "",
                                     onValueChange = viewModel::updateCompany,
                                     label = { Text(text = "Company") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                    )
                                 )
-
-
                             }
                         }
-
-
                     }
                 }
             }
         }
-
-
-
-
     }
-
 }

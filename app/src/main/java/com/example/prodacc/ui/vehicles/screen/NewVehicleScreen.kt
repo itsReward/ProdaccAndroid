@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -33,7 +35,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
@@ -52,7 +58,7 @@ fun NewVehicleScreen(
 ) {
     val uiState = viewModel.uiState.collectAsState().value
     val saveState = viewModel.saveState.collectAsState().value
-
+    val focusManager = LocalFocusManager.current
     var clientExpanded by remember { mutableStateOf(false) }
     var makeExpanded by remember { mutableStateOf(false) }
     var modelExpanded by remember { mutableStateOf(false) }
@@ -269,21 +275,45 @@ fun NewVehicleScreen(
                         onValueChange = viewModel::updateColor,
                         label = { Text(text = "Color") },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Color") }
+                        placeholder = { Text("Color") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
                     )
                     OutlinedTextField(
                         value = viewModel.uiState.value.regNumber ?: "",
                         onValueChange = viewModel::updateRegNumber,
                         label = { Text(text = "Reg No.") },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Enter Reg Number") }
+                        placeholder = { Text("Enter Reg Number") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Characters,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
                     )
                     OutlinedTextField(
                         value = viewModel.uiState.value.chassisNumber ?: "",
                         onValueChange = viewModel::updateChassisNumber,
                         label = { Text(text = "Chassis No.") },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Enter Chassis Number") }
+                        placeholder = { Text("Enter Chassis Number") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Characters,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
                     )
                     Row {
                         OutlinedTextField(

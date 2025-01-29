@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -31,12 +32,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -44,7 +49,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.designsystem.designComponents.ErrorStateColumn
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.ProfileAvatar
@@ -53,8 +57,6 @@ import com.example.designsystem.theme.contactDetails
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.employees.viewModels.EditEmployeeViewModel
-import com.example.prodacc.ui.vehicles.viewModels.EditVehicleDetailsViewModel
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +64,7 @@ fun EditEmployeeScreen(
     navController: NavController,
     employeeId: String
 ){
+    val focusManager = LocalFocusManager.current
     val viewModel: EditEmployeeViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -222,13 +225,29 @@ fun EditEmployeeScreen(
                                         value = viewModel.employee.collectAsState().value?.employeeName ?: "",
                                         onValueChange = viewModel::updateFirstName,
                                         label = { Text(text = "First Name") },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
                                     OutlinedTextField(
                                         value = viewModel.employee.collectAsState().value?.employeeSurname?: "",
                                         onValueChange = viewModel::updateSurname,
                                         label = { Text(text = "Surname") },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
                                 }
                             }
@@ -246,13 +265,28 @@ fun EditEmployeeScreen(
                                         value = viewModel.employee.collectAsState().value?.phoneNumber?: "",
                                         onValueChange = viewModel::updatePhone,
                                         label = { Text(text = "Phone Number") },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            keyboardType = KeyboardType.Phone,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
                                     OutlinedTextField(
                                         value = viewModel.employee.collectAsState().value?.homeAddress?:"",
                                         onValueChange = viewModel::updateAddress,
                                         label = { Text(text = "Home Address") },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
                                 }
                             }
@@ -270,13 +304,29 @@ fun EditEmployeeScreen(
                                         value = viewModel.employee.collectAsState().value?.employeeDepartment?: "",
                                         onValueChange = viewModel::updateDepartment,
                                         label = { Text(text = "Department") },
-                                        readOnly = false
+                                        readOnly = false,
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
                                     OutlinedTextField(
                                         value = viewModel.employee.collectAsState().value?.employeeRole?: "",
                                         onValueChange = viewModel::updateJobTitle,
                                         label = { Text(text = "Job Title") },
-                                        readOnly = false
+                                        readOnly = false,
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        keyboardActions = KeyboardActions(
+                                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        )
                                     )
                                 }
                             }
@@ -324,11 +374,7 @@ fun EditEmployeeScreen(
                         text = { Text(text = (viewModel.updateState.collectAsState().value as EditEmployeeViewModel.UpdateState.Error).message) }
                     )
                 }
-
-
             }
-
-
         }
     }
 }

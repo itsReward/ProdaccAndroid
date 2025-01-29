@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -50,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,8 +60,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -134,9 +142,8 @@ fun JobCardDetailScreen(
     )
 ) {
     val jobCard = viewModel.jobCard.collectAsState().value
-
+    val focusManager = LocalFocusManager.current
     val scroll = rememberScrollState()
-    val statusScroll = rememberScrollState()
     var showDialog by remember { mutableStateOf(false) }
 
 
@@ -156,7 +163,8 @@ fun JobCardDetailScreen(
         mutableStateOf(false)
     }
 
-    val refreshing = rememberSwipeRefreshState(isRefreshing = viewModel.refreshing.collectAsState().value)
+    val refreshing =
+        rememberSwipeRefreshState(isRefreshing = viewModel.refreshing.collectAsState().value)
 
     SwipeRefresh(
         state = refreshing,
@@ -269,7 +277,6 @@ fun JobCardDetailScreen(
                     ) {
 
 
-
                         Row(
                             modifier = Modifier
                                 .padding(top = 20.dp)
@@ -280,7 +287,7 @@ fun JobCardDetailScreen(
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            when(val list = viewModel.statusLoadingState.collectAsState().value){
+                            when (val list = viewModel.statusLoadingState.collectAsState().value) {
                                 is JobCardDetailsViewModel.LoadingState.Error -> {
                                     Column(
                                         modifier = Modifier
@@ -296,6 +303,7 @@ fun JobCardDetailScreen(
 
                                     }
                                 }
+
                                 JobCardDetailsViewModel.LoadingState.Loading -> {
                                     Row(
                                         modifier = Modifier.padding(start = 10.dp),
@@ -303,13 +311,19 @@ fun JobCardDetailScreen(
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
 
                                     ) {
-                                        CircularProgressIndicator(color = BlueA700, trackColor = Color.Transparent, modifier = Modifier.size(25.dp), strokeWidth = 2.dp)
+                                        CircularProgressIndicator(
+                                            color = BlueA700,
+                                            trackColor = Color.Transparent,
+                                            modifier = Modifier.size(25.dp),
+                                            strokeWidth = 2.dp
+                                        )
                                         Text(text = "Loading Statuses")
 
                                     }
                                 }
+
                                 else -> {
-                                    if (viewModel.jobCardStatusList.collectAsState().value.isNotEmpty()){
+                                    if (viewModel.jobCardStatusList.collectAsState().value.isNotEmpty()) {
                                         StepIndicator(
                                             jobCardStatuses = viewModel.jobCardStatusList.collectAsState().value
                                         )
@@ -412,7 +426,7 @@ fun JobCardDetailScreen(
                                 onValueChange = { viewModel.updateDateAndTimeIn(it) },
                                 label = "Date In",
                                 modifier = Modifier.fillMaxWidth(),
-                                enabled = when(SignedInUser.role){
+                                enabled = when (SignedInUser.role) {
                                     SignedInUser.Role.Supervisor -> false
                                     SignedInUser.Role.Technician -> false
                                     else -> {
@@ -426,7 +440,7 @@ fun JobCardDetailScreen(
                                 onValueChange = { viewModel.updateJobCardDeadline(it) },
                                 label = "Deadline",
                                 modifier = Modifier.fillMaxWidth(),
-                                enabled = when(SignedInUser.role){
+                                enabled = when (SignedInUser.role) {
                                     SignedInUser.Role.Supervisor -> false
                                     SignedInUser.Role.Technician -> false
                                     else -> {
@@ -447,7 +461,7 @@ fun JobCardDetailScreen(
                                 label = "Date Frozen",
                                 modifier = Modifier
                                     .fillMaxWidth(),
-                                enabled = when(SignedInUser.role){
+                                enabled = when (SignedInUser.role) {
                                     SignedInUser.Role.Supervisor -> false
                                     SignedInUser.Role.Technician -> false
                                     else -> {
@@ -484,13 +498,14 @@ fun JobCardDetailScreen(
                                 onSave = { reportsViewModel.saveServiceAdvisorReport() },
                                 modifier = Modifier.fillMaxWidth(),
                                 loadingState = reportsViewModel.serviceAdvisorReportLoadingState.collectAsState().value,
-                                enabled = when(SignedInUser.role){
+                                enabled = when (SignedInUser.role) {
                                     SignedInUser.Role.Supervisor -> false
                                     SignedInUser.Role.Technician -> false
                                     else -> {
                                         true
                                     }
-                                }
+                                },
+                                focusManager = focusManager
                             )
 
                             DateTimePickerTextField(
@@ -500,7 +515,7 @@ fun JobCardDetailScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 20.dp),
-                                enabled = when(SignedInUser.role){
+                                enabled = when (SignedInUser.role) {
                                     SignedInUser.Role.Admin -> true
                                     SignedInUser.Role.Technician -> true
                                     else -> {
@@ -516,13 +531,14 @@ fun JobCardDetailScreen(
                                 onSave = { timeSheetViewModel.onSaveDiagnosticsReport() },
                                 modifier = Modifier.fillMaxWidth(),
                                 loadingState = timeSheetViewModel.savingDiagnosticsState.collectAsState().value,
-                                enabled = when(SignedInUser.role){
+                                enabled = when (SignedInUser.role) {
                                     SignedInUser.Role.Admin -> true
                                     SignedInUser.Role.Technician -> true
                                     else -> {
                                         false
                                     }
-                                }
+                                },
+                                focusManager = focusManager
                             )
                             DateTimePickerTextField(
                                 value = timeSheetViewModel.diagnosticsClockOut.collectAsState().value,
@@ -531,7 +547,7 @@ fun JobCardDetailScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 10.dp, top = 10.dp),
-                                enabled = when(SignedInUser.role){
+                                enabled = when (SignedInUser.role) {
                                     SignedInUser.Role.Admin -> true
                                     SignedInUser.Role.Technician -> true
                                     else -> {
@@ -546,7 +562,7 @@ fun JobCardDetailScreen(
                                 label = "E.T.C.",
                                 modifier = Modifier
                                     .fillMaxWidth(),
-                                enabled = when(SignedInUser.role){
+                                enabled = when (SignedInUser.role) {
                                     SignedInUser.Role.Admin -> true
                                     SignedInUser.Role.Technician -> true
                                     else -> {
@@ -570,7 +586,7 @@ fun JobCardDetailScreen(
                             ) {
                                 MediumTitleText(name = "Timesheets/work done ")
 
-                                when(SignedInUser.role){
+                                when (SignedInUser.role) {
                                     SignedInUser.Role.ServiceAdvisor -> {}
                                     else -> {
                                         TextButton(
@@ -595,7 +611,10 @@ fun JobCardDetailScreen(
                                         verticalArrangement = Arrangement.spacedBy(10.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Text(text = timeSheetsLoadingState.message, color = Color.Red)
+                                        Text(
+                                            text = timeSheetsLoadingState.message,
+                                            color = Color.Red
+                                        )
                                         TextButton(onClick = { timeSheetViewModel.refreshTimeSheets() }) {
                                             Text(text = "Reload")
                                         }
@@ -668,7 +687,10 @@ fun JobCardDetailScreen(
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(imageVector = checklistIcon, contentDescription = "Checklist icon")
+                                Icon(
+                                    imageVector = checklistIcon,
+                                    contentDescription = "Checklist icon"
+                                )
                                 MediumTitleText(
                                     name = "Checklists",
                                     modifier = Modifier.padding(start = 5.dp)
@@ -714,7 +736,7 @@ fun JobCardDetailScreen(
                             label = "Quality control clock in",
                             modifier = Modifier
                                 .fillMaxWidth(),
-                            enabled = when(SignedInUser.role){
+                            enabled = when (SignedInUser.role) {
                                 SignedInUser.Role.Admin -> true
                                 SignedInUser.Role.Supervisor -> true
                                 else -> {
@@ -731,13 +753,14 @@ fun JobCardDetailScreen(
                             onSave = { timeSheetViewModel.onSaveControlReport() },
                             modifier = Modifier.fillMaxWidth(),
                             loadingState = timeSheetViewModel.savingControlState.collectAsState().value,
-                            enabled = when(SignedInUser.role){
+                            enabled = when (SignedInUser.role) {
                                 SignedInUser.Role.Admin -> true
                                 SignedInUser.Role.Supervisor -> true
                                 else -> {
                                     false
                                 }
-                            }
+                            },
+                            focusManager = focusManager
                         )
 
                         DateTimePickerTextField(
@@ -746,7 +769,7 @@ fun JobCardDetailScreen(
                             label = "Quality control clock out",
                             modifier = Modifier
                                 .fillMaxWidth(),
-                            enabled = when(SignedInUser.role){
+                            enabled = when (SignedInUser.role) {
                                 SignedInUser.Role.Admin -> true
                                 SignedInUser.Role.Supervisor -> true
                                 else -> {
@@ -764,7 +787,7 @@ fun JobCardDetailScreen(
                             },
                             label = "Date Closed",
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = when(SignedInUser.role){
+                            enabled = when (SignedInUser.role) {
                                 SignedInUser.Role.Admin -> true
                                 SignedInUser.Role.ServiceAdvisor -> true
                                 else -> {
@@ -948,7 +971,7 @@ fun JobCardDetailScreen(
 
     }
 
-    when (val saveState = viewModel.savingState.collectAsState().value){
+    when (val saveState = viewModel.savingState.collectAsState().value) {
         is JobCardDetailsViewModel.SaveState.Error -> {
             AlertDialog(
                 onDismissRequest = viewModel::resetSaveState,
@@ -962,10 +985,11 @@ fun JobCardDetailScreen(
                         Text(text = "Discard Changes")
                     }
                 },
-                title = { Text(text = "Failed to save changes")},
-                text = { Text(text = saveState.message)}
+                title = { Text(text = "Failed to save changes") },
+                text = { Text(text = saveState.message) }
             )
         }
+
         else -> {}
     }
 
@@ -981,7 +1005,8 @@ fun ReportTextField(
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
     loadingState: JobCardReportsViewModel.LoadingState,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    focusManager: FocusManager
 ) {
     var successText by remember {
         mutableStateOf(false)
@@ -1002,6 +1027,13 @@ fun ReportTextField(
                 disabledLabelColor = Color.DarkGray,
                 unfocusedContainerColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent
+            ),
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
             )
         )
         when (loadingState) {
@@ -1068,6 +1100,7 @@ fun ReportTextField(
 
     }
 }
+
 @Composable
 fun ReportTextField(
     value: String,
@@ -1077,7 +1110,8 @@ fun ReportTextField(
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
     loadingState: TimeSheetsViewModel.LoadingState,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    focusManager: FocusManager
 ) {
     var successText by remember {
         mutableStateOf(false)
@@ -1098,7 +1132,15 @@ fun ReportTextField(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent
             ),
-            enabled = enabled
+            enabled = enabled,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            )
         )
         when (loadingState) {
             is TimeSheetsViewModel.LoadingState.Loading -> {
@@ -1178,7 +1220,7 @@ fun NewTimeSheet(
     onReportChange: (String) -> Unit,
     saveState: TimeSheetsViewModel.LoadingState
 ) {
-    val lastClickTime = remember { mutableStateOf(0L) }
+    val lastClickTime = remember { mutableLongStateOf(0L) }
 
     when (saveState) {
         is TimeSheetsViewModel.LoadingState.Loading -> {
@@ -1252,7 +1294,11 @@ fun NewTimeSheet(
                     label = { Text(text = "Timesheet report") },
                     modifier = Modifier
                         .height(200.dp)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Next
+                    )
                 )
 
                 Row(
@@ -1267,8 +1313,8 @@ fun NewTimeSheet(
                     }
                     Button(onClick = {
                         val currentTime = System.currentTimeMillis()
-                        if (currentTime - lastClickTime.value > 1000) { // 1 second debounce
-                            lastClickTime.value = currentTime
+                        if (currentTime - lastClickTime.longValue > 1000) { // 1 second debounce
+                            lastClickTime.longValue = currentTime
                             saveSheet()
                         }
                     }
