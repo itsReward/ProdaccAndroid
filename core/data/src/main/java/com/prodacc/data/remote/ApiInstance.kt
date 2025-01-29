@@ -1,9 +1,6 @@
 package com.prodacc.data.remote
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
@@ -21,21 +18,13 @@ import com.prodacc.data.remote.services.StateChecklistService
 import com.prodacc.data.remote.services.TimesheetService
 import com.prodacc.data.remote.services.UserService
 import com.prodacc.data.remote.services.VehicleService
-import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.Cache
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.WebSocket
-import okhttp3.WebSocketListener
-import okhttp3.logging.HttpLoggingInterceptor
-import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 

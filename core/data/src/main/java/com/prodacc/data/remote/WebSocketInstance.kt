@@ -6,10 +6,13 @@ import android.os.Looper
 import android.util.Log
 import com.prodacc.data.NotificationManager
 import com.prodacc.data.remote.ApiInstance.BASE_URL
-import com.prodacc.data.repositories.JobCardRepository
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -26,6 +29,8 @@ object WebSocketInstance {
     private val _webSocketState = MutableStateFlow<WebSocketState>(WebSocketState.Disconnected(""))
     val webSocketState = _webSocketState.asStateFlow()
     private lateinit var applicationContext: Context
+
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun initialize(context: Context){
         applicationContext = context.applicationContext
@@ -92,7 +97,10 @@ object WebSocketInstance {
                     val uuid = UUID.fromString(data)
 
                     // Show notification first
-                    showNotificationForType(type, uuid)
+                    serviceScope.launch{
+                        showNotificationForType(type, uuid)
+                    }
+
 
                     logger.info("WebSocket Received: $type")
 
@@ -101,17 +109,13 @@ object WebSocketInstance {
                             logger.info("WebSocket Received: $type")
                             val jobCardId = UUID.fromString(jsonObject.getString("data"))
                             val update = WebSocketUpdate.JobCardCreated(jobCardId)
-                            webSocketListeners.forEach { listener ->
-                                listener.onWebSocketUpdate(update)
-                            }
+                            webSocketListeners.forEach { listener -> listener.onWebSocketUpdate(update) }
                         }
                         "DELETE_JOB_CARD" -> {
                             logger.info("WebSocket Received: $type")
                             val jobCardId = UUID.fromString(jsonObject.getString("data"))  // Parse data as string
                             val update = WebSocketUpdate.JobCardDeleted(jobCardId)  // or create a new DeletedJobCard update type
-                            webSocketListeners.forEach { listener ->
-                                listener.onWebSocketUpdate(update)
-                            }
+                            webSocketListeners.forEach { listener -> listener.onWebSocketUpdate(update) }
                         }
                         "UPDATE_JOB_CARD" -> {
                             val id = UUID.fromString(jsonObject.getString("data"))
@@ -301,6 +305,7 @@ object WebSocketInstance {
         webSocket?.close(1000, "App closing")
         webSocket = null
         webSocketListeners.clear()
+        serviceScope.cancel()
     }
 
 
@@ -311,59 +316,60 @@ object WebSocketInstance {
         data class Error(val message: String) : WebSocketState()
     }
 
-    private fun showNotificationForType(type: String, id: UUID) {
+    private suspend fun showNotificationForType(type: String, id: UUID) {
+        val jobCardName = getJobCardName(id)
         val (title, message) = when (type) {
             "NEW_JOB_CARD" -> Pair(
                 "New Job Card",
-                "Job Card #$id has been created"
+                "$jobCardName Job Card  has been created"
             )
             "DELETE_JOB_CARD" -> Pair(
                 "Job Card Deleted",
-                "Job Card #$id has been deleted"
+                "$jobCardName A Job Card has been deleted"
             )
             "JOB_CARD_STATUS_CHANGED" -> Pair(
                 "Status Update",
-                "Job Card #$id status has been updated"
+                "$jobCardName Job Card status has been updated"
             )
             "NEW_JOB_CARD_TECHNICIAN" -> Pair(
                 "New Assignment",
-                "You have been assigned to Job Card #$id"
+                "New technician has been assigned to $jobCardName job card"
             )
             "DELETE_JOB_CARD_TECHNICIAN" -> Pair(
                 "Assignment Removed",
-                "You have been removed from Job Card #$id"
+                "A technicians has been removed from $jobCardName Job Card "
             )
             "NEW_TIMESHEET" -> Pair(
                 "New Timesheet",
-                "A new timesheet has been added to Job Card #$id"
+                "A new timesheet has been added to $jobCardName Job Card"
             )
             "UPDATE_TIMESHEET" -> Pair(
                 "Timesheet Updated",
-                "A timesheet has been updated on Job Card #$id"
+                "A timesheet has been updated on $jobCardName Job Card"
             )
             "NEW_SERVICE_CHECKLIST" -> Pair(
                 "New Service Checklist",
-                "A service checklist has been created for Job Card #$id"
+                "A service checklist has been created for $jobCardName Job Card"
             )
             "UPDATE_SERVICE_CHECKLIST" -> Pair(
                 "Service Checklist Updated",
-                "Service checklist has been updated for Job Card #$id"
+                "Service checklist has been updated for $jobCardName Job Card "
             )
             "NEW_STATE_CHECKLIST" -> Pair(
                 "New State Checklist",
-                "A state checklist has been created for Job Card #$id"
+                "A state checklist has been created for $jobCardName Job Card "
             )
             "UPDATE_STATE_CHECKLIST" -> Pair(
                 "State Checklist Updated",
-                "State checklist has been updated for Job Card #$id"
+                "State checklist has been updated for $jobCardName Job Card"
             )
             "NEW_CONTROL_CHECKLIST" -> Pair(
                 "New Control Checklist",
-                "A control checklist has been created for Job Card #$id"
+                "A control checklist has been created for $jobCardName Job Card"
             )
             "UPDATE_CONTROL_CHECKLIST" -> Pair(
                 "Control Checklist Updated",
-                "Control checklist has been updated for Job Card #$id"
+                "Control checklist has been updated for $jobCardName Job Card"
             )
             else -> return // No notification for other types
         }
@@ -375,6 +381,20 @@ object WebSocketInstance {
             type = type,
             entityId = id
         )
+    }
+
+    private suspend fun getJobCardName(jobCardId: UUID): String {
+        return try {
+            val response = ApiInstance.jobCardService.getJobCard(jobCardId)
+            if (response.isSuccessful) {
+                response.body()?.jobCardName ?: "Job Card #$jobCardId"
+            } else {
+                ""
+            }
+        } catch (e: Exception) {
+            Log.e("WebSocket", "Error fetching job card name", e)
+            "Job Card #$jobCardId"
+        }
     }
 
 }
