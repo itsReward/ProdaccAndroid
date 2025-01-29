@@ -20,6 +20,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.content.ContextCompat
+import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.repositories.JobCardTechnicianRepository
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
