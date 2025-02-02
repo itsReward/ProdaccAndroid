@@ -125,7 +125,7 @@ fun LogInScreen(
         Column(
             modifier = Modifier
                 .weight(2.5f)
-                .clip(RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
+                .clip(RoundedCornerShape(topEnd = 30.dp, topStart = 30.dp))
                 .background(LightGrey)
                 .padding(start = 20.dp, end = 20.dp, top = 35.dp)
 

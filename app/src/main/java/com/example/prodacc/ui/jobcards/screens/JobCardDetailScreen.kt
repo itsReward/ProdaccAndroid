@@ -441,7 +441,6 @@ fun JobCardDetailScreen(
                                 label = "Deadline",
                                 modifier = Modifier.fillMaxWidth(),
                                 enabled = when (SignedInUser.role) {
-                                    SignedInUser.Role.Supervisor -> false
                                     SignedInUser.Role.Technician -> false
                                     else -> {
                                         true
@@ -564,7 +563,7 @@ fun JobCardDetailScreen(
                                     .fillMaxWidth(),
                                 enabled = when (SignedInUser.role) {
                                     SignedInUser.Role.Admin -> true
-                                    SignedInUser.Role.Technician -> true
+                                    SignedInUser.Role.Supervisor -> true
                                     else -> {
                                         false
                                     }
@@ -841,7 +840,7 @@ fun JobCardDetailScreen(
                 onClockInChange = timeSheetViewModel::clockIn,
                 onClockOutChange = timeSheetViewModel::clockOut,
                 saveState = timeSheetViewModel.newTimeSheetState.collectAsState().value,
-                resetState = timeSheetViewModel::resetNewTimeSheetLoadState
+                resetState = timeSheetViewModel::resetNewTimeSheetLoadState,
             )
 
         }
@@ -1030,10 +1029,9 @@ fun ReportTextField(
             ),
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences,
-                imeAction = ImeAction.Next
             ),
             keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                onNext = { focusManager.clearFocus()}
             )
         )
         when (loadingState) {
@@ -1088,7 +1086,10 @@ fun ReportTextField(
             exit = fadeOut() + shrinkVertically()
         ) {
             Button(
-                onClick = onSave,
+                onClick = {
+                    onSave()
+                    focusManager.clearFocus()
+                          },
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(top = 8.dp)
@@ -1133,10 +1134,8 @@ fun ReportTextField(
                 unfocusedContainerColor = Color.Transparent
             ),
             enabled = enabled,
-            singleLine = true,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences,
-                imeAction = ImeAction.Next
             ),
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
@@ -1194,7 +1193,10 @@ fun ReportTextField(
             exit = fadeOut() + shrinkVertically()
         ) {
             Button(
-                onClick = onSave,
+                onClick = {
+                    onSave()
+                    focusManager.clearFocus()
+                          },
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(top = 8.dp)
@@ -1218,8 +1220,9 @@ fun NewTimeSheet(
     onClockInChange: (LocalDateTime) -> Unit,
     onClockOutChange: (LocalDateTime) -> Unit,
     onReportChange: (String) -> Unit,
-    saveState: TimeSheetsViewModel.LoadingState
+    saveState: TimeSheetsViewModel.LoadingState,
 ) {
+    val focusManager = LocalFocusManager.current
     val lastClickTime = remember { mutableLongStateOf(0L) }
 
     when (saveState) {
@@ -1274,7 +1277,15 @@ fun NewTimeSheet(
                             text = "Title",
                             color = Color.DarkGray
                         )
-                    }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    )
                 )
                 DateTimePickerTextField(
                     value = newTimesheet.clockInDateAndTime,
@@ -1297,7 +1308,6 @@ fun NewTimeSheet(
                         .fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
-                        imeAction = ImeAction.Next
                     )
                 )
 
@@ -1316,6 +1326,7 @@ fun NewTimeSheet(
                         if (currentTime - lastClickTime.longValue > 1000) { // 1 second debounce
                             lastClickTime.longValue = currentTime
                             saveSheet()
+                            focusManager.clearFocus()
                         }
                     }
                     ) {

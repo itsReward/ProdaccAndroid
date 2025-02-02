@@ -33,7 +33,7 @@ object ApiInstance {
     private val logger = Logger.getLogger(ApiInstance::class.java.name)
 
     @Volatile
-    var BASE_URL = "http://10.20.108.123:5000"
+    var BASE_URL = "https://90ed-77-246-55-171.ngrok-free.app"
 
     // Api Connection Initialisation
     fun initialize(context: Context, baseUrl: String = BASE_URL) {

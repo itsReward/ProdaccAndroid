@@ -84,15 +84,41 @@ fun VehiclesList(
         Row (
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val clientInitials = clientName.split(" ")
-            BodyText(text = clientInitials[0])
+            val clientInitials = clientName.trim().split(" ").filter { it.isNotEmpty() }
+            // Show client name only if we have initials
+            if (clientInitials.isNotEmpty()) {
+                BodyText(text = clientInitials[0])
+                Spacer(modifier = Modifier.width(10.dp))
+            }
+
             Spacer(modifier = Modifier.width(10.dp))
-            if (clientInitials.size > 1){
-                ProfileAvatar(initials = "${clientInitials[0].first()}${clientInitials[1].first()}", textSize = 16.sp)
-            } else if (clientInitials.size == 1){
-                ProfileAvatar(initials = "${clientInitials[0].first()}", textSize = 16.sp)
-            } else {
-                ProfileAvatar(initials = "--", textSize = 16.sp, color = Color.LightGray)
+            // Handle profile avatar display based on available initials
+            when {
+                clientInitials.size >= 2 -> {
+                    // If we have at least 2 parts in the name
+                    val firstInitial = clientInitials[0].firstOrNull()?.toString() ?: ""
+                    val secondInitial = clientInitials[1].firstOrNull()?.toString() ?: ""
+                    ProfileAvatar(
+                        initials = "$firstInitial$secondInitial",
+                        textSize = 16.sp
+                    )
+                }
+                clientInitials.size == 1 -> {
+                    // If we have only one part in the name
+                    val initial = clientInitials[0].firstOrNull()?.toString() ?: ""
+                    ProfileAvatar(
+                        initials = initial,
+                        textSize = 16.sp
+                    )
+                }
+                else -> {
+                    // Fallback for empty or invalid names
+                    ProfileAvatar(
+                        initials = "--",
+                        textSize = 16.sp,
+                        color = Color.LightGray
+                    )
+                }
             }
 
 
