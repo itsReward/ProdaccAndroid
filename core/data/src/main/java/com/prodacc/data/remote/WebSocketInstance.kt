@@ -4,8 +4,8 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.prodacc.data.ConnectionManager
 import com.prodacc.data.NotificationManager
-import com.prodacc.data.remote.ApiInstance.BASE_URL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,12 +20,17 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
+import java.security.cert.X509Certificate
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 object WebSocketInstance {
     private val logger = Logger.getLogger(WebSocketInstance::class.java.name)
+    private lateinit var connectionManager: ConnectionManager
     private val _webSocketState = MutableStateFlow<WebSocketState>(WebSocketState.Disconnected(""))
     val webSocketState = _webSocketState.asStateFlow()
     private lateinit var applicationContext: Context
@@ -34,6 +39,7 @@ object WebSocketInstance {
 
     fun initialize(context: Context){
         applicationContext = context.applicationContext
+        connectionManager = ConnectionManager(context)
         NotificationManager.createNotificationChannels(applicationContext)
     }
 
@@ -55,33 +61,53 @@ object WebSocketInstance {
             return
         }
 
-        val wsUrl = try {
-            BASE_URL.replace("http://", "ws://")
-                .replace("https://", "wss://")
-                .let { "$it/websocket?token=$token" }
-        } catch (e: Exception) {
-            Log.e("WebSocket", "Error creating WebSocket URL", e)
-            return
+        serviceScope.launch {
+            try {
+                val baseUrl = connectionManager.getBaseUrl()
+                val wsUrl = when {
+                    baseUrl.startsWith("https://") -> baseUrl.replace("https://", "wss://")
+                    baseUrl.startsWith("http://") -> baseUrl.replace("http://", "ws://")
+                    else -> baseUrl
+                }.let { "$it/websocket?token=$token" }
+
+                Log.d("WebSocket", "Attempting connection to: $wsUrl")
+
+                val client = OkHttpClient.Builder()
+                    .pingInterval(30, TimeUnit.SECONDS)
+                    .readTimeout(3600, TimeUnit.MILLISECONDS)
+                    .writeTimeout(3600, TimeUnit.MILLISECONDS)
+                    .connectTimeout(3600, TimeUnit.MILLISECONDS)
+                    .addInterceptor { chain ->
+                        val request = chain.request().newBuilder()
+                            .header("Connection", "Upgrade")
+                            .header("Upgrade", "websocket")
+                            .header("Sec-WebSocket-Version", "13")
+                            .header("Host", "api.silverstarzw.com")
+                            .build()
+                        chain.proceed(request)
+                    }
+                    .retryOnConnectionFailure(false)
+                    .build()
+
+                val request = Request.Builder()
+                    .url(wsUrl)
+                    .addHeader("Origin", baseUrl)
+                    .build()
+
+                webSocket?.cancel()
+                webSocket = client.newWebSocket(request, createWebSocketListener())
+            } catch (e: Exception) {
+                Log.e("WebSocket", "Error setting up WebSocket", e)
+                _webSocketState.value = WebSocketState.Error("Error: ${e.message}")
+            }
         }
 
-        Log.d("WebSocket", "Attempting connection to: $wsUrl")
+
+    }
+
+    private fun createWebSocketListener() = object : WebSocketListener(){
 
 
-        val client = OkHttpClient.Builder()
-            .pingInterval(60, TimeUnit.SECONDS) // Keep connection alive
-            .readTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
-            .writeTimeout(0, TimeUnit.MILLISECONDS) // Important for WebSocket
-            .addInterceptor(
-                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
-            )
-            .build()
-
-        val request = Request.Builder()
-            .url(wsUrl)
-            .addHeader("Origin", BASE_URL)
-            .build()
-
-        webSocket = client.newWebSocket(request, object : WebSocketListener() {
 
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 _webSocketState.value = WebSocketState.Connected("Connected")
@@ -245,7 +271,7 @@ object WebSocketInstance {
                 Response code: ${response?.code}
                 Response message: ${response?.message}
                 Response headers: ${response?.headers}
-                Full URL: $wsUrl
+                Full URL: ${response?.request?.url}
             """.trimIndent())
                 webSocketListeners.forEach { listener ->
                     listener.onWebSocketError(t)
@@ -260,7 +286,8 @@ object WebSocketInstance {
                 _webSocketState.value = WebSocketState.Disconnected("Closed: $reason")
                 Log.d("WebSocket", "WebSocket closed: $reason")
             }
-        })
+
+
     }
 
     // Connecting to WebSocket
@@ -395,6 +422,11 @@ object WebSocketInstance {
             Log.e("WebSocket", "Error fetching job card name", e)
             "Job Card #$jobCardId"
         }
+    }
+
+    fun updateConnection() {
+        webSocket?.close(1000, "Switching connection")
+        setupWebSocket()
     }
 
 }

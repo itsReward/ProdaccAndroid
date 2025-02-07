@@ -8,9 +8,11 @@ import com.prodacc.data.remote.TokenManager
 import com.prodacc.data.remote.dao.Token
 import com.prodacc.data.remote.dao.UserLogInDetails
 import java.io.IOException
+import java.util.logging.Logger
 
 class LogInRepository {
     private var loginService = ApiInstance.logInService
+    private val logger = Logger.getLogger(LogInRepository::class.java.name)
     private val gson = Gson()
 
     sealed class LoginResult {
@@ -21,6 +23,7 @@ class LogInRepository {
     }
 
     suspend fun login(username: String, password: String): LoginResult {
+        logger.info("LOGGING IN...")
         return try {
             val loginDetails = UserLogInDetails(username, password)
 
@@ -36,6 +39,7 @@ class LogInRepository {
                     LoginResult.Success(token)
                 } ?: LoginResult.ErrorSingleMessage("Empty response body")
             } else {
+                logger.info("Error connecting")
                 println("####Error####")
                 println(response.errorBody()?.string())
 

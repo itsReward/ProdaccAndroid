@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
+import com.prodacc.data.ConnectionManager
 import com.prodacc.data.remote.services.ClientService
 import com.prodacc.data.remote.services.ControlChecklistService
 import com.prodacc.data.remote.services.EmployeeService
@@ -18,6 +19,9 @@ import com.prodacc.data.remote.services.StateChecklistService
 import com.prodacc.data.remote.services.TimesheetService
 import com.prodacc.data.remote.services.UserService
 import com.prodacc.data.remote.services.VehicleService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -31,17 +35,25 @@ import java.util.logging.Logger
 
 object ApiInstance {
     private val logger = Logger.getLogger(ApiInstance::class.java.name)
+    private lateinit var connectionManager: ConnectionManager
+    var url: String = ""
 
-    @Volatile
-    var BASE_URL = "https://90ed-77-246-55-171.ngrok-free.app"
+    fun initialize(context: Context) {
+        connectionManager = ConnectionManager(context)
+        updateBaseUrl(context)
+    }
+
+    private fun updateBaseUrl(context: Context) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val baseUrl = connectionManager.getBaseUrl()
+            url = baseUrl
+            _retrofitBuilder = createRetrofitBuilder(context, baseUrl)
+            initializeServices()
+        }
+    }
 
     // Api Connection Initialisation
-    fun initialize(context: Context, baseUrl: String = BASE_URL) {
-        BASE_URL = baseUrl
-        // Recreate the Retrofit instance with the provided context
-        _retrofitBuilder = createRetrofitBuilder(context)
-
-        // Recreate services
+    private fun initializeServices() {
         _logInService = _retrofitBuilder.create(LogInService::class.java)
         _jobCardService = _retrofitBuilder.create(JobCardService::class.java)
         _vehicleService = _retrofitBuilder.create(VehicleService::class.java)
@@ -58,17 +70,14 @@ object ApiInstance {
 
     }
 
-    val gson = GsonBuilder()
-        .registerTypeAdapter(LocalDateTime::class.java,
+    val gson = GsonBuilder().registerTypeAdapter(
+            LocalDateTime::class.java,
             JsonSerializer<LocalDateTime> { src, _, _ ->
                 JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-            })
-        .registerTypeAdapter(LocalDateTime::class.java,
-            JsonDeserializer { json, _, _ ->
-                val dateString = json.asString
-                LocalDateTime.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-            })
-        .create()
+            }).registerTypeAdapter(LocalDateTime::class.java, JsonDeserializer { json, _, _ ->
+            val dateString = json.asString
+            LocalDateTime.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        }).create()
 
     // Use a private backing field for retrofitBuilder
     private var _retrofitBuilder: Retrofit = createDefaultRetrofitBuilder()
@@ -83,11 +92,14 @@ object ApiInstance {
     private var _employeeService: EmployeeService =
         _retrofitBuilder.create(EmployeeService::class.java)
     private var _userService = _retrofitBuilder.create(UserService::class.java)
-    private var _controlChecklistService = _retrofitBuilder.create(ControlChecklistService::class.java)
+    private var _controlChecklistService =
+        _retrofitBuilder.create(ControlChecklistService::class.java)
     private var _jobCardReportService = _retrofitBuilder.create(JobCardReportService::class.java)
     private var _jobCardStatusService = _retrofitBuilder.create(JobCardStatusService::class.java)
-    private var _jobCardTechniciansService = _retrofitBuilder.create(JobCardTechniciansService::class.java)
-    private var _serviceChecklistService = _retrofitBuilder.create(ServiceChecklistService::class.java)
+    private var _jobCardTechniciansService =
+        _retrofitBuilder.create(JobCardTechniciansService::class.java)
+    private var _serviceChecklistService =
+        _retrofitBuilder.create(ServiceChecklistService::class.java)
     private var _stateChecklistService = _retrofitBuilder.create(StateChecklistService::class.java)
     private var _timesheetService = _retrofitBuilder.create(TimesheetService::class.java)
 
@@ -138,31 +150,38 @@ object ApiInstance {
 
     // Default builder without caching (for initial setup)
     private fun createDefaultRetrofitBuilder(): Retrofit {
-        val client = OkHttpClient.Builder().addInterceptor { chain ->
-            val requestBuilder = chain.request().newBuilder()
+        val client = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val requestBuilder = chain.request().newBuilder()
 
-            // Add Authorization header if token is available
-            TokenManager.getToken()?.let { token ->
-                requestBuilder.addHeader("Authorization", "Bearer ${token.accessToken}")
+                // Add Authorization header if token is available
+                TokenManager.getToken()?.let { token ->
+                    requestBuilder.addHeader("Authorization", "Bearer ${token.accessToken}")
+                }
+
+                chain.proceed(requestBuilder.build())
             }
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
 
-            chain.proceed(requestBuilder.build())
-        }.connectTimeout(30, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS).build()
-
-        return Retrofit.Builder().baseUrl(BASE_URL).client(client)
-            .addConverterFactory(GsonConverterFactory.create(gson)).build()
+        return Retrofit.Builder()
+            .baseUrl("http://localhost/")
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
     }
 
     // Method to create Retrofit builder with caching
-    private fun createRetrofitBuilder(context: Context): Retrofit {
+    private fun createRetrofitBuilder(context: Context, baseUrl: String): Retrofit {
         // Create cache
         val cacheSize = 500L * 1024L * 1024L // 10 MiB
         val httpCacheDirectory = File(context.cacheDir, "http-cache")
         val cache = Cache(httpCacheDirectory, cacheSize)
 
-
-        val client = OkHttpClient.Builder().cache(cache) // Add cache to OkHttpClient
+        val client = OkHttpClient.Builder()
+            .cache(cache) // Add cache to OkHttpClient
             .addInterceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()
 
@@ -177,15 +196,26 @@ object ApiInstance {
                 ).addHeader("Content-Type", "application/json")
 
                 chain.proceed(requestBuilder.build())
-            }.addNetworkInterceptor { chain ->
+            }
+            .addNetworkInterceptor { chain ->
                 val response = chain.proceed(chain.request())
                 response.newBuilder().removeHeader("Pragma")
                     .header("Cache-Control", "public, max-age=300").build()
-            }.connectTimeout(30, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS)
+            }
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS).build()
 
-        return Retrofit.Builder().baseUrl(BASE_URL).client(client)
-            .addConverterFactory(GsonConverterFactory.create(gson)).build()
+        return Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    // Add a method to manually trigger URL update
+    fun updateConnection(context: Context) {
+        updateBaseUrl(context)
     }
 
 }

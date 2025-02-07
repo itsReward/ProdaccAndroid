@@ -10,12 +10,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven(url = "https://jitpack.io") // Add this line
     }
 }
 
-rootProject.name = "Prodacc"
+rootProject.name = "JobKeep"
 include(":app")
-include(":feature")
 include(":core")
 include(":core:auth")
 include(":core:designsystem")

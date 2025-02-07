@@ -59,6 +59,7 @@ import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.login.viewmodel.LogInState
 import com.example.prodacc.ui.login.viewmodel.LogInViewModel
 import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.ApiInstance
 import kotlinx.coroutines.delay
 
 
@@ -259,6 +260,7 @@ fun LogInScreen(
                     .fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
+            Text(text = ApiInstance.url, color = Grey)
             Text(
                 textAlign = TextAlign.Center,
                 text = "Version 1.0 created with ❤ by Render Creative",

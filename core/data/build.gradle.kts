@@ -40,7 +40,6 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
     //implementation("com.squareup.okhttp3:okhttp:4.12.1")
 
-
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")

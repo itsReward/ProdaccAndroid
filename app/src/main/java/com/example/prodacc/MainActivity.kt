@@ -15,15 +15,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.designsystem.theme.ProdaccTheme
 import com.example.prodacc.navigation.AppNavigation
-import com.example.prodacc.navigation.Route
 import com.prodacc.data.NotificationManager
 import com.prodacc.data.NotificationService
 import java.util.UUID

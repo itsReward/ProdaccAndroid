@@ -30,7 +30,12 @@ object SignedInUser{
                     "ADMIN" -> Role.Admin
                     else -> Role.Technician
                 }
-                fetchEmployee()
+                try {
+                    fetchEmployee()
+                }catch (e:Exception){
+                    UserSignInResult.Error(e.message?: "Eish Unknown Error ")
+                }
+
                 UserSignInResult.Success
             }
         }
@@ -39,9 +44,9 @@ object SignedInUser{
     private suspend fun fetchEmployee(){
         when (val response = EmployeeRepository().getEmployee(user!!.employeeId)){
             is EmployeeRepository.LoadingResult.EmployeeEntity -> employee = response.employee
-            is EmployeeRepository.LoadingResult.Error -> TODO()
-            is EmployeeRepository.LoadingResult.NetworkError -> TODO()
-            is EmployeeRepository.LoadingResult.Success -> TODO()
+            is EmployeeRepository.LoadingResult.Error -> UserSignInResult.Error(response.message)
+            is EmployeeRepository.LoadingResult.NetworkError -> UserSignInResult.Error("Network Error")
+            is EmployeeRepository.LoadingResult.Success -> {}
         }
     }
 

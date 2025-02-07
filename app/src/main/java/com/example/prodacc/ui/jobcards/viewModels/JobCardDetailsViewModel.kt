@@ -340,7 +340,6 @@ class JobCardDetailsViewModel(
     }
 
     override fun onWebSocketError(error: Throwable) {
-        _loadingState.value = LoadingState.Error(error.message ?: "Unknown Error")
     }
 }
 
