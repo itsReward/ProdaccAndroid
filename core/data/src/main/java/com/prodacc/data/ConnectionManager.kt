@@ -8,32 +8,51 @@ import java.net.Socket
 import java.util.logging.Logger
 
 class ConnectionManager(private val context: Context) {
-    private val localServerIp = "192.168.100.10"  // Your server's local IP
-    private val remoteServer = "api.silverstarzw.com"         // OpenVPN server IP
-    private val port = "80"                      // NGINX port
+    private val localServerIp = "192.168.100.10"
+    private val remoteServer = "api.silverstarzw.com"
+    private val port = "80"
     private val logger = Logger.getLogger(ConnectionManager::class.java.name)
 
+    private var currentBaseUrl: String? = null
+    private var currentNetworkType: Int? = null
+
     suspend fun getBaseUrl(): String = withContext(Dispatchers.IO) {
-        return@withContext if (isLocalNetworkAvailable()) {
-            logger.info("Local network is available. Using local server IP.")
+        // If we already have a URL and network type hasn't changed, return cached URL
+        currentBaseUrl?.let { url ->
+            return@withContext url
+        }
+
+        // If no cached URL, determine the appropriate URL
+        val newUrl = if (isLocalNetworkAvailable()) {
             "http://$localServerIp:$port"
         } else {
-            logger.info("Local network is not available. Using remote address.")
             "https://$remoteServer"
         }
+
+        currentBaseUrl = newUrl
+        return@withContext newUrl
     }
 
     private suspend fun isLocalNetworkAvailable(): Boolean = withContext(Dispatchers.IO) {
         try {
             val socket = Socket()
-            val timeoutMs = 3000
-            socket.connect(InetSocketAddress(localServerIp, port.toInt()), timeoutMs)
+            socket.soTimeout = 1000
+            socket.connect(InetSocketAddress(localServerIp, port.toInt()), 1000)
             socket.close()
             logger.info("Successfully connected to local server.")
             true
         } catch (e: Exception) {
-            logger.severe("Failed to connect to local server: ${e.message}")
+            logger.info("Failed to connect to local server: ${e.message}")
             false
+        }
+    }
+
+    // Called by NetworkStateMonitor when network changes
+    fun onNetworkChanged(networkType: Int?) {
+        if (currentNetworkType != networkType) {
+            currentNetworkType = networkType
+            currentBaseUrl = null // Force new URL check
+            logger.info("Network changed, clearing cached URL")
         }
     }
 }
