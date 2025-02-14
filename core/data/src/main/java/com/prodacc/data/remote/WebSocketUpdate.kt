@@ -43,4 +43,8 @@ sealed class WebSocketUpdate {
     data class NewEmployee(val id: UUID): WebSocketUpdate()
     data class UpdateEmployee(val id: UUID): WebSocketUpdate()
     data class DeleteEmployee(val id: UUID): WebSocketUpdate()
+
+    data class NewComment(val id: UUID): WebSocketUpdate()
+    data class UpdateComment(val id: UUID): WebSocketUpdate()
+    data class DeleteComment(val id: UUID): WebSocketUpdate()
 }

@@ -20,6 +20,7 @@ import com.example.prodacc.ui.clients.screens.NewClientScreen
 import com.example.prodacc.ui.employees.screens.EditEmployeeScreen
 import com.example.prodacc.ui.employees.screens.EmployeeDetailScreen
 import com.example.prodacc.ui.employees.screens.NewEmployeeScreen
+import com.example.prodacc.ui.jobcards.screens.CommentsScreen
 import com.example.prodacc.ui.jobcards.screens.JobCardDetailScreen
 import com.example.prodacc.ui.jobcards.screens.NewJobCardScreen
 import com.example.prodacc.ui.search.screen.SearchScreen
@@ -294,6 +295,27 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         ){ backStackEntry ->
             val title = backStackEntry.arguments?.getString("title") ?: ""
             SearchScreen(navController, title)
+        }
+
+        //CommentsScreen
+        composable(
+            route = Route.Comments.path,
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(durationMillis = 300)
+                )
+            }
+        ){ backStackEntry ->
+            val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
+            CommentsScreen(navController = navController, jobId = jobId)
+
         }
     }
 }

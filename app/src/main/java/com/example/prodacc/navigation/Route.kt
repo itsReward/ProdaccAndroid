@@ -33,4 +33,7 @@ sealed class Route(val path: String) {
     //Search Screen
     data object Search: Route("search/{title}")
 
+    //Comments Screen
+    data object Comments: Route("comments/{jobId}")
+
 }

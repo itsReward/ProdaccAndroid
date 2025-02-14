@@ -250,9 +250,7 @@ fun JobCardDisplayCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    modifier = Modifier.weight(2f),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.weight(2f)
                 ) {
                     ProfileAvatar(
                         initials = "${jobCard.serviceAdvisorName.first()}",
@@ -261,6 +259,8 @@ fun JobCardDisplayCard(
                     )
 
                     IconButton(onClick = { }, icon = chat, color = Grey)
+
+
                 }
 
                 //Text("Progress:", color = DarkGrey, modifier = Modifier.weight(2f))

@@ -90,7 +90,7 @@ class ClientRepository {
         return try {
             val response = service.deleteClient(id)
             if (response.isSuccessful) {
-                LoadingResult.Success(emptyList(), )
+                LoadingResult.Success(emptyList())
             } else {
                 LoadingResult.Error(response.raw().message)
             }

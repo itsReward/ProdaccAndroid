@@ -444,6 +444,18 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
                 "Control Checklist Updated",
                 "Control checklist has been updated for $jobCardName Job Card"
             )
+            "NEW_COMMENT" -> Pair(
+                "New Comment",
+                "New Comment added on $jobCardName Job Card"
+            )
+            "UPDATE_COMMENT" -> Pair(
+                "Comment Updated",
+                "Comment updated on $jobCardName Job Card"
+            )
+            "DELETE_COMMENT" -> Pair(
+                "Comment Removed",
+                "Comment deleted on $jobCardName Job Card"
+            )
             else -> return // No notification for other types
         }
 
