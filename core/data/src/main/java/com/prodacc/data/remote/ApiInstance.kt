@@ -1,12 +1,14 @@
 package com.prodacc.data.remote
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
-import com.prodacc.data.ConnectionManager
+import com.prodacc.data.NetworkManager
 import com.prodacc.data.remote.services.ClientService
+import com.prodacc.data.remote.services.CommentService
 import com.prodacc.data.remote.services.ControlChecklistService
 import com.prodacc.data.remote.services.EmployeeService
 import com.prodacc.data.remote.services.JobCardReportService
@@ -27,28 +29,38 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
+import java.lang.ref.WeakReference
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 
 
-object ApiInstance {
+object ApiInstance : NetworkManager.NetworkChangeListener {
     private val logger = Logger.getLogger(ApiInstance::class.java.name)
-    private lateinit var connectionManager: ConnectionManager
     var url: String = ""
+    private var contextRef: WeakReference<Context>? = null
 
     fun initialize(context: Context) {
-        connectionManager = ConnectionManager(context)
-        updateBaseUrl(context)
+        contextRef = WeakReference(context.applicationContext)
+        NetworkManager.getInstance(context).addNetworkChangeListener(this)
+        updateBaseUrl()
     }
 
-    private fun updateBaseUrl(context: Context) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val baseUrl = connectionManager.getBaseUrl()
-            url = baseUrl
-            _retrofitBuilder = createRetrofitBuilder(context, baseUrl)
-            initializeServices()
+    override fun onNetworkChanged() {
+        contextRef?.get()?.let { updateBaseUrl() }
+        Log.e("Api Connection Change", "START")
+
+    }
+
+    private fun updateBaseUrl() {
+        contextRef?.get()?.let { context ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val baseUrl = NetworkManager.getInstance(context).getBaseUrl()
+                url = baseUrl
+                _retrofitBuilder = createRetrofitBuilder(context, baseUrl)
+                initializeServices()
+            }
         }
     }
 
@@ -67,17 +79,22 @@ object ApiInstance {
         _serviceChecklistService = _retrofitBuilder.create(ServiceChecklistService::class.java)
         _stateChecklistService = _retrofitBuilder.create(StateChecklistService::class.java)
         _timesheetService = _retrofitBuilder.create(TimesheetService::class.java)
+        _commentService = _retrofitBuilder.create(CommentService::class.java)
 
     }
 
-    val gson = GsonBuilder().registerTypeAdapter(
+    val gson = GsonBuilder()
+        .registerTypeAdapter(
             LocalDateTime::class.java,
             JsonSerializer<LocalDateTime> { src, _, _ ->
                 JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-            }).registerTypeAdapter(LocalDateTime::class.java, JsonDeserializer { json, _, _ ->
+            }
+        )
+        .registerTypeAdapter(LocalDateTime::class.java, JsonDeserializer { json, _, _ ->
             val dateString = json.asString
             LocalDateTime.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        }).create()
+        })
+        .create()
 
     // Use a private backing field for retrofitBuilder
     private var _retrofitBuilder: Retrofit = createDefaultRetrofitBuilder()
@@ -102,6 +119,7 @@ object ApiInstance {
         _retrofitBuilder.create(ServiceChecklistService::class.java)
     private var _stateChecklistService = _retrofitBuilder.create(StateChecklistService::class.java)
     private var _timesheetService = _retrofitBuilder.create(TimesheetService::class.java)
+    private var _commentService = _retrofitBuilder.create(CommentService::class.java)
 
     // Getter for retrofitBuilder that returns the current instance
     val retrofitBuilder: Retrofit
@@ -146,6 +164,8 @@ object ApiInstance {
 
     val timesheetService: TimesheetService
         get() = _timesheetService
+
+    val commentService: CommentService get() = _commentService
 
 
     // Default builder without caching (for initial setup)
@@ -213,9 +233,11 @@ object ApiInstance {
             .build()
     }
 
-    // Add a method to manually trigger URL update
-    fun updateConnection(context: Context) {
-        updateBaseUrl(context)
+    fun cleanup() {
+        contextRef?.get()?.let { context ->
+            NetworkManager.getInstance(context).removeNetworkChangeListener(this)
+        }
+        contextRef = null
     }
 
 }

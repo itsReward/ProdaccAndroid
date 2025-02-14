@@ -41,6 +41,7 @@ import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.BodyTextItalic
 import com.example.designsystem.designComponents.DurationText
 import com.example.designsystem.designComponents.FormattedTime
+import com.example.designsystem.designComponents.IconButton
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.Blue50
@@ -58,6 +59,7 @@ import com.example.designsystem.theme.LightOrange
 import com.example.designsystem.theme.LightRed
 import com.example.designsystem.theme.Orange
 import com.example.designsystem.theme.Red
+import com.example.designsystem.theme.chat
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.jobcards.viewModels.ReportLoadingState
 import com.example.prodacc.ui.jobcards.viewModels.StatusLoadingState
@@ -247,13 +249,20 @@ fun JobCardDisplayCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ProfileAvatar(
-                    initials = "${jobCard.serviceAdvisorName.first()}",
-                    modifier = Modifier
-                        .weight(2f),
-                    color = LightGrey,
-                    textColor = DarkGrey
-                )
+                Row(
+                    modifier = Modifier.weight(2f),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ProfileAvatar(
+                        initials = "${jobCard.serviceAdvisorName.first()}",
+                        color = LightGrey,
+                        textColor = DarkGrey
+                    )
+
+                    IconButton(onClick = { }, icon = chat, color = Grey)
+                }
+
                 //Text("Progress:", color = DarkGrey, modifier = Modifier.weight(2f))
 
                 when (val status = statusMap[jobCard.id]) {
@@ -375,17 +384,12 @@ fun JobCardDisplayCard(
                             Text(text = "No Status", color = Color.Red, fontSize = 10.sp)
 
                         }
-
                     }
-
                     null -> {
                         Text(text = "HUGE ERROR ", color = Color.Red, fontSize = 10.sp)
                     }
                 }
             }
-
-
         }
-
     }
 }

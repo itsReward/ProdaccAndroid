@@ -4,39 +4,56 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.prodacc.data.ConnectionManager
+import com.prodacc.data.NetworkManager
 import com.prodacc.data.NotificationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Logger
 
-object WebSocketInstance {
+object WebSocketInstance: NetworkManager.NetworkChangeListener {
     private val logger = Logger.getLogger(WebSocketInstance::class.java.name)
-    private val remoteServer = "api.silverstarzw.com"
-    private lateinit var connectionManager: ConnectionManager
+    private var contextRef: WeakReference<Context>? = null
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private val isConnecting = AtomicBoolean(false)
+    private val connectionLock = Mutex()
+    private var connectionJob: Job? = null
+
+
     private val _webSocketState = MutableStateFlow<WebSocketState>(WebSocketState.Disconnected(""))
     val webSocketState = _webSocketState.asStateFlow()
     private lateinit var applicationContext: Context
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
 
     fun initialize(context: Context){
+        contextRef = WeakReference(context.applicationContext)
         applicationContext = context.applicationContext
-        connectionManager = ConnectionManager(context)
+        NetworkManager.getInstance(context.applicationContext)
         NotificationManager.createNotificationChannels(applicationContext)
+    }
+
+    override fun onNetworkChanged() {
+        updateConnection()
     }
 
     private val _websocketIndicator = MutableStateFlow(true)
@@ -52,56 +69,73 @@ object WebSocketInstance {
 
     // Setting up WebSocket Connection
     private fun setupWebSocket() {
+        // Return early if already connecting
+        if (!isConnecting.compareAndSet(false, true)) {
+            Log.d("WebSocket", "Setup already in progress, skipping")
+            return
+        }
+
         val token = TokenManager.getToken()?.accessToken ?: run {
             Log.e("WebSocket", "No token available")
+            isConnecting.set(false)
             return
         }
 
         serviceScope.launch {
-            try {
-                val baseUrl = connectionManager.getBaseUrl()
-                val wsUrl = when {
-                    baseUrl.startsWith("https://") -> baseUrl.replace("https://", "wss://")
-                    baseUrl.startsWith("http://") -> baseUrl.replace("http://", "ws://")
-                    else -> baseUrl
-                }.let { "$it/websocket?token=$token" }
-
-                Log.d("WebSocket", "Attempting connection to: $wsUrl")
-
-                val client = OkHttpClient.Builder()
-                    .pingInterval(30, TimeUnit.SECONDS)
-                    .readTimeout(3600, TimeUnit.MILLISECONDS)
-                    .writeTimeout(3600, TimeUnit.MILLISECONDS)
-                    .connectTimeout(3600, TimeUnit.MILLISECONDS)
-                    .addInterceptor { chain ->
-                        val request = chain.request().newBuilder()
-                            .header("Upgrade", "websocket")
-                            .header("Connection", "Upgrade")
-                            .header("Sec-WebSocket-Version", "13")
-                            //.header("Host", "api.silverstarzw.com")
-                            .build()
-                        chain.proceed(request)
+            connectionLock.withLock {
+                try {
+                    val baseUrl = contextRef?.get()?.let { context ->
+                        NetworkManager.getInstance(context).getBaseUrl()
+                    } ?: run {
+                        isConnecting.set(false)
+                        return@withLock
                     }
-                    .retryOnConnectionFailure(false)
-                    .build()
 
-                val request = Request.Builder()
-                    .url(wsUrl)
-                    .addHeader("Origin", baseUrl)
-                    .build()
+                    val wsUrl = when {
+                        baseUrl.startsWith("https://") -> baseUrl.replace("https://", "wss://")
+                        baseUrl.startsWith("http://") -> baseUrl.replace("http://", "ws://")
+                        else -> baseUrl
+                    }.let { "$it/websocket?token=$token" }
 
-                Log.e("Request Url", "############################")
-                Log.e("Request Url", "${request.url}")
+                    Log.d("WebSocket", "Attempting connection to: $wsUrl")
 
-                webSocket?.cancel()
-                webSocket = client.newWebSocket(request, createWebSocketListener())
-            } catch (e: Exception) {
-                Log.e("WebSocket", "Error setting up WebSocket", e)
-                _webSocketState.value = WebSocketState.Error("Error: ${e.message}")
+                    // Close existing connection before creating new one
+                    webSocket?.close(1000, "Setting up new connection")
+                    webSocket = null
+
+                    // Small delay to ensure clean closure
+                    delay(100)
+
+                    val client = OkHttpClient.Builder()
+                        .pingInterval(30, TimeUnit.SECONDS)
+                        .readTimeout(3600, TimeUnit.SECONDS) // Changed to SECONDS
+                        .writeTimeout(3600, TimeUnit.SECONDS)
+                        .connectTimeout(30, TimeUnit.SECONDS) // Reduced timeout
+                        .addInterceptor { chain ->
+                            val request = chain.request().newBuilder()
+                                .header("Upgrade", "websocket")
+                                .header("Connection", "Upgrade")
+                                .header("Sec-WebSocket-Version", "13")
+                                .build()
+                            chain.proceed(request)
+                        }
+                        .retryOnConnectionFailure(true) // Changed to true
+                        .build()
+
+                    val request = Request.Builder()
+                        .url(wsUrl)
+                        .addHeader("Origin", baseUrl)
+                        .build()
+
+                    webSocket = client.newWebSocket(request, createWebSocketListener())
+                } catch (e: Exception) {
+                    Log.e("WebSocket", "Error setting up WebSocket", e)
+                    _webSocketState.value = WebSocketState.Error("Error: ${e.message}")
+                } finally {
+                    isConnecting.set(false)
+                }
             }
         }
-
-
     }
 
     private fun createWebSocketListener() = object : WebSocketListener(){
@@ -275,10 +309,13 @@ object WebSocketInstance {
                 webSocketListeners.forEach { listener ->
                     listener.onWebSocketError(t)
                 }
-                // Attempt to reconnect after delay
-                Handler(Looper.getMainLooper()).postDelayed({
-                    setupWebSocket()
-                }, 5000)
+
+                // Only attempt reconnect if not already connecting
+                if (!isConnecting.get()) {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        setupWebSocket()
+                    }, 5000)
+                }
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
@@ -328,10 +365,20 @@ object WebSocketInstance {
 
     // Clean up method
     fun cleanup() {
-        webSocket?.close(1000, "App closing")
-        webSocket = null
-        webSocketListeners.clear()
+        serviceScope.launch {
+            connectionLock.withLock {
+                connectionJob?.cancel()
+                connectionJob = null
+                webSocket?.close(1000, "App closing")
+                webSocket = null
+                webSocketListeners.clear()
+            }
+        }
         serviceScope.cancel()
+        contextRef?.get()?.let { context ->
+            NetworkManager.getInstance(context).removeNetworkChangeListener(this)
+        }
+        contextRef = null
     }
 
 
@@ -423,26 +470,69 @@ object WebSocketInstance {
         }
     }
 
-    fun updateConnection() {serviceScope.launch {
-        try {
-            val currentWsUrl = webSocket?.request()?.url?.toString()
-            val newBaseUrl = connectionManager.getBaseUrl()
+    private fun updateConnection() {
+        // Only proceed if not already connecting
+        if (!isConnecting.compareAndSet(false, true)) {
+            Log.d("WebSocket", "Connection update already in progress, skipping")
+            return
+        }
 
-            // If we're already connected to remote and new URL is remote, skip reconnection
-            if (currentWsUrl?.contains(remoteServer) == true &&
-                newBaseUrl.contains(remoteServer)) {
-                Log.d("WebSocket", "Already connected to remote, skipping reconnection")
-                return@launch
+        serviceScope.launch {
+            connectionLock.withLock {
+                //cancel any existing connection job
+                connectionJob?.cancel()
+
+                connectionJob = launch {
+                    try {
+                        val currentWsUrl = webSocket?.request()?.url?.toString()
+                        val newBaseUrl = contextRef?.get()?.let { context ->
+                            NetworkManager.getInstance(context).getBaseUrl()
+                        } ?: return@launch
+
+                        // Get current and new URLs in normalized form for comparison
+                        val currentBaseUrl = currentWsUrl?.let { url ->
+                            when {
+                                url.startsWith("wss://") -> "https://" + url.substringAfter("wss://").substringBefore("/")
+                                url.startsWith("ws://") -> "http://" + url.substringAfter("ws://").substringBefore("/")
+                                else -> url.substringBefore("/")
+                            }
+                        }
+
+                        // Only reconnect if the base URL actually changed
+                        if (currentBaseUrl == newBaseUrl) {
+                            Log.d("WebSocket", "Base URL unchanged, skipping reconnection")
+                            return@launch
+                        }
+
+                        // Log the connection change
+                        Log.d("WebSocket", "Switching connection from $currentBaseUrl to $newBaseUrl")
+
+                        // Close existing connection before creating new one
+                        webSocket?.let { ws ->
+                            try {
+                                ws.close(1000, "Switching connection")
+                                // Small delay to ensure clean closure
+                                delay(3600)
+
+                            } catch (e: Exception) {
+                                Log.e("WebSocket", "Error closing websocket", e)
+                            }
+                        }
+                        webSocket = null
+
+                        // Setup new connection
+                        setupWebSocket()
+
+                    } catch (e: Exception) {
+                        Log.e("WebSocket", "Error updating connection", e)
+                        _webSocketState.value = WebSocketState.Error("Connection update failed: ${e.message}")
+                    } finally {
+                        isConnecting.set(false)
+                    }
+
+                }
             }
-
-            // Only close existing connection after confirming we need to switch
-            webSocket?.close(1000, "Switching connection")
-            setupWebSocket()
-        } catch (e: Exception) {
-            Log.e("WebSocket", "Error updating connection", e)
         }
     }
-    }
-
 }
 
