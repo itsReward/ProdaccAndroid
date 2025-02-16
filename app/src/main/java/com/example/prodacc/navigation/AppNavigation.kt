@@ -303,13 +303,13 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             enterTransition = {
                 slideIntoContainer(
                     AnimatedContentTransitionScope.SlideDirection.Up,
-                    animationSpec = tween(durationMillis = 300)
+                    animationSpec = tween(durationMillis = 800)
                 )
             },
             exitTransition = {
                 slideOutOfContainer(
                     AnimatedContentTransitionScope.SlideDirection.Down,
-                    animationSpec = tween(durationMillis = 300)
+                    animationSpec = tween(durationMillis = 800)
                 )
             }
         ){ backStackEntry ->

@@ -1,5 +1,6 @@
 package com.prodacc.data.repositories
 
+import android.util.Log
 import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.dao.JobCardComment
 import com.prodacc.data.remote.dao.NewComment
@@ -33,6 +34,8 @@ class CommentRepository {
     suspend fun getCommentsByJobCardId(id: UUID): LoadingResult {
         return try {
             val response = service.getCommentByJobCardId(id)
+            Log.d("Get Comments Response", response.message())
+
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body() ?: emptyList())
             } else {

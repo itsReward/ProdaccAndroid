@@ -1,13 +1,17 @@
 package com.prodacc.data.remote.dao
 
 import com.google.gson.annotations.SerializedName
+import java.time.LocalDateTime
 import java.util.UUID
 
 data class JobCardComment(
     @SerializedName("commentId") val commentId: UUID,
     @SerializedName("jobCardId") val jobCardId: UUID,
+    @SerializedName("jobCardName") val jobCardName: String,
     @SerializedName("employeeId") val employeeId: UUID,
-    @SerializedName("comment") val comment: String
+    @SerializedName("employeeName") val employeeName: String,
+    @SerializedName("comment") val comment: String,
+    @SerializedName("commentDate") val commentDate: LocalDateTime
 )
 
 data class NewComment(

@@ -45,7 +45,9 @@ data class JobCard(
 
     @SerializedName("serviceChecklistId") val serviceChecklistId: UUID?,
 
-    @SerializedName("controlChecklistId") val controlChecklistId: UUID?
+    @SerializedName("controlChecklistId") val controlChecklistId: UUID?,
+
+    @SerializedName("comments") val comments: List<UUID>
 )
 
 data class NewJobCard(

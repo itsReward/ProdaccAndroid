@@ -1,6 +1,5 @@
 package com.example.prodacc.ui.jobcards.screens
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,12 +17,13 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,7 +31,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,22 +40,15 @@ import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.BodyTextItalic
 import com.example.designsystem.designComponents.DurationText
 import com.example.designsystem.designComponents.FormattedTime
-import com.example.designsystem.designComponents.IconButton
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
-import com.example.designsystem.theme.Blue50
-import com.example.designsystem.theme.BlueA60
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
-import com.example.designsystem.theme.DarkBlue
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
-import com.example.designsystem.theme.DarkOrange
 import com.example.designsystem.theme.Grey
-import com.example.designsystem.theme.LightGreen
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.LightOrange
-import com.example.designsystem.theme.LightRed
 import com.example.designsystem.theme.Orange
 import com.example.designsystem.theme.Red
 import com.example.designsystem.theme.chat
@@ -65,7 +57,6 @@ import com.example.prodacc.ui.jobcards.viewModels.ReportLoadingState
 import com.example.prodacc.ui.jobcards.viewModels.StatusLoadingState
 import com.prodacc.data.remote.dao.JobCard
 import java.time.Duration
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -107,8 +98,9 @@ fun JobCardDisplayCard(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    LargeTitleText(name = jobCard.jobCardName)
                     if (jobCard.priority && jobCard.dateAndTimeClosed == null) {
                         Row(
                             modifier = Modifier
@@ -119,7 +111,6 @@ fun JobCardDisplayCard(
                             Text(text = "priority")
                         }
                     }
-                    LargeTitleText(name = jobCard.jobCardName)
 
                 }
 
@@ -194,8 +185,6 @@ fun JobCardDisplayCard(
 
                         if (jobCard.dateAndTimeClosed!! > jobCard.jobCardDeadline) {
                             Spacer(modifier = Modifier.width(5.dp))
-                            /*Text(text = "over due by: ", color = Color.Red, fontWeight = FontWeight.Medium)
-                            DurationText(timeSpentMinutes = Duration.between(jobCard.jobCardDeadline, jobCard.dateAndTimeClosed!!).toMinutes())*/
                         }
                     }
                 }
@@ -250,15 +239,40 @@ fun JobCardDisplayCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    modifier = Modifier.weight(2f)
+                    modifier = Modifier.weight(2f),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     ProfileAvatar(
                         initials = "${jobCard.serviceAdvisorName.first()}",
                         color = LightGrey,
                         textColor = DarkGrey
                     )
-
-                    IconButton(onClick = { }, icon = chat, color = Grey)
+                    Row {
+                        IconButton(
+                            onClick = {
+                                navController.navigate(
+                                    Route.Comments.path
+                                        .replace("{jobId}", jobCard.id.toString())
+                                        .replace("{jobCardName}", jobCard.jobCardName)
+                                )
+                            },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = Color.LightGray
+                            )
+                        ) {
+                            Icon(imageVector = chat, contentDescription = "comments button")
+                        }
+                        if (jobCard.comments.isNotEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .offset(x = (-16).dp, y = (5).dp)
+                                    .clip(CircleShape)
+                                    .size(10.dp)
+                                    .background(Orange)
+                            )
+                        }
+                    }
 
 
                 }
@@ -385,6 +399,7 @@ fun JobCardDisplayCard(
 
                         }
                     }
+
                     null -> {
                         Text(text = "HUGE ERROR ", color = Color.Red, fontSize = 10.sp)
                     }

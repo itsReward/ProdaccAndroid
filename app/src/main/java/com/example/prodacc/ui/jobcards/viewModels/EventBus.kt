@@ -1,5 +1,6 @@
 package com.example.prodacc.ui.jobcards.viewModels
 
+import androidx.lifecycle.asLiveData
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.JobCard
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -26,6 +27,9 @@ object EventBus {
     private val _timesheetEvents = MutableSharedFlow<TimesheetEvent>()
     val timesheetEvent = _timesheetEvents.asSharedFlow()
 
+    private val _commentEvents = MutableSharedFlow<CommentEvent>()
+    val commentEvent = _commentEvents.asSharedFlow()
+
     suspend fun emit(event: JobCardEvent) {
         _events.emit(event)
     }
@@ -48,6 +52,10 @@ object EventBus {
 
     suspend fun emitTimeSheetEvent(event: TimesheetEvent){
         _timesheetEvents.emit(event)
+    }
+
+    suspend fun emitCommentEvent(event: CommentEvent){
+        _commentEvents.emit(event)
     }
 
 
@@ -82,6 +90,10 @@ object EventBus {
     sealed class JobCardCRUDEvent {
         data class JobCardCreated(val jobCard : JobCard) : JobCardCRUDEvent()
         data class JobCardDeleted(val jobCardId: UUID) : JobCardCRUDEvent()
+    }
 
+    sealed class CommentEvent {
+        data object CommentCreated: CommentEvent()
+        data object CommentDeleted: CommentEvent()
     }
 }

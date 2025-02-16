@@ -165,7 +165,8 @@ object ApiInstance : NetworkManager.NetworkChangeListener {
     val timesheetService: TimesheetService
         get() = _timesheetService
 
-    val commentService: CommentService get() = _commentService
+    val commentService: CommentService
+        get() = _commentService
 
 
     // Default builder without caching (for initial setup)

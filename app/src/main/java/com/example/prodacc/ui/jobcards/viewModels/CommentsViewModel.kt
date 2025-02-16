@@ -1,12 +1,15 @@
 package com.example.prodacc.ui.jobcards.viewModels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.prodacc.data.SignedInUser
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCardComment
+import com.prodacc.data.remote.dao.NewComment
 import com.prodacc.data.repositories.CommentRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,6 +33,11 @@ class CommentsViewModel(
     private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val updateState = _updateState.asStateFlow()
 
+    private val _comment = MutableStateFlow<String>("")
+    val comment = _comment.asStateFlow()
+
+    private val _jobCardName = MutableStateFlow<String>("")
+    val jobCardName = _comment.asStateFlow()
 
 
     init {
@@ -39,6 +47,45 @@ class CommentsViewModel(
         viewModelScope.launch {
             fetchComments()
         }
+    }
+
+    fun updateComment(string: String){
+        _comment.value = string
+
+    }
+
+    fun createComment(){
+        Log.e("Create Comment", "create comment launched")
+        viewModelScope.launch {
+            try {
+                val jobId = UUID.fromString(jobId)
+                val employeeId = SignedInUser.employee!!.id
+                when(val comment = commentRepository.createComment(NewComment(jobId, employeeId, _comment.value))){
+                    is CommentRepository.LoadingResult.Error -> _savingState.value = SavingState.Error(comment.message?:"unknown error")
+                    is CommentRepository.LoadingResult.ErrorSingleMessage -> _savingState.value = SavingState.Error(
+                        comment.message
+                    )
+                    is CommentRepository.LoadingResult.NetworkError -> _savingState.value = SavingState.Error("Network error")
+                    is CommentRepository.LoadingResult.SingleEntity -> {
+                        _comment.value = ""
+                        WebSocketInstance.sendWebSocketMessage(
+                            "NEW_COMMENT",
+                            jobId
+                        )
+                        refreshComments()
+                        _savingState.value = SavingState.Idle
+                    }
+                    is CommentRepository.LoadingResult.Success -> {}
+                }
+            } catch (e:Exception){
+                handleException(e)
+            } finally {
+                _comment.value = ""
+                EventBus.emitCommentEvent(EventBus.CommentEvent.CommentCreated)
+                refreshComments()
+            }
+        }
+
     }
 
     private suspend fun fetchComments() {
@@ -53,6 +100,9 @@ class CommentsViewModel(
                 is CommentRepository.LoadingResult.SingleEntity -> {}
                 is CommentRepository.LoadingResult.Success -> {
                     _comments.value = comments.comments
+                    if (_comments.value.isNotEmpty()){
+                        _jobCardName.value = _comments.value.first().jobCardName
+                    }
                     _loadingState.value = LoadingState.Idle
                 }
             }
@@ -64,6 +114,7 @@ class CommentsViewModel(
     private fun refreshComments(){
         _updateState.value = UpdateState.Updating
         viewModelScope.launch {
+            _comments.value = emptyList()
             fetchComments()
         }
     }
@@ -104,6 +155,14 @@ class CommentsViewModel(
 
     override fun onWebSocketError(error: Throwable) {
         _updateState.value = UpdateState.Error(error.message?:"Unknown Error Refresh")
+    }
+
+    fun deleteComment(uuid: UUID) {
+        viewModelScope.launch {
+            commentRepository.deleteComment(uuid)
+            EventBus.emitCommentEvent(EventBus.CommentEvent.CommentDeleted)
+            refreshComments()
+        }
     }
 }
 

@@ -15,6 +15,7 @@ import com.prodacc.data.repositories.JobCardTechnicianRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -109,9 +110,6 @@ class JobCardViewModel(
                     is EventBus.JobCardCRUDEvent.JobCardDeleted -> {
                         _jobCardLoadState.value = LoadingState.Loading
                         _reportsMap.value = emptyMap()
-                        /*_reportsMap.update { currentMap ->
-                            currentMap.filterKeys { it != event.jobCardId }
-                        }*/
                         _statusMap.update { currentMap ->
                             currentMap.filterKeys { it != event.jobCardId }
                         }
@@ -131,6 +129,19 @@ class JobCardViewModel(
 
                     is EventBus.JobCardEvent.ReportCRUD -> {
                         refreshSingleJobCardReport(event.jobId)
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            EventBus.commentEvent.collect() { event ->
+                when (event){
+                    EventBus.CommentEvent.CommentCreated -> {
+                        refreshJobCards()
+                    }
+                    EventBus.CommentEvent.CommentDeleted -> {
+                        refreshJobCards()
                     }
                 }
             }
@@ -537,6 +548,8 @@ class JobCardViewModel(
                         else -> refreshJobCards()
                     }
                 }
+                is WebSocketUpdate.NewComment -> refreshJobCards()
+                is WebSocketUpdate.DeleteComment -> refreshJobCards()
 
                 else -> {}
             }

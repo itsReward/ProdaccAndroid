@@ -76,6 +76,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -600,8 +601,10 @@ fun FormattedTimeDisplay(
 
 @Composable
 fun FormattedTime(
+    modifier: Modifier = Modifier,
     color: Color = Color.DarkGray,
-    time: LocalDateTime
+    time: LocalDateTime,
+    style: TextStyle = MaterialTheme.typography.bodyLarge
 ){
 
     val dateFormatter = DateTimeFormatter.ofPattern("MMM dd")
@@ -613,7 +616,10 @@ fun FormattedTime(
     }
 
     BodyText(
-        text = timeDisplay
+        text = timeDisplay,
+        color = color,
+        modifier = modifier,
+        style = style
     )
 }
 
