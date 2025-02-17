@@ -288,6 +288,14 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
                             val id = UUID.fromString(jsonObject.getString("data"))
                             webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteEmployee(id)) }
                         }
+                        "NEW_COMMENT" ->  {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.NewComment(id)) }
+                        }
+                        "DELETE_COMMENT" -> {
+                            val id = UUID.fromString(jsonObject.getString("data"))
+                            webSocketListeners.forEach { it.onWebSocketUpdate(WebSocketUpdate.DeleteComment(id)) }
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e("WebSocket", "Error parsing message", e)
@@ -311,16 +319,19 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
                 }
 
                 // Only attempt reconnect if not already connecting
-                if (!isConnecting.get()) {
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        setupWebSocket()
-                    }, 5000)
+                if (_webSocketState.value !is WebSocketState.Connected && !isConnecting.get()) {
+                    serviceScope.launch {
+                        delay(30000)
+                        if (_webSocketState.value !is WebSocketState.Connected && !isConnecting.get()){
+                            updateConnection()
+                        }
+                    }
                 }
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 _webSocketState.value = WebSocketState.Disconnected("Closed: $reason")
-                Log.d("WebSocket", "WebSocket closed: $reason")
+                Log.e("WebSocket", "WebSocket closed: $reason")
             }
 
 
@@ -482,7 +493,7 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
         }
     }
 
-    private fun updateConnection() {
+    /*private fun updateConnection() {
         // Only proceed if not already connecting
         if (!isConnecting.compareAndSet(false, true)) {
             Log.d("WebSocket", "Connection update already in progress, skipping")
@@ -542,6 +553,80 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
                         isConnecting.set(false)
                     }
 
+                }
+            }
+        }
+    }*/
+
+    private fun updateConnection() {
+        // Only proceed if not already connecting
+        if (!isConnecting.compareAndSet(false, true)) {
+            Log.d("WebSocket", "Connection update already in progress, skipping")
+            return
+        }
+
+        serviceScope.launch {
+            connectionLock.withLock {
+                try {
+                    // If we're already connected and the socket is alive, don't reconnect
+                    if (_webSocketState.value is WebSocketState.Connected) {
+                        val isSocketAlive = webSocket?.let { ws ->
+                            try {
+                                ws.send("ping")
+                                true
+                            } catch (e: Exception) {
+                                false
+                            }
+                        } ?: false
+
+                        if (isSocketAlive) {
+                            Log.d("WebSocket", "Socket is alive, skipping reconnect")
+                            isConnecting.set(false)
+                            return@withLock
+                        }
+                    }
+
+                    val currentWsUrl = webSocket?.request()?.url?.toString()
+                    val newBaseUrl = contextRef?.get()?.let { context ->
+                        NetworkManager.getInstance(context).getBaseUrl()
+                    } ?: run {
+                        isConnecting.set(false)
+                        return@withLock
+                    }
+
+                    // Get current and new URLs in normalized form for comparison
+                    val currentBaseUrl = currentWsUrl?.let { url ->
+                        when {
+                            url.startsWith("wss://") -> "https://" + url.substringAfter("wss://").substringBefore("/")
+                            url.startsWith("ws://") -> "http://" + url.substringAfter("ws://").substringBefore("/")
+                            else -> url.substringBefore("/")
+                        }
+                    }
+
+                    if (currentBaseUrl == newBaseUrl && _webSocketState.value is WebSocketState.Connected) {
+                        Log.d("WebSocket", "Already connected to correct URL, skipping reconnect")
+                        isConnecting.set(false)
+                        return@withLock
+                    }
+
+                    // Close existing connection properly
+                    webSocket?.let { ws ->
+                        try {
+                            ws.close(1000, "Switching connection")
+                            delay(100)  // Small delay for clean closure
+                        } catch (e: Exception) {
+                            Log.e("WebSocket", "Error closing websocket", e)
+                        }
+                    }
+                    webSocket = null
+
+                    setupWebSocket()
+
+                } catch (e: Exception) {
+                    Log.e("WebSocket", "Error updating connection", e)
+                    _webSocketState.value = WebSocketState.Error("Connection update failed: ${e.message}")
+                } finally {
+                    isConnecting.set(false)
                 }
             }
         }

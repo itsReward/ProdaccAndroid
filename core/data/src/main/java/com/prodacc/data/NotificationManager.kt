@@ -175,6 +175,7 @@ object NotificationManager {
         val technicianId = SignedInUser.employee?.id ?: return false
 
         return when (type) {
+            "NEW_COMMENT", "DELETE_COMMENT",
             "NEW_JOB_CARD_TECHNICIAN",
             "DELETE_JOB_CARD_TECHNICIAN" -> {
                 // Check if the technician is assigned to this job card
@@ -191,7 +192,7 @@ object NotificationManager {
 
     private fun shouldShowServiceAdvisorNotification(type: String, entityId: UUID): Boolean {
         return when (type) {
-            "NEW_JOB_CARD", "UPDATE_JOB_CARD", "DELETE_JOB_CARD",
+            "NEW_JOB_CARD", "UPDATE_JOB_CARD", "DELETE_JOB_CARD","NEW_COMMENT", "DELETE_COMMENT",
             "JOB_CARD_STATUS_CHANGED", "NEW_TIMESHEET", "UPDATE_TIMESHEET" -> true
             else -> false
         }
@@ -199,7 +200,7 @@ object NotificationManager {
 
     private fun shouldShowSupervisorNotification(type: String, entityId: UUID): Boolean {
         return when (type) {
-            "NEW_JOB_CARD", "UPDATE_JOB_CARD", "DELETE_JOB_CARD",
+            "NEW_JOB_CARD", "UPDATE_JOB_CARD", "DELETE_JOB_CARD","NEW_COMMENT", "DELETE_COMMENT",
             "JOB_CARD_STATUS_CHANGED", "NEW_TIMESHEET", "UPDATE_TIMESHEET",
             "NEW_SERVICE_CHECKLIST", "UPDATE_SERVICE_CHECKLIST",
             "NEW_STATE_CHECKLIST", "UPDATE_STATE_CHECKLIST",

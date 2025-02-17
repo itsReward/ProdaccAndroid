@@ -73,6 +73,15 @@ class JobCardDetailsViewModel(
         }
 
         viewModelScope.launch {
+            EventBus.commentEvent.collect { event ->
+                when (event) {
+                    EventBus.CommentEvent.CommentCreated -> refreshJobCard()
+                    EventBus.CommentEvent.CommentDeleted -> refreshJobCard()
+                }
+            }
+        }
+
+        viewModelScope.launch {
             fetchJobCard()
             fetchJobCardCardStatus()
         }
@@ -188,7 +197,7 @@ class JobCardDetailsViewModel(
 
     }
 
-    fun togglePriority(){
+    fun togglePriority() {
         updateJobCard { copy(priority = !_jobCard.value?.priority!!) }
     }
 
@@ -334,6 +343,8 @@ class JobCardDetailsViewModel(
                 is WebSocketUpdate.JobCardUpdated -> refreshJobCard()
                 is WebSocketUpdate.StatusChanged -> refreshStatusList()
                 is WebSocketUpdate.JobCardDeleted -> refreshJobCard()
+                is WebSocketUpdate.NewComment -> refreshJobCard()
+                is WebSocketUpdate.DeleteComment -> refreshJobCard()
                 else -> {}
             }
         }

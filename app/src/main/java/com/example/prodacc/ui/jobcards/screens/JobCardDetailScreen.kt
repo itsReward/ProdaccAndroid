@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,6 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
@@ -179,630 +181,667 @@ fun JobCardDetailScreen(
         }
     ) {
 
-        when (val load = viewModel.loadingState.collectAsState().value) {
-            is JobCardDetailsViewModel.LoadingState.Error -> {
-                ErrorStateColumn(
-                    title = load.message,
-                    buttonOnClick = { viewModel.refreshJobCard() },
-                    buttonText = "Reload"
-                )
-            }
-
-            is JobCardDetailsViewModel.LoadingState.Idle -> {
-
-            }
-
-            is JobCardDetailsViewModel.LoadingState.Loading -> {
-                LoadingStateColumn(title = "Loading JobCard")
-            }
-
-            is JobCardDetailsViewModel.LoadingState.Success -> {
-                Column(
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.Top,
-                    modifier = Modifier
-                        .background(Color.White)
-                        .fillMaxSize()
-                        .navigationBarsPadding()
-
-
-                ) {
-
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding() // Handle IME padding
+                .navigationBarsPadding() // Handle navigation bar padding
+        ) {
+            Scaffold (
+                topBar = {
                     TopBar(
-                        jobCardName = jobCard!!.jobCardName,
+                        jobCardName = if (jobCard != null )jobCard!!.jobCardName else "Loading...",
                         navController = navController,
                         onClickPeople = { showDialog = !showDialog },
                         onClickDelete = { viewModel.setDeleteJobCardConfirmation(true) },
                         saveState = viewModel.savingState.collectAsState().value,
-                        priority = jobCard.priority,
-                        onClickPriority = { viewModel.togglePriority() }
+                        priority = if (jobCard != null ) jobCard.priority else false,
+                        onClickPriority = { viewModel.togglePriority() },
+                        showButtons = jobCard!=null,
+                        jobId = jobCardId,
+                        comments = jobCard?.comments?.isNotEmpty() ?: false
                     )
+                }
+            ){ innerPadding ->
 
-                    if (showDialog) {
-                        TeamDialog(
-                            onDismiss = { showDialog = !showDialog },
-                            onAddNewTechnician = jobCardTechnicianViewModel::addTechnician,
-                            jobCard = jobCard,
-                            employees = employeesViewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }
-                                .groupBy { it.employeeName.first() }.toSortedMap()
-                                .map {
-                                    EmployeeListCategory(
-                                        name = it.key.toString(),
-                                        items = it.value
-                                    )
-                                },
-                            onUpdateSupervisor = {},
-                            onUpdateServiceAdvisor = {},
-                            technicians = jobCardTechnicianViewModel.technicians.collectAsState().value,
-                            techniciansLoadingState = jobCardTechnicianViewModel.loadingState.collectAsState().value,
-                            techniciansList = employeesViewModel.technicians.collectAsState().value,
-                            removeTechnician = jobCardTechnicianViewModel::removeTechnician
+                when (val load = viewModel.loadingState.collectAsState().value) {
+                    is JobCardDetailsViewModel.LoadingState.Error -> {
+                        ErrorStateColumn(
+                            title = load.message,
+                            buttonOnClick = { viewModel.refreshJobCard() },
+                            buttonText = "Reload"
                         )
                     }
 
-                    if (viewModel.deleteJobCardConfirmation.collectAsState().value) {
-                        AlertDialog(
-                            onDismissRequest = { viewModel.setDeleteJobCardConfirmation(false) },
-                            confirmButton = {
-                                TextButton(onClick = {
-                                    viewModel.deleteJobCard()
-                                    viewModel.setDeleteJobCardConfirmation(false)
-                                    navController.navigate(Route.JobCards.path)
-                                }) {
-                                    Text(text = "Delete")
-                                }
-                            },
-                            dismissButton = {
-                                Button(onClick = { viewModel.setDeleteJobCardConfirmation(false) }) {
-                                    Text(text = "Cancel")
-                                }
+                    is JobCardDetailsViewModel.LoadingState.Idle -> {
 
-                            },
-                            title = { Text(text = "Delete JobCard?") },
-                            text = { Text(text = "Are you sure you want to delete this job card?") }
-
-                        )
                     }
 
+                    is JobCardDetailsViewModel.LoadingState.Loading -> {
+                        LoadingStateColumn(title = "Loading JobCard")
+                    }
 
-                    //content
-
-
-                    Column(
-                        modifier = Modifier
-                            .verticalScroll(scroll)
-                            .animateContentSize()
-                            .padding(horizontal = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-
-
-                        Row(
+                    is JobCardDetailsViewModel.LoadingState.Success -> {
+                        Column(
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top,
                             modifier = Modifier
-                                .padding(top = 20.dp)
-                                .fillMaxWidth()
-                                .animateContentSize()
-                            //.horizontalScroll(statusScroll)
-                            ,
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
+                                .background(Color.White)
+                                .fillMaxSize()
+                                .padding(innerPadding)
+
+
                         ) {
-                            when (val list = viewModel.statusLoadingState.collectAsState().value) {
-                                is JobCardDetailsViewModel.LoadingState.Error -> {
-                                    Column(
+                            if (showDialog) {
+                                if (jobCard != null) {
+                                    TeamDialog(
+                                        onDismiss = { showDialog = !showDialog },
+                                        onAddNewTechnician = jobCardTechnicianViewModel::addTechnician,
+                                        jobCard = jobCard,
+                                        employees = employeesViewModel.employees.collectAsState().value.sortedBy { it.employeeName.first() }
+                                            .groupBy { it.employeeName.first() }.toSortedMap()
+                                            .map {
+                                                EmployeeListCategory(
+                                                    name = it.key.toString(),
+                                                    items = it.value
+                                                )
+                                            },
+                                        onUpdateSupervisor = {},
+                                        onUpdateServiceAdvisor = {},
+                                        technicians = jobCardTechnicianViewModel.technicians.collectAsState().value,
+                                        techniciansLoadingState = jobCardTechnicianViewModel.loadingState.collectAsState().value,
+                                        techniciansList = employeesViewModel.technicians.collectAsState().value,
+                                        removeTechnician = jobCardTechnicianViewModel::removeTechnician
+                                    )
+                                }
+                            }
+
+                            if (viewModel.deleteJobCardConfirmation.collectAsState().value) {
+                                AlertDialog(
+                                    onDismissRequest = { viewModel.setDeleteJobCardConfirmation(false) },
+                                    confirmButton = {
+                                        TextButton(onClick = {
+                                            viewModel.deleteJobCard()
+                                            viewModel.setDeleteJobCardConfirmation(false)
+                                            navController.navigate(Route.JobCards.path)
+                                        }) {
+                                            Text(text = "Delete")
+                                        }
+                                    },
+                                    dismissButton = {
+                                        Button(onClick = { viewModel.setDeleteJobCardConfirmation(false) }) {
+                                            Text(text = "Cancel")
+                                        }
+
+                                    },
+                                    title = { Text(text = "Delete JobCard?") },
+                                    text = { Text(text = "Are you sure you want to delete this job card?") }
+
+                                )
+                            }
+
+
+                            //content
+
+                            if (jobCard!=null){
+                                Column(
+                                    modifier = Modifier
+                                        .verticalScroll(scroll)
+                                        .animateContentSize()
+                                        .padding(horizontal = 10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                                ) {
+
+
+                                    Row(
                                         modifier = Modifier
+                                            .padding(top = 20.dp)
                                             .fillMaxWidth()
-                                            .padding(vertical = 20.dp),
-                                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
+                                            .animateContentSize()
+                                        ,
+                                        horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(text = list.message, color = Color.Red)
-                                        TextButton(onClick = { viewModel.refreshStatusList() }) {
-                                            Text(text = "Reload")
-                                        }
+                                        when (val list = viewModel.statusLoadingState.collectAsState().value) {
+                                            is JobCardDetailsViewModel.LoadingState.Error -> {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 20.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    Text(text = list.message, color = Color.Red)
+                                                    TextButton(onClick = { viewModel.refreshStatusList() }) {
+                                                        Text(text = "Reload")
+                                                    }
 
-                                    }
-                                }
-
-                                JobCardDetailsViewModel.LoadingState.Loading -> {
-                                    Row(
-                                        modifier = Modifier.padding(start = 10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-
-                                    ) {
-                                        CircularProgressIndicator(
-                                            color = BlueA700,
-                                            trackColor = Color.Transparent,
-                                            modifier = Modifier.size(25.dp),
-                                            strokeWidth = 2.dp
-                                        )
-                                        Text(text = "Loading Statuses")
-
-                                    }
-                                }
-
-                                else -> {
-                                    if (viewModel.jobCardStatusList.collectAsState().value.isNotEmpty()) {
-                                        StepIndicator(
-                                            jobCardStatuses = viewModel.jobCardStatusList.collectAsState().value
-                                        )
-                                    } else {
-                                        Text(text = "No Status Entry")
-                                    }
-
-                                }
-                            }
-
-
-                        }
-
-                        Column(
-                            modifier = Modifier,
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight()
-                                    .clip(
-                                        RoundedCornerShape(10.dp)
-                                    )
-                                    .background(CardGrey)
-                                    .padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(20.dp)
-
-                            ) {
-
-                                Row {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(2f)
-                                    ) {
-                                        MediumTitleText(name = "Vehicle : ")
-                                        Spacer(modifier = Modifier.width(5.dp))
-                                        Box(
-                                            modifier = Modifier
-                                                .border(2.dp, LightGrey, RoundedCornerShape(100.dp))
-                                                .clip(RoundedCornerShape(100.dp))
-                                                .clickable(onClick = {
-                                                    navController.navigate(
-                                                        Route.VehicleDetails.path.replace(
-                                                            "{vehicleId}",
-                                                            jobCard.vehicleId.toString()
-                                                        )
-                                                    )
-                                                })
-                                                .padding(horizontal = 20.dp, vertical = 8.dp)
-                                        ) {
-                                            BodyText(text = jobCard.vehicleName)
-
-                                        }
-
-
-                                    }
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(2f)
-                                    ) {
-                                        MediumTitleText(name = "Client : ")
-                                        Spacer(modifier = Modifier.width(5.dp))
-                                        Box(
-                                            modifier = Modifier
-                                                .border(2.dp, LightGrey, RoundedCornerShape(100.dp))
-                                                .clip(RoundedCornerShape(100.dp))
-                                                .clickable(onClick = {
-                                                    navController.navigate(
-                                                        Route.ClientDetails.path.replace(
-                                                            "{clientId}",
-                                                            jobCard.clientId.toString()
-                                                        )
-                                                    )
-                                                })
-                                                .padding(horizontal = 20.dp, vertical = 8.dp)
-                                        ) {
-                                            BodyText(text = jobCard.clientName.substringAfter(" "))
-
-                                        }
-
-
-                                    }
-                                }
-
-
-                                Row {
-                                    DisabledTextField(
-                                        label = "JobCard No.",
-                                        text = jobCard.jobCardNumber.toString(),
-                                        modifier = Modifier
-                                    )
-                                }
-
-
-                            }
-
-                            DateTimePickerTextField(
-                                value = jobCard.dateAndTimeIn,
-                                onValueChange = { viewModel.updateDateAndTimeIn(it) },
-                                label = "Date In",
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = when (SignedInUser.role) {
-                                    SignedInUser.Role.Supervisor -> false
-                                    SignedInUser.Role.Technician -> false
-                                    else -> {
-                                        true
-                                    }
-                                }
-                            )
-
-                            DateTimePickerTextField(
-                                value = jobCard.jobCardDeadline,
-                                onValueChange = { viewModel.updateJobCardDeadline(it) },
-                                label = "Deadline",
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = when (SignedInUser.role) {
-                                    SignedInUser.Role.Technician -> false
-                                    else -> {
-                                        true
-                                    }
-                                }
-
-                            )
-
-
-                            DateTimePickerTextField(
-                                value = jobCard.dateAndTimeFrozen,
-                                onValueChange = { newDateTime ->
-                                    viewModel.updateDateAndTimeFrozen(
-                                        newDateTime
-                                    )
-                                },
-                                label = "Date Frozen",
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                enabled = when (SignedInUser.role) {
-                                    SignedInUser.Role.Supervisor -> false
-                                    SignedInUser.Role.Technician -> false
-                                    else -> {
-                                        true
-                                    }
-                                }
-                            )
-
-
-                        }
-
-
-                        Button(
-                            onClick = {
-                                showStateChecklistDialog = true
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Grey,
-                            )
-                        ) {
-                            Text(text = "State Checklist")
-
-                        }
-
-
-                        Column {
-                            ReportTextField(
-                                value = reportsViewModel.serviceAdvisorReport.collectAsState().value?.jobReport
-                                    ?: "",
-                                onValueChange = { reportsViewModel.editServiceAdvisorReport(it) },
-                                label = if (reportsViewModel.serviceAdvisorReport.collectAsState().value != null) "Service Advisor Report" else "New Service Advisor Report",
-                                isEdited = reportsViewModel.isServiceAdvisorReportEdited.collectAsState().value,
-                                onSave = { reportsViewModel.saveServiceAdvisorReport() },
-                                modifier = Modifier.fillMaxWidth(),
-                                loadingState = reportsViewModel.serviceAdvisorReportLoadingState.collectAsState().value,
-                                enabled = when (SignedInUser.role) {
-                                    SignedInUser.Role.Supervisor -> false
-                                    SignedInUser.Role.Technician -> false
-                                    else -> {
-                                        true
-                                    }
-                                },
-                                focusManager = focusManager
-                            )
-
-                            DateTimePickerTextField(
-                                value = timeSheetViewModel.diagnosticsClockIn.collectAsState().value,
-                                onValueChange = { timeSheetViewModel.updateDiagnosticsClockIn(it) },
-                                label = "Diagnostics clock in",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 20.dp),
-                                enabled = when (SignedInUser.role) {
-                                    SignedInUser.Role.Admin -> true
-                                    SignedInUser.Role.Technician -> true
-                                    else -> {
-                                        false
-                                    }
-                                }
-                            )
-                            ReportTextField(
-                                value = timeSheetViewModel.diagnosticsReport.collectAsState().value,
-                                onValueChange = { timeSheetViewModel.updateDiagnosticsReport(it) },
-                                label = if (timeSheetViewModel.diagnosticsReport.collectAsState().value != "") "Diagnostics Report" else "New Diagnostics Report",
-                                isEdited = timeSheetViewModel.isDiagnosticsReportEdited.collectAsState().value,
-                                onSave = { timeSheetViewModel.onSaveDiagnosticsReport() },
-                                modifier = Modifier.fillMaxWidth(),
-                                loadingState = timeSheetViewModel.savingDiagnosticsState.collectAsState().value,
-                                enabled = when (SignedInUser.role) {
-                                    SignedInUser.Role.Admin -> true
-                                    SignedInUser.Role.Technician -> true
-                                    else -> {
-                                        false
-                                    }
-                                },
-                                focusManager = focusManager
-                            )
-                            DateTimePickerTextField(
-                                value = timeSheetViewModel.diagnosticsClockOut.collectAsState().value,
-                                onValueChange = { timeSheetViewModel.updateDiagnosticsClockOut(it) },
-                                label = "Diagnostics clock out",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 10.dp, top = 10.dp),
-                                enabled = when (SignedInUser.role) {
-                                    SignedInUser.Role.Admin -> true
-                                    SignedInUser.Role.Technician -> true
-                                    else -> {
-                                        false
-                                    }
-                                }
-                            )
-
-                            DateTimePickerTextField(
-                                value = jobCard.estimatedTimeOfCompletion,
-                                onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
-                                label = "E.T.C.",
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                enabled = when (SignedInUser.role) {
-                                    SignedInUser.Role.Admin -> true
-                                    SignedInUser.Role.Supervisor -> true
-                                    else -> {
-                                        false
-                                    }
-                                }
-                            )
-                        }
-
-
-
-
-
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                MediumTitleText(name = "Timesheets/work done ")
-
-                                when (SignedInUser.role) {
-                                    SignedInUser.Role.ServiceAdvisor -> {}
-                                    else -> {
-                                        TextButton(
-                                            onClick = {
-                                                showBottomSheet = true
+                                                }
                                             }
-                                        ) {
-                                            Text(text = "Add", fontWeight = FontWeight.Bold)
+
+                                            JobCardDetailsViewModel.LoadingState.Loading -> {
+                                                Row(
+                                                    modifier = Modifier.padding(start = 10.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+
+                                                ) {
+                                                    CircularProgressIndicator(
+                                                        color = BlueA700,
+                                                        trackColor = Color.Transparent,
+                                                        modifier = Modifier.size(25.dp),
+                                                        strokeWidth = 2.dp
+                                                    )
+                                                    Text(text = "Loading Statuses")
+
+                                                }
+                                            }
+
+                                            else -> {
+                                                if (viewModel.jobCardStatusList.collectAsState().value.isNotEmpty()) {
+                                                    StepIndicator(
+                                                        jobCardStatuses = viewModel.jobCardStatusList.collectAsState().value
+                                                    )
+                                                } else {
+                                                    Text(text = "No Status Entry")
+                                                }
+
+                                            }
                                         }
+
+
                                     }
-                                }
 
-                            }
-
-                            when (val timeSheetsLoadingState =
-                                timeSheetViewModel.loadingState.collectAsState().value) {
-                                is TimeSheetsViewModel.LoadingState.Error -> {
                                     Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 20.dp),
-                                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
+                                        modifier = Modifier,
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
-                                        Text(
-                                            text = timeSheetsLoadingState.message,
-                                            color = Color.Red
-                                        )
-                                        TextButton(onClick = { timeSheetViewModel.refreshTimeSheets() }) {
-                                            Text(text = "Reload")
-                                        }
-
-                                    }
-                                }
-
-                                is TimeSheetsViewModel.LoadingState.Idle -> {
-                                    IdleStateColumn(
-                                        title = "Load TimeSheets",
-                                        buttonOnClick = { timeSheetViewModel.refreshTimeSheets() },
-                                        buttonText = "Load TimeSheets"
-                                    )
-                                }
-
-                                is TimeSheetsViewModel.LoadingState.Loading -> {
-                                    LoadingStateColumn(title = "Loading Timesheets")
-                                }
-
-                                is TimeSheetsViewModel.LoadingState.Success -> {
-                                    if (timeSheetViewModel.timeSheets.collectAsState().value.isEmpty()) {
                                         Column(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(vertical = 20.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
+                                                .wrapContentHeight()
+                                                .clip(
+                                                    RoundedCornerShape(10.dp)
+                                                )
+                                                .background(CardGrey)
+                                                .padding(20.dp),
+                                            verticalArrangement = Arrangement.spacedBy(20.dp)
+
                                         ) {
-                                            Text(text = "Add Timesheet")
+
+                                            Row {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.weight(2f)
+                                                ) {
+                                                    MediumTitleText(name = "Vehicle : ")
+                                                    Spacer(modifier = Modifier.width(5.dp))
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .border(
+                                                                2.dp,
+                                                                LightGrey,
+                                                                RoundedCornerShape(100.dp)
+                                                            )
+                                                            .clip(RoundedCornerShape(100.dp))
+                                                            .clickable(onClick = {
+                                                                navController.navigate(
+                                                                    Route.VehicleDetails.path.replace(
+                                                                        "{vehicleId}",
+                                                                        jobCard.vehicleId.toString()
+                                                                    )
+                                                                )
+                                                            })
+                                                            .padding(
+                                                                horizontal = 20.dp,
+                                                                vertical = 8.dp
+                                                            )
+                                                    ) {
+                                                        BodyText(text = jobCard.vehicleName)
+
+                                                    }
+
+
+                                                }
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.weight(2f)
+                                                ) {
+                                                    MediumTitleText(name = "Client : ")
+                                                    Spacer(modifier = Modifier.width(5.dp))
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .border(
+                                                                2.dp,
+                                                                LightGrey,
+                                                                RoundedCornerShape(100.dp)
+                                                            )
+                                                            .clip(RoundedCornerShape(100.dp))
+                                                            .clickable(onClick = {
+                                                                navController.navigate(
+                                                                    Route.ClientDetails.path.replace(
+                                                                        "{clientId}",
+                                                                        jobCard.clientId.toString()
+                                                                    )
+                                                                )
+                                                            })
+                                                            .padding(
+                                                                horizontal = 20.dp,
+                                                                vertical = 8.dp
+                                                            )
+                                                    ) {
+                                                        BodyText(text = jobCard.clientName.substringAfter(" "))
+
+                                                    }
+
+
+                                                }
+                                            }
+
+
+                                            Row {
+                                                DisabledTextField(
+                                                    label = "JobCard No.",
+                                                    text = jobCard.jobCardNumber.toString(),
+                                                    modifier = Modifier
+                                                )
+                                            }
+
 
                                         }
-                                    } else {
-                                        timeSheetViewModel.timeSheets.collectAsState().value.forEach {
 
-                                            Timesheets(
-                                                timeSheet = it,
-                                                onClick = timeSheetViewModel::onClickTimesheet
-                                            )
+                                        DateTimePickerTextField(
+                                            value = jobCard.dateAndTimeIn,
+                                            onValueChange = { viewModel.updateDateAndTimeIn(it) },
+                                            label = "Date In",
+                                            modifier = Modifier.fillMaxWidth(),
+                                            enabled = when (SignedInUser.role) {
+                                                SignedInUser.Role.Supervisor -> false
+                                                SignedInUser.Role.Technician -> false
+                                                else -> {
+                                                    true
+                                                }
+                                            }
+                                        )
 
-                                        }
+                                        DateTimePickerTextField(
+                                            value = jobCard.jobCardDeadline,
+                                            onValueChange = { viewModel.updateJobCardDeadline(it) },
+                                            label = "Deadline",
+                                            modifier = Modifier.fillMaxWidth(),
+                                            enabled = when (SignedInUser.role) {
+                                                SignedInUser.Role.Technician -> false
+                                                else -> {
+                                                    true
+                                                }
+                                            }
+
+                                        )
+
+
+                                        DateTimePickerTextField(
+                                            value = jobCard.dateAndTimeFrozen,
+                                            onValueChange = { newDateTime ->
+                                                viewModel.updateDateAndTimeFrozen(
+                                                    newDateTime
+                                                )
+                                            },
+                                            label = "Date Frozen",
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            enabled = when (SignedInUser.role) {
+                                                SignedInUser.Role.Supervisor -> false
+                                                SignedInUser.Role.Technician -> false
+                                                else -> {
+                                                    true
+                                                }
+                                            }
+                                        )
+
+
                                     }
 
-                                    if (timeSheetViewModel.onClickTimesheet.collectAsState().value) {
 
-                                        TimeSheetDialog(
-                                            timeSheet = timeSheetViewModel.timesheet.collectAsState().value!!,
-                                            timeSheetDialogVisibility = timeSheetViewModel.showTimesheetDialog.collectAsState().value,
-                                            isTimesheetEdited = timeSheetViewModel.isTimesheetEdited.collectAsState().value,
-                                            clockOut = timeSheetViewModel::updateTimeSheetClockOut,
-                                            onReportChange = timeSheetViewModel::updateTimesheetReport,
-                                            onDialogDismiss = timeSheetViewModel::timeSheetDialogDismissRequest,
-                                            onSave = timeSheetViewModel::saveUpdatedTimesheet,
+                                    Button(
+                                        onClick = {
+                                            showStateChecklistDialog = true
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Grey,
+                                        )
+                                    ) {
+                                        Text(text = "State Checklist")
+
+                                    }
+
+
+                                    Column {
+                                        ReportTextField(
+                                            value = reportsViewModel.serviceAdvisorReport.collectAsState().value?.jobReport
+                                                ?: "",
+                                            onValueChange = { reportsViewModel.editServiceAdvisorReport(it) },
+                                            label = if (reportsViewModel.serviceAdvisorReport.collectAsState().value != null) "Service Advisor Report" else "New Service Advisor Report",
+                                            isEdited = reportsViewModel.isServiceAdvisorReportEdited.collectAsState().value,
+                                            onSave = { reportsViewModel.saveServiceAdvisorReport() },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            loadingState = reportsViewModel.serviceAdvisorReportLoadingState.collectAsState().value,
+                                            enabled = when (SignedInUser.role) {
+                                                SignedInUser.Role.Supervisor -> false
+                                                SignedInUser.Role.Technician -> false
+                                                else -> {
+                                                    true
+                                                }
+                                            },
+                                            focusManager = focusManager
+                                        )
+
+                                        DateTimePickerTextField(
+                                            value = timeSheetViewModel.diagnosticsClockIn.collectAsState().value,
+                                            onValueChange = { timeSheetViewModel.updateDiagnosticsClockIn(it) },
+                                            label = "Diagnostics clock in",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 20.dp),
+                                            enabled = when (SignedInUser.role) {
+                                                SignedInUser.Role.Admin -> true
+                                                SignedInUser.Role.Technician -> true
+                                                else -> {
+                                                    false
+                                                }
+                                            }
+                                        )
+                                        ReportTextField(
+                                            value = timeSheetViewModel.diagnosticsReport.collectAsState().value,
+                                            onValueChange = { timeSheetViewModel.updateDiagnosticsReport(it) },
+                                            label = if (timeSheetViewModel.diagnosticsReport.collectAsState().value != "") "Diagnostics Report" else "New Diagnostics Report",
+                                            isEdited = timeSheetViewModel.isDiagnosticsReportEdited.collectAsState().value,
+                                            onSave = { timeSheetViewModel.onSaveDiagnosticsReport() },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            loadingState = timeSheetViewModel.savingDiagnosticsState.collectAsState().value,
+                                            enabled = when (SignedInUser.role) {
+                                                SignedInUser.Role.Admin -> true
+                                                SignedInUser.Role.Technician -> true
+                                                else -> {
+                                                    false
+                                                }
+                                            },
+                                            focusManager = focusManager
+                                        )
+                                        DateTimePickerTextField(
+                                            value = timeSheetViewModel.diagnosticsClockOut.collectAsState().value,
+                                            onValueChange = { timeSheetViewModel.updateDiagnosticsClockOut(it) },
+                                            label = "Diagnostics clock out",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 10.dp, top = 10.dp),
+                                            enabled = when (SignedInUser.role) {
+                                                SignedInUser.Role.Admin -> true
+                                                SignedInUser.Role.Technician -> true
+                                                else -> {
+                                                    false
+                                                }
+                                            }
+                                        )
+
+                                        DateTimePickerTextField(
+                                            value = jobCard.estimatedTimeOfCompletion,
+                                            onValueChange = { viewModel.updateEstimatedTimeOfCompletion(it) },
+                                            label = "E.T.C.",
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            enabled = when (SignedInUser.role) {
+                                                SignedInUser.Role.Admin -> true
+                                                SignedInUser.Role.Supervisor -> true
+                                                else -> {
+                                                    false
+                                                }
+                                            }
                                         )
                                     }
 
 
+
+
+
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            MediumTitleText(name = "Timesheets/work done ")
+
+                                            when (SignedInUser.role) {
+                                                SignedInUser.Role.ServiceAdvisor -> {}
+                                                else -> {
+                                                    TextButton(
+                                                        onClick = {
+                                                            showBottomSheet = true
+                                                        }
+                                                    ) {
+                                                        Text(text = "Add", fontWeight = FontWeight.Bold)
+                                                    }
+                                                }
+                                            }
+
+                                        }
+
+                                        when (val timeSheetsLoadingState =
+                                            timeSheetViewModel.loadingState.collectAsState().value) {
+                                            is TimeSheetsViewModel.LoadingState.Error -> {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 20.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    Text(
+                                                        text = timeSheetsLoadingState.message,
+                                                        color = Color.Red
+                                                    )
+                                                    TextButton(onClick = { timeSheetViewModel.refreshTimeSheets() }) {
+                                                        Text(text = "Reload")
+                                                    }
+
+                                                }
+                                            }
+
+                                            is TimeSheetsViewModel.LoadingState.Idle -> {
+                                                IdleStateColumn(
+                                                    title = "Load TimeSheets",
+                                                    buttonOnClick = { timeSheetViewModel.refreshTimeSheets() },
+                                                    buttonText = "Load TimeSheets"
+                                                )
+                                            }
+
+                                            is TimeSheetsViewModel.LoadingState.Loading -> {
+                                                LoadingStateColumn(title = "Loading Timesheets")
+                                            }
+
+                                            is TimeSheetsViewModel.LoadingState.Success -> {
+                                                if (timeSheetViewModel.timeSheets.collectAsState().value.isEmpty()) {
+                                                    Column(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(vertical = 20.dp),
+                                                        horizontalAlignment = Alignment.CenterHorizontally
+                                                    ) {
+                                                        Text(text = "Add Timesheet")
+
+                                                    }
+                                                } else {
+                                                    timeSheetViewModel.timeSheets.collectAsState().value.forEach {
+
+                                                        Timesheets(
+                                                            timeSheet = it,
+                                                            onClick = timeSheetViewModel::onClickTimesheet
+                                                        )
+
+                                                    }
+                                                }
+
+                                                if (timeSheetViewModel.onClickTimesheet.collectAsState().value) {
+
+                                                    TimeSheetDialog(
+                                                        timeSheet = timeSheetViewModel.timesheet.collectAsState().value!!,
+                                                        timeSheetDialogVisibility = timeSheetViewModel.showTimesheetDialog.collectAsState().value,
+                                                        isTimesheetEdited = timeSheetViewModel.isTimesheetEdited.collectAsState().value,
+                                                        clockOut = timeSheetViewModel::updateTimeSheetClockOut,
+                                                        onReportChange = timeSheetViewModel::updateTimesheetReport,
+                                                        onDialogDismiss = timeSheetViewModel::timeSheetDialogDismissRequest,
+                                                        onSave = timeSheetViewModel::saveUpdatedTimesheet,
+                                                    )
+                                                }
+
+
+                                            }
+                                        }
+
+
+                                    }
+
+
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(horizontal = 10.dp)
+                                            .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = checklistIcon,
+                                                contentDescription = "Checklist icon"
+                                            )
+                                            MediumTitleText(
+                                                name = "Checklists",
+                                                modifier = Modifier.padding(start = 5.dp)
+                                            )
+                                        }
+
+                                        Row {
+                                            Button(
+                                                onClick = {
+                                                    showControlChecklistDialog = true
+                                                },
+                                                modifier = Modifier,
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Grey,
+                                                )
+                                            ) {
+                                                // Icon(imageVector = checklistIcon, contentDescription = "")
+                                                Text(text = "Control")
+
+                                            }
+                                            Spacer(modifier = Modifier.width(5.dp))
+
+                                            Button(
+                                                onClick = {
+                                                    showServiceChecklistDialog = true
+                                                },
+                                                modifier = Modifier,
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Grey,
+                                                )
+                                            ) {
+                                                Text(text = "Service ")
+
+                                            }
+                                        }
+
+
+                                    }
+
+                                    DateTimePickerTextField(
+                                        value = timeSheetViewModel.controlClockIn.collectAsState().value,
+                                        onValueChange = { timeSheetViewModel.updateControlClockIn(it) },
+                                        label = "Quality control clock in",
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        enabled = when (SignedInUser.role) {
+                                            SignedInUser.Role.Admin -> true
+                                            SignedInUser.Role.Supervisor -> true
+                                            else -> {
+                                                false
+                                            }
+                                        }
+                                    )
+
+                                    ReportTextField(
+                                        value = timeSheetViewModel.controlReport.collectAsState().value,
+                                        onValueChange = { timeSheetViewModel.updateControlReport(it) },
+                                        label = if (timeSheetViewModel.controlReport.collectAsState().value != "") "Control Report" else "New Control Report",
+                                        isEdited = timeSheetViewModel.isControlReportEdited.collectAsState().value,
+                                        onSave = { timeSheetViewModel.onSaveControlReport() },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        loadingState = timeSheetViewModel.savingControlState.collectAsState().value,
+                                        enabled = when (SignedInUser.role) {
+                                            SignedInUser.Role.Admin -> true
+                                            SignedInUser.Role.Supervisor -> true
+                                            else -> {
+                                                false
+                                            }
+                                        },
+                                        focusManager = focusManager
+                                    )
+
+                                    DateTimePickerTextField(
+                                        value = timeSheetViewModel.controlClockOut.collectAsState().value,
+                                        onValueChange = { timeSheetViewModel.updateControlClockOut(it) },
+                                        label = "Quality control clock out",
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        enabled = when (SignedInUser.role) {
+                                            SignedInUser.Role.Admin -> true
+                                            SignedInUser.Role.Supervisor -> true
+                                            else -> {
+                                                false
+                                            }
+                                        }
+                                    )
+
+                                    DateTimePickerTextField(
+                                        value = jobCard.dateAndTimeClosed,
+                                        onValueChange = { newDateTime ->
+                                            viewModel.updateDateAndTimeClosed(
+                                                newDateTime
+                                            )
+                                        },
+                                        label = "Date Closed",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        enabled = when (SignedInUser.role) {
+                                            SignedInUser.Role.Admin -> true
+                                            SignedInUser.Role.ServiceAdvisor -> true
+                                            else -> {
+                                                false
+                                            }
+                                        }
+                                    )
+
+
                                 }
                             }
+
+
 
 
                         }
-
-
-                        Row(
-                            modifier = Modifier
-                                .padding(horizontal = 10.dp)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = checklistIcon,
-                                    contentDescription = "Checklist icon"
-                                )
-                                MediumTitleText(
-                                    name = "Checklists",
-                                    modifier = Modifier.padding(start = 5.dp)
-                                )
-                            }
-
-                            Row {
-                                Button(
-                                    onClick = {
-                                        showControlChecklistDialog = true
-                                    },
-                                    modifier = Modifier,
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Grey,
-                                    )
-                                ) {
-                                    // Icon(imageVector = checklistIcon, contentDescription = "")
-                                    Text(text = "Control")
-
-                                }
-                                Spacer(modifier = Modifier.width(5.dp))
-
-                                Button(
-                                    onClick = {
-                                        showServiceChecklistDialog = true
-                                    },
-                                    modifier = Modifier,
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Grey,
-                                    )
-                                ) {
-                                    Text(text = "Service ")
-
-                                }
-                            }
-
-
-                        }
-
-                        DateTimePickerTextField(
-                            value = timeSheetViewModel.controlClockIn.collectAsState().value,
-                            onValueChange = { timeSheetViewModel.updateControlClockIn(it) },
-                            label = "Quality control clock in",
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            enabled = when (SignedInUser.role) {
-                                SignedInUser.Role.Admin -> true
-                                SignedInUser.Role.Supervisor -> true
-                                else -> {
-                                    false
-                                }
-                            }
-                        )
-
-                        ReportTextField(
-                            value = timeSheetViewModel.controlReport.collectAsState().value,
-                            onValueChange = { timeSheetViewModel.updateControlReport(it) },
-                            label = if (timeSheetViewModel.controlReport.collectAsState().value != "") "Control Report" else "New Control Report",
-                            isEdited = timeSheetViewModel.isControlReportEdited.collectAsState().value,
-                            onSave = { timeSheetViewModel.onSaveControlReport() },
-                            modifier = Modifier.fillMaxWidth(),
-                            loadingState = timeSheetViewModel.savingControlState.collectAsState().value,
-                            enabled = when (SignedInUser.role) {
-                                SignedInUser.Role.Admin -> true
-                                SignedInUser.Role.Supervisor -> true
-                                else -> {
-                                    false
-                                }
-                            },
-                            focusManager = focusManager
-                        )
-
-                        DateTimePickerTextField(
-                            value = timeSheetViewModel.controlClockOut.collectAsState().value,
-                            onValueChange = { timeSheetViewModel.updateControlClockOut(it) },
-                            label = "Quality control clock out",
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            enabled = when (SignedInUser.role) {
-                                SignedInUser.Role.Admin -> true
-                                SignedInUser.Role.Supervisor -> true
-                                else -> {
-                                    false
-                                }
-                            }
-                        )
-
-                        DateTimePickerTextField(
-                            value = jobCard.dateAndTimeClosed,
-                            onValueChange = { newDateTime ->
-                                viewModel.updateDateAndTimeClosed(
-                                    newDateTime
-                                )
-                            },
-                            label = "Date Closed",
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = when (SignedInUser.role) {
-                                SignedInUser.Role.Admin -> true
-                                SignedInUser.Role.ServiceAdvisor -> true
-                                else -> {
-                                    false
-                                }
-                            }
-                        )
-
-
                     }
-
 
                 }
             }
 
+
         }
+
+
+
 
     }
 
@@ -817,31 +856,34 @@ fun JobCardDetailScreen(
                 }
             },
             sheetState = sheetState,
-            containerColor = Color.White
+            containerColor = Color.White,
         ) {
             // Sheet content
-            NewTimeSheet(
-                onDismiss = {
-                    scope.launch {
-                        // Only dismiss if not in loading state
-                        if (newTimeSheetLoadState !is TimeSheetsViewModel.LoadingState.Loading) {
-                            sheetState.hide()
+            Box(modifier = Modifier.imePadding()){
+                NewTimeSheet(
+                    onDismiss = {
+                        scope.launch {
+                            // Only dismiss if not in loading state
+                            if (newTimeSheetLoadState !is TimeSheetsViewModel.LoadingState.Loading) {
+                                sheetState.hide()
+                            }
+                        }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showBottomSheet = false
+                            }
                         }
-                    }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            showBottomSheet = false
-                        }
-                    }
-                },
-                saveSheet = { timeSheetViewModel.saveTimesheet() },
-                newTimesheet = timeSheetViewModel.newTimeSheet.collectAsState().value,
-                onTitleChange = timeSheetViewModel::onTitleChange,
-                onReportChange = timeSheetViewModel::onReportChange,
-                onClockInChange = timeSheetViewModel::clockIn,
-                onClockOutChange = timeSheetViewModel::clockOut,
-                saveState = timeSheetViewModel.newTimeSheetState.collectAsState().value,
-                resetState = timeSheetViewModel::resetNewTimeSheetLoadState,
-            )
+                    },
+                    saveSheet = { timeSheetViewModel.saveTimesheet() },
+                    newTimesheet = timeSheetViewModel.newTimeSheet.collectAsState().value,
+                    onTitleChange = timeSheetViewModel::onTitleChange,
+                    onReportChange = timeSheetViewModel::onReportChange,
+                    onClockInChange = timeSheetViewModel::clockIn,
+                    onClockOutChange = timeSheetViewModel::clockOut,
+                    saveState = timeSheetViewModel.newTimeSheetState.collectAsState().value,
+                    resetState = timeSheetViewModel::resetNewTimeSheetLoadState,
+                )
+            }
+
 
         }
     }

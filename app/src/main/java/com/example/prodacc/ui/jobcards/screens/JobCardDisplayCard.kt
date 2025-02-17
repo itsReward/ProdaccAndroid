@@ -254,7 +254,6 @@ fun JobCardDisplayCard(
                                 navController.navigate(
                                     Route.Comments.path
                                         .replace("{jobId}", jobCard.id.toString())
-                                        .replace("{jobCardName}", jobCard.jobCardName)
                                 )
                             },
                             colors = IconButtonDefaults.iconButtonColors(

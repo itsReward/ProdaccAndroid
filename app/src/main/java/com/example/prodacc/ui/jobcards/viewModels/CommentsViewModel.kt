@@ -161,6 +161,7 @@ class CommentsViewModel(
         viewModelScope.launch {
             commentRepository.deleteComment(uuid)
             EventBus.emitCommentEvent(EventBus.CommentEvent.CommentDeleted)
+            WebSocketInstance.sendWebSocketMessage("DELETE_COMMENT", jobId)
             refreshComments()
         }
     }
