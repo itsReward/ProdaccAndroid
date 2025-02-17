@@ -13,9 +13,9 @@ class MyApplication : Application() {
         super.onCreate()
 
         NetworkManager.getInstance(this).startMonitoring()
-
-        WebSocketInstance.initialize(this)
         ApiInstance.initialize(this)
+        WebSocketInstance.initialize(this)
+
     }
 
     override fun onTerminate() {

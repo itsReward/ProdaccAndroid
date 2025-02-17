@@ -171,7 +171,7 @@ class NetworkManager private constructor(private val context: Context) {
 
     sealed class NetworkState {
         data class Connected(val type: NetworkType) : NetworkState()
-        object Disconnected : NetworkState()
+        data object Disconnected : NetworkState()
     }
 
     enum class NetworkType {

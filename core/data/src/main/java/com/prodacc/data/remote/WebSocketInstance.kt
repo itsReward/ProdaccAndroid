@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Logger
 
-object WebSocketInstance: NetworkManager.NetworkChangeListener {
+object WebSocketInstance: NetworkManager.NetworkChangeListener, TokenManager.TokenListener {
     private val logger = Logger.getLogger(WebSocketInstance::class.java.name)
     private var contextRef: WeakReference<Context>? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -50,6 +50,11 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
         applicationContext = context.applicationContext
         NetworkManager.getInstance(context.applicationContext)
         NotificationManager.createNotificationChannels(applicationContext)
+        TokenManager.addTokenChangeListeners(this)
+    }
+
+    override fun onTokenUpdate() {
+        reconnectWebSocket()
     }
 
     override fun onNetworkChanged() {
@@ -80,6 +85,19 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
             isConnecting.set(false)
             return
         }
+
+        // Check if we have an existing connection and compare tokens
+        webSocket?.let { existingSocket ->
+            val currentUrl = existingSocket.request().url.toString()
+            val currentToken = currentUrl.substringAfter("token=")
+
+            if (currentToken == token && _webSocketState.value is WebSocketState.Connected) {
+                Log.d("WebSocket", "Connection exists with same token, skipping setup")
+                isConnecting.set(false)
+                return
+            }
+        }
+
 
         serviceScope.launch {
             connectionLock.withLock {
@@ -321,7 +339,7 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
                 // Only attempt reconnect if not already connecting
                 if (_webSocketState.value !is WebSocketState.Connected && !isConnecting.get()) {
                     serviceScope.launch {
-                        delay(30000)
+                        delay(5000)
                         if (_webSocketState.value !is WebSocketState.Connected && !isConnecting.get()){
                             updateConnection()
                         }
@@ -339,7 +357,6 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
 
     // Connecting to WebSocket
     fun reconnectWebSocket() {
-        _webSocketState.value = WebSocketState.Reconnecting("Reconnecting")
         setupWebSocket()
     }
 
@@ -388,6 +405,7 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
         serviceScope.cancel()
         contextRef?.get()?.let { context ->
             NetworkManager.getInstance(context).removeNetworkChangeListener(this)
+            TokenManager.removeTokenChangeListener(this)
         }
         contextRef = null
     }
@@ -568,6 +586,17 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
         serviceScope.launch {
             connectionLock.withLock {
                 try {
+                    val currentWsUrl = webSocket?.request()?.url?.toString()
+                    val currentToken = currentWsUrl?.substringAfter("token=")
+                    val newToken = TokenManager.getToken()?.accessToken
+
+                    // Check if token has changed
+                    if (currentToken != newToken) {
+                        Log.d("WebSocket", "Token changed, reconnecting")
+                        setupWebSocket()
+                        return@withLock
+                    }
+
                     // If we're already connected and the socket is alive, don't reconnect
                     if (_webSocketState.value is WebSocketState.Connected) {
                         val isSocketAlive = webSocket?.let { ws ->
@@ -586,7 +615,6 @@ object WebSocketInstance: NetworkManager.NetworkChangeListener {
                         }
                     }
 
-                    val currentWsUrl = webSocket?.request()?.url?.toString()
                     val newBaseUrl = contextRef?.get()?.let { context ->
                         NetworkManager.getInstance(context).getBaseUrl()
                     } ?: run {

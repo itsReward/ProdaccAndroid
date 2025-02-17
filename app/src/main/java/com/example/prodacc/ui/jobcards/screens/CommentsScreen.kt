@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -165,12 +166,14 @@ fun CommentsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 state = lazyListState
             ) {
-                items(comments) { comment ->
+                itemsIndexed(comments){ index, item ->
                     CommentBubble(
-                        comment = comment,
-                        onDeleteClick = commentsViewModel::deleteComment
+                        comment = item,
+                        onDeleteClick = commentsViewModel::deleteComment,
+                        showAvatar = index!=0 && comments[index-1].employeeId == item.employeeId
                     )
                 }
+
             }
         }
     }
@@ -179,7 +182,8 @@ fun CommentsScreen(
 @Composable
 fun CommentBubble(
     comment: JobCardComment,
-    onDeleteClick: (UUID) -> Unit
+    onDeleteClick: (UUID) -> Unit,
+    showAvatar: Boolean = true
 ) {
     var isLongPressed by remember { mutableStateOf(false) }
     val initials = comment.employeeName.split(" ")
@@ -196,10 +200,15 @@ fun CommentBubble(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ProfileAvatar(
-                initials = "${initials[0].first()} ${initials[1].first()}",
-                size = 30.dp
-            )
+            if (!showAvatar){
+                ProfileAvatar(
+                    initials = "${initials[0].first()} ${initials[1].first()}",
+                    size = 30.dp
+                )
+            } else {
+                Box(modifier = Modifier.size(30.dp))
+            }
+
 
             //Bubble
             Column(

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -36,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.designsystem.designComponents.JobCardsScreenTopBar
 import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.BlueA700
 import com.example.prodacc.navigation.NavigationBar
@@ -67,13 +69,13 @@ fun JobCardsScreen(
         topBar = {
             Column(modifier = Modifier.statusBarsPadding()){
                 WebSocketStateIndicator()
-                TopBar(
-                    title = "Job Cards",
+                JobCardsScreenTopBar(
                     onSearchClick = { navController.navigate( Route.Search.path.replace("{title}", "Job Cards")) },
                     logOut = {
                         TokenManager.saveToken(null)
                         navController.navigate(Route.LogIn.path)
-                    }
+                    },
+                    products = {}
                 )
             }
 
@@ -98,7 +100,8 @@ fun JobCardsScreen(
 
 
         },
-        containerColor = Color.White
+        modifier = Modifier.systemBarsPadding(),
+        containerColor = Color.Transparent
     ) { innerPadding ->
 
         SwipeRefresh(

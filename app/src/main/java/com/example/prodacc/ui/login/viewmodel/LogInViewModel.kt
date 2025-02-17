@@ -63,7 +63,7 @@ class LogInViewModel(
 
                             is SignedInUser.UserSignInResult.Error -> LogInState.Error(user.message)
                             is SignedInUser.UserSignInResult.Success -> {
-                                WebSocketInstance.reconnectWebSocket()
+                                //WebSocketInstance.reconnectWebSocket()
                                 _loginState.value = LogInState.Success(result.token)
                                 // Set navigation state instead of directly navigating
                                 _navigateToJobCards.value = true
