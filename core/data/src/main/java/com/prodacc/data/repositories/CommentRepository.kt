@@ -1,27 +1,36 @@
 package com.prodacc.data.repositories
 
 import android.util.Log
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.dao.JobCardComment
 import com.prodacc.data.remote.dao.NewComment
 import com.prodacc.data.remote.dao.UpdateComment
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class CommentRepository {
-    private val service = ApiInstance.commentService
+@Singleton
+class CommentRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val dispatcher: CoroutineDispatchers
+)
+{
+    private val service get() = apiServiceContainer.commentService
 
-    suspend fun getCommentById(id: UUID): LoadingResult {
-        return try {
+    suspend fun getCommentById(id: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getCommentByCommentId(id)
             if (response.isSuccessful) {
                 if (response.body() == null) {
-                    return LoadingResult.SingleEntity(null, "Comment not found")
+                    LoadingResult.SingleEntity(null, "Comment not found")
                 } else {
-                    return LoadingResult.SingleEntity(response.body(), null)
+                    LoadingResult.SingleEntity(response.body(), null)
                 }
             } else {
-                return LoadingResult.Error(response.raw().message)
+                LoadingResult.Error(response.raw().message)
             }
         } catch (e: Exception) {
             when (e) {
@@ -31,8 +40,8 @@ class CommentRepository {
         }
     }
 
-    suspend fun getCommentsByJobCardId(id: UUID): LoadingResult {
-        return try {
+    suspend fun getCommentsByJobCardId(id: UUID): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = service.getCommentByJobCardId(id)
             Log.d("Get Comments Response", response.message())
 
@@ -49,8 +58,8 @@ class CommentRepository {
         }
     }
 
-    suspend fun getComments(): LoadingResult {
-        return try {
+    suspend fun getComments(): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = service.getComments()
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body() ?: emptyList())
@@ -65,15 +74,17 @@ class CommentRepository {
         }
     }
 
-    suspend fun createComment(newComment: NewComment): LoadingResult {
-        return try {
+    suspend fun createComment(newComment: NewComment): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.newComment(newComment)
             if (response.isSuccessful) {
-                if (response.body() == null) {
-                    LoadingResult.ErrorSingleMessage("Comment creation failed")
-                } else {
-                    LoadingResult.Success(response.body() ?: emptyList())
-                }
+                response.body()?.let { comments ->
+                    if (comments.isNotEmpty()) {
+                        LoadingResult.SingleEntity(comments.first(), null)
+                    } else {
+                        LoadingResult.ErrorSingleMessage("Comment creation returned no data")
+                    }
+                } ?: LoadingResult.ErrorSingleMessage("Comment creation failed")
             } else {
                 LoadingResult.Error(response.raw().message)
             }
@@ -85,8 +96,8 @@ class CommentRepository {
         }
     }
 
-    suspend fun updateComment(id: UUID, updatedComment: UpdateComment): LoadingResult {
-        return try {
+    suspend fun updateComment(id: UUID, updatedComment: UpdateComment): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.updateComment(id, updatedComment)
             if (response.isSuccessful) {
                 if (response.body() == null) {
@@ -105,8 +116,8 @@ class CommentRepository {
         }
     }
 
-    suspend fun deleteComment(id: UUID): LoadingResult {
-        return try {
+    suspend fun deleteComment(id: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.deleteComment(id)
             if (response.isSuccessful) {
                 LoadingResult.Success(emptyList())

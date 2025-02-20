@@ -1,18 +1,26 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.dao.JobCardReport
 import com.prodacc.data.remote.dao.NewJobCardReport
 import com.prodacc.data.remote.dao.UpdateJobCardReport
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class JobCardReportRepository {
-    private val service = ApiInstance.jobCardReportService
+@Singleton
+class JobCardReportRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val dispatcher: CoroutineDispatchers
+) {
+    private val service get() = apiServiceContainer.jobCardReportService
 
 
-    suspend fun getJobCardReports(jobCardId: UUID): LoadingResult {
-        return try {
+    suspend fun getJobCardReports(jobCardId: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val reports = service.getJobCardReports(jobCardId)
             if (reports.isSuccessful) {
                 LoadingResult.Success(reports.body()!!)
@@ -28,8 +36,8 @@ class JobCardReportRepository {
         }
     }
 
-    suspend fun newJobCardReport(report: JobCardReport): LoadingResult {
-        return try {
+    suspend fun newJobCardReport(report: JobCardReport): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.createReport(
                 NewJobCardReport(
                     jobReport = report.jobReport,
@@ -51,8 +59,8 @@ class JobCardReportRepository {
         }
     }
 
-    suspend fun updateJobCardReport(id: UUID, report: JobCardReport): LoadingResult {
-        return try {
+    suspend fun updateJobCardReport(id: UUID, report: JobCardReport): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.updateReport(
                 id,
                 UpdateJobCardReport(
@@ -76,8 +84,8 @@ class JobCardReportRepository {
         }
     }
 
-    suspend fun getReportById(id: UUID): LoadingResult {
-        return try {
+    suspend fun getReportById(id: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getReportById(id)
             if (response.isSuccessful) {
                 LoadingResult.SingleEntitySuccess(response.body()!!)

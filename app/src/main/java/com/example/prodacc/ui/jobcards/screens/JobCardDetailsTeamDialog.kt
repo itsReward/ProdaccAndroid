@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,8 +17,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +40,7 @@ import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.CardGrey
 import com.example.prodacc.ui.jobcards.viewModels.JobCardTechnicianViewModel
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
 import java.util.UUID
@@ -60,7 +57,8 @@ fun TeamDialog(
     onUpdateSupervisor: (UUID) -> Unit,
     techniciansLoadingState: JobCardTechnicianViewModel.LoadingState,
     techniciansList: List<Employee>,
-    removeTechnician: (UUID) -> Unit
+    removeTechnician: (UUID) -> Unit,
+    userRole: SignedInUserManager.Role
 ) {
     Dialog(
         onDismissRequest = onDismiss
@@ -109,7 +107,8 @@ fun TeamDialog(
                 employees = techniciansList,
                 onAddNewTechnician = onAddNewTechnician,
                 techniciansLoadingState = techniciansLoadingState,
-                removeTechnician = removeTechnician
+                removeTechnician = removeTechnician,
+                userRole = userRole
             )
 
 
@@ -137,7 +136,7 @@ fun TeamDialogCard(
     }
 
     Column {
-        androidx.compose.material3.Text(
+        Text(
             text = title,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Start,
@@ -194,7 +193,8 @@ fun TechnicianRow(
     employees: List<Employee>,
     onAddNewTechnician: (UUID) -> Unit,
     techniciansLoadingState: JobCardTechnicianViewModel.LoadingState,
-    removeTechnician: (UUID) -> Unit
+    removeTechnician: (UUID) -> Unit,
+    userRole: SignedInUserManager.Role
 ) {
     var dropdownMenu by remember {
         mutableStateOf(false)
@@ -208,8 +208,8 @@ fun TechnicianRow(
         ) {
             MediumTitleText("Technicians: ")
 
-            when (SignedInUser.role) {
-                SignedInUser.Role.Technician -> {}
+            when (userRole) {
+                SignedInUserManager.Role.Technician -> {}
                 else -> {
                     TextButton(onClick = { dropdownMenu = true }) {
                         Text(text = "Add")
@@ -297,9 +297,9 @@ fun TechnicianRow(
                                         .toString() + it.employeeSurname.first().toString()
                                 )
                                 Text(text = it.employeeName, color = Color.DarkGray)
-                                when(SignedInUser.role){
-                                    SignedInUser.Role.Technician -> {}
-                                    SignedInUser.Role.ServiceAdvisor -> {}
+                                when(userRole){
+                                    SignedInUserManager.Role.Technician -> {}
+                                    SignedInUserManager.Role.ServiceAdvisor -> {}
                                     else -> {
                                         Button(onClick = { removeTechnician(it.id) }) {
                                             Text(text = "Remove")

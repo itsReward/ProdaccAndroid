@@ -45,9 +45,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.LoadingStateColumn
@@ -62,16 +60,9 @@ import com.example.prodacc.ui.employees.viewModels.EditEmployeeViewModel
 @Composable
 fun EditEmployeeScreen(
     navController: NavController,
-    employeeId: String
+    viewModel: EditEmployeeViewModel = hiltViewModel()
 ){
     val focusManager = LocalFocusManager.current
-    val viewModel: EditEmployeeViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return EditEmployeeViewModel(employeeId = employeeId) as T
-            }
-        }
-    )
     val scroll = rememberScrollState()
     val updateState = viewModel.updateState.collectAsState().value
 

@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.PasswordTextField
@@ -58,15 +59,13 @@ import com.example.designsystem.theme.pretendard
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.login.viewmodel.LogInState
 import com.example.prodacc.ui.login.viewmodel.LogInViewModel
-import com.prodacc.data.SignedInUser
-import com.prodacc.data.remote.ApiInstance
 import kotlinx.coroutines.delay
 
 
 @Composable
 fun LogInScreen(
     navController: NavController,
-    viewModel: LogInViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: LogInViewModel = hiltViewModel()
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -105,8 +104,7 @@ fun LogInScreen(
                     text = "jobkeep",
                     fontFamily = pretendard,
                     fontWeight = FontWeight.Medium,
-                    color = BlueA700
-                    ,
+                    color = BlueA700,
                     fontSize = 55.sp
 
                 )
@@ -128,9 +126,7 @@ fun LogInScreen(
                 .weight(2.5f)
                 .clip(RoundedCornerShape(topEnd = 30.dp, topStart = 30.dp))
                 .background(LightGrey)
-                .padding(start = 20.dp, end = 20.dp, top = 35.dp)
-
-                ,
+                .padding(start = 20.dp, end = 20.dp, top = 35.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
@@ -152,7 +148,7 @@ fun LogInScreen(
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    //.padding(bottom = 5.dp)
+                //.padding(bottom = 5.dp)
                 ,
                 label = { Text("username") },
                 colors = TextFieldDefaults.colors(
@@ -162,7 +158,7 @@ fun LogInScreen(
                     errorContainerColor = Color.Transparent
                 ),
                 singleLine = true,
-                isError = when(viewModel.loginState.collectAsState().value ){
+                isError = when (viewModel.loginState.collectAsState().value) {
                     is LogInState.Error -> true
                     else -> false
                 },
@@ -173,12 +169,12 @@ fun LogInScreen(
                     onDone = { focusManager.moveFocus(FocusDirection.Down) }
                 )
             )
-             Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             PasswordTextField(
                 password = viewModel.passwordState.collectAsState().value,
                 onPasswordChange = { viewModel.onPasswordChange(it) },
-                isError = when(viewModel.loginState.collectAsState().value){
+                isError = when (viewModel.loginState.collectAsState().value) {
                     is LogInState.Error -> true
                     else -> false
                 },
@@ -193,7 +189,8 @@ fun LogInScreen(
                 ),
                 keyboardActions = KeyboardActions(
                     onGo = {
-                        val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        val inputMethodManager =
+                            context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                         val currentFocus = (context as? Activity)?.currentFocus
                         inputMethodManager.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
                         viewModel.logIn()
@@ -201,7 +198,7 @@ fun LogInScreen(
                 )
             )
 
-            when (viewModel.loginState.collectAsState().value){
+            when (viewModel.loginState.collectAsState().value) {
                 is LogInState.Error -> {
                     Text(
                         text = (viewModel.loginState.collectAsState().value as LogInState.Error).message,
@@ -214,13 +211,15 @@ fun LogInScreen(
                         textAlign = TextAlign.Center
                     )
                 }
+
                 else -> {}
             }
 
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {
-                    val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    val inputMethodManager =
+                        context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                     val currentFocus = (context as? Activity)?.currentFocus
                     inputMethodManager.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
                     viewModel.logIn()
@@ -235,9 +234,6 @@ fun LogInScreen(
             ) {
                 Text(text = "LogIn")
             }
-
-
-
 
 
         }
@@ -260,7 +256,7 @@ fun LogInScreen(
                     .fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
-            Text(text = ApiInstance.url, color = Grey)
+            Text(text = viewModel.url, color = Grey)
             Text(
                 textAlign = TextAlign.Center,
                 text = "Version 1.0 created with ❤ by Render Creative",
@@ -276,6 +272,7 @@ fun LogInScreen(
         when (state) {
             is LogInState.Idle -> {
             }
+
             is LogInState.Loading -> {
                 Dialog(onDismissRequest = {}) {
                     Row(
@@ -297,13 +294,14 @@ fun LogInScreen(
 
                 }
             }
+
             is LogInState.Success -> {
 
                 AnimatedVisibility(
                     visible = viewModel.signedInScreen.collectAsState().value,
 
-                ) {
-                    Column (
+                    ) {
+                    Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(bottomEnd = 50.dp, bottomStart = 50.dp))
                             .background(Color.White)
@@ -312,7 +310,7 @@ fun LogInScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        LargeTitleText(name = "Welcome Back ${SignedInUser.user?.employeeName}")
+                        LargeTitleText(name = "Welcome Back ${viewModel.signedInEmployee.collectAsState().value}")
 
                     }
                     LaunchedEffect(Unit) {

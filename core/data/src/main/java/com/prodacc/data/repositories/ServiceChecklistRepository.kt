@@ -1,19 +1,26 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.WebSocketInstance
-import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.NewServiceChecklist
 import com.prodacc.data.remote.dao.ServiceChecklist
+import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.time.LocalDateTime
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ServiceChecklistRepository {
-    private val service = ApiInstance.serviceChecklistService
+@Singleton
+class ServiceChecklistRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val webSocketInstance: WebSocketInstance,
+    private val dispatcher: CoroutineDispatchers
+){
+    private val service get() = apiServiceContainer.serviceChecklistService
 
-    suspend fun getServiceChecklistByJobCard(id: UUID): LoadingResult {
-        return try {
+    suspend fun getServiceChecklistByJobCard(id: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getServiceChecklistByJobCard(id)
 
             println(response.raw().request.url)
@@ -36,11 +43,11 @@ class ServiceChecklistRepository {
     }
 
 
-    suspend fun addServiceChecklist(serviceChecklist: NewServiceChecklist): LoadingResult {
-        return try {
+    suspend fun addServiceChecklist(serviceChecklist: NewServiceChecklist): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.createServiceChecklist(serviceChecklist)
             if (response.isSuccessful){
-                WebSocketInstance.sendWebSocketMessage("NEW_SERVICE_CHECKLIST", serviceChecklist.jobCardId.toString())
+                webSocketInstance.sendWebSocketMessage("NEW_SERVICE_CHECKLIST", serviceChecklist.jobCardId.toString())
                 LoadingResult.Success(response.body())
             } else {
                 LoadingResult.Error(response.message())
@@ -54,11 +61,11 @@ class ServiceChecklistRepository {
     }
 
 
-    suspend fun updateServiceChecklist(id: UUID, serviceChecklist: NewServiceChecklist): LoadingResult {
-        return try {
+    suspend fun updateServiceChecklist(id: UUID, serviceChecklist: NewServiceChecklist): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.updateServiceChecklist(id, serviceChecklist)
             if (response.isSuccessful){
-                WebSocketInstance.sendWebSocketMessage("UPDATE_SERVICE_CHECKLIST", serviceChecklist.jobCardId.toString())
+                webSocketInstance.sendWebSocketMessage("UPDATE_SERVICE_CHECKLIST", serviceChecklist.jobCardId.toString())
                 LoadingResult.Success(response.body())
             } else {
                 LoadingResult.Error(response.message())

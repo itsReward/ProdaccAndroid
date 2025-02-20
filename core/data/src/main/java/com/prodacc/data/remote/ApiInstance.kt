@@ -1,5 +1,6 @@
 package com.prodacc.data.remote
 
+/*
 import android.content.Context
 import android.util.Log
 import com.google.gson.GsonBuilder
@@ -16,6 +17,7 @@ import com.prodacc.data.remote.services.JobCardService
 import com.prodacc.data.remote.services.JobCardStatusService
 import com.prodacc.data.remote.services.JobCardTechniciansService
 import com.prodacc.data.remote.services.LogInService
+import com.prodacc.data.remote.services.ProductService
 import com.prodacc.data.remote.services.ServiceChecklistService
 import com.prodacc.data.remote.services.StateChecklistService
 import com.prodacc.data.remote.services.TimesheetService
@@ -34,9 +36,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
+*/
 
 
-object ApiInstance : NetworkManager.NetworkChangeListener {
+/*object ApiInstance : NetworkManager.NetworkChangeListener {
     private val logger = Logger.getLogger(ApiInstance::class.java.name)
     var url: String = ""
     private var contextRef: WeakReference<Context>? = null
@@ -80,6 +83,7 @@ object ApiInstance : NetworkManager.NetworkChangeListener {
         _stateChecklistService = _retrofitBuilder.create(StateChecklistService::class.java)
         _timesheetService = _retrofitBuilder.create(TimesheetService::class.java)
         _commentService = _retrofitBuilder.create(CommentService::class.java)
+        _productService = _retrofitBuilder.create(ProductService::class.java)
 
     }
 
@@ -120,53 +124,28 @@ object ApiInstance : NetworkManager.NetworkChangeListener {
     private var _stateChecklistService = _retrofitBuilder.create(StateChecklistService::class.java)
     private var _timesheetService = _retrofitBuilder.create(TimesheetService::class.java)
     private var _commentService = _retrofitBuilder.create(CommentService::class.java)
+    private var _productService = _retrofitBuilder.create(ProductService::class.java)
 
     // Getter for retrofitBuilder that returns the current instance
     val retrofitBuilder: Retrofit
         get() = _retrofitBuilder
 
     // Getters for services
-    val logInService: LogInService
-        get() = _logInService
-
-    val jobCardService: JobCardService
-        get() = _jobCardService
-
-    val vehicleService: VehicleService
-        get() = _vehicleService
-
-    val clientService: ClientService
-        get() = _clientService
-
-    val employeeService: EmployeeService
-        get() = _employeeService
-
-    val userService: UserService
-        get() = _userService
-
-    val controlChecklistService: ControlChecklistService
-        get() = _controlChecklistService
-
-    val jobCardReportService: JobCardReportService
-        get() = _jobCardReportService
-
-    val jobCardStatusService: JobCardStatusService
-        get() = _jobCardStatusService
-
-    val jobCardTechniciansService: JobCardTechniciansService
-        get() = _jobCardTechniciansService
-
-    val serviceChecklistService: ServiceChecklistService
-        get() = _serviceChecklistService
-
-    val stateChecklistService: StateChecklistService
-        get() = _stateChecklistService
-
-    val timesheetService: TimesheetService
-        get() = _timesheetService
-
-    val commentService: CommentService
-        get() = _commentService
+    val logInService: LogInService get() = _logInService
+    val jobCardService: JobCardService get() = _jobCardService
+    val vehicleService: VehicleService get() = _vehicleService
+    val clientService: ClientService get() = _clientService
+    val employeeService: EmployeeService get() = _employeeService
+    val userService: UserService get() = _userService
+    val controlChecklistService: ControlChecklistService get() = _controlChecklistService
+    val jobCardReportService: JobCardReportService get() = _jobCardReportService
+    val jobCardStatusService: JobCardStatusService get() = _jobCardStatusService
+    val jobCardTechniciansService: JobCardTechniciansService get() = _jobCardTechniciansService
+    val serviceChecklistService: ServiceChecklistService get() = _serviceChecklistService
+    val stateChecklistService: StateChecklistService get() = _stateChecklistService
+    val timesheetService: TimesheetService get() = _timesheetService
+    val commentService: CommentService get() = _commentService
+    val productService: ProductService get() = _productService
 
 
     // Default builder without caching (for initial setup)
@@ -241,4 +220,4 @@ object ApiInstance : NetworkManager.NetworkChangeListener {
         contextRef = null
     }
 
-}
+}*/

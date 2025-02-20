@@ -1,17 +1,34 @@
 package com.prodacc.data
 
+import com.prodacc.data.di.CoroutineDispatchers
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.User
 import com.prodacc.data.repositories.EmployeeRepository
 import com.prodacc.data.repositories.UserRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object SignedInUser{
-    var role: Role? = null
-    var user: User? = null
-    var employee: Employee? = null
+@Singleton
+class SignedInUserManager @Inject constructor(
+    private val userRepository: UserRepository,
+    private val employeeRepository: EmployeeRepository,
+    private val dispatchers: CoroutineDispatchers
+) {
+    private val _user = MutableStateFlow<User?>(null)
+    val user = _user.asStateFlow()
 
-    suspend fun initialize(signedIn: String): UserSignInResult {
-        return when (val signedInUser = UserRepository().getUserByUsername(signedIn)){
+    private val _employee = MutableStateFlow<Employee?>(null)
+    val employee = _employee.asStateFlow()
+
+    private val _role = MutableStateFlow<Role?>(null)
+    val role = _role.asStateFlow()
+
+    suspend fun initialize(signedIn: String): UserSignInResult = withContext(dispatchers.io) {
+        return@withContext when (val signedInUser = userRepository.getUserByUsername(signedIn)) {
             is UserRepository.LoadingResult.Error -> {
                 UserSignInResult.Error(signedInUser.message)
             }
@@ -22,45 +39,52 @@ object SignedInUser{
                 UserSignInResult.Error("Returned List, Can never happen anyways")
             }
             is UserRepository.LoadingResult.UserEntity -> {
-                user = signedInUser.user
-                role = when(user!!.userRole){
-                    "SERVICE_ADVISOR" -> Role.ServiceAdvisor
-                    "SUPERVISOR" -> Role.Supervisor
-                    "TECHNICIAN" -> Role.Technician
-                    "ADMIN" -> Role.Admin
-                    else -> Role.Technician
-                }
                 try {
-                    fetchEmployee()
-                }catch (e:Exception){
-                    UserSignInResult.Error(e.message?: "Eish Unknown Error ")
+                    _user.value = signedInUser.user
+                    _role.value = mapUserRole(signedInUser.user.userRole)
+                    fetchEmployee(signedInUser.user.employeeId)
+                    UserSignInResult.Success
+                } catch (e: Exception) {
+                    UserSignInResult.Error(e.message ?: "Unknown Error")
                 }
-
-                UserSignInResult.Success
             }
         }
     }
 
-    private suspend fun fetchEmployee(){
-        when (val response = EmployeeRepository().getEmployee(user!!.employeeId)){
-            is EmployeeRepository.LoadingResult.EmployeeEntity -> employee = response.employee
-            is EmployeeRepository.LoadingResult.Error -> UserSignInResult.Error(response.message)
-            is EmployeeRepository.LoadingResult.NetworkError -> UserSignInResult.Error("Network Error")
-            is EmployeeRepository.LoadingResult.Success -> {}
+    private fun mapUserRole(userRole: String): Role {
+        return when(userRole) {
+            "SERVICE_ADVISOR" -> Role.ServiceAdvisor
+            "SUPERVISOR" -> Role.Supervisor
+            "TECHNICIAN" -> Role.Technician
+            "ADMIN" -> Role.Admin
+            else -> Role.Technician
         }
     }
 
-    sealed class UserSignInResult{
+    private suspend fun fetchEmployee(employeeId: UUID) {
+        when (val response = employeeRepository.getEmployee(employeeId)) {
+            is EmployeeRepository.LoadingResult.EmployeeEntity -> _employee.value = response.employee
+            is EmployeeRepository.LoadingResult.Error -> throw Exception(response.message)
+            is EmployeeRepository.LoadingResult.NetworkError -> throw Exception("Network Error")
+            is EmployeeRepository.LoadingResult.Success -> {} // No-op
+        }
+    }
+
+    fun clearUser() {
+        _user.value = null
+        _employee.value = null
+        _role.value = null
+    }
+
+    sealed class UserSignInResult {
         data class Error(val message: String): UserSignInResult()
         data object Success : UserSignInResult()
     }
 
-    sealed class Role{
+    sealed class Role {
         data object Admin: Role()
         data object Supervisor: Role()
         data object Technician: Role()
         data object ServiceAdvisor: Role()
     }
-
-
 }

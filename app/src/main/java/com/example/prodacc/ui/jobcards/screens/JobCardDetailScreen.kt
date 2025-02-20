@@ -70,7 +70,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.BodyText
 import com.example.designsystem.designComponents.DateTimePickerTextField
@@ -89,24 +89,16 @@ import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.checklistIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.employees.viewModels.EmployeesViewModel
-import com.example.prodacc.ui.employees.viewModels.EmployeesViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.ControlChecklistViewModel
-import com.example.prodacc.ui.jobcards.viewModels.ControlChecklistViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
-import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModel
-import com.example.prodacc.ui.jobcards.viewModels.JobCardReportsViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.JobCardTechnicianViewModel
-import com.example.prodacc.ui.jobcards.viewModels.JobCardTechnicianViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.ServiceChecklistViewModel
-import com.example.prodacc.ui.jobcards.viewModels.ServiceChecklistViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.StateChecklistViewModel
-import com.example.prodacc.ui.jobcards.viewModels.StateChecklistViewModelFactory
 import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel
-import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModelFactory
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.dao.CreateTimesheet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -118,30 +110,14 @@ import java.time.LocalDateTime
 fun JobCardDetailScreen(
     navController: NavController,
     jobCardId: String,
-    viewModel: JobCardDetailsViewModel = viewModel(
-        factory = JobCardDetailsViewModelFactory(jobCardId)
-    ),
-    reportsViewModel: JobCardReportsViewModel = viewModel(
-        factory = JobCardReportsViewModelFactory(jobCardId)
-    ),
-    timeSheetViewModel: TimeSheetsViewModel = viewModel(
-        factory = TimeSheetsViewModelFactory(jobCardId)
-    ),
-    jobCardTechnicianViewModel: JobCardTechnicianViewModel = viewModel(
-        factory = JobCardTechnicianViewModelFactory(jobCardId)
-    ),
-    employeesViewModel: EmployeesViewModel = viewModel(
-        factory = EmployeesViewModelFactory()
-    ),
-    controlChecklistViewModel: ControlChecklistViewModel = viewModel(
-        factory = ControlChecklistViewModelFactory(jobCardId)
-    ),
-    serviceChecklistViewModel: ServiceChecklistViewModel = viewModel(
-        factory = ServiceChecklistViewModelFactory(jobCardId)
-    ),
-    stateChecklistViewModel: StateChecklistViewModel = viewModel(
-        factory = StateChecklistViewModelFactory(jobCardId)
-    )
+    viewModel: JobCardDetailsViewModel = hiltViewModel(),
+    reportsViewModel: JobCardReportsViewModel = hiltViewModel(),
+    timeSheetViewModel: TimeSheetsViewModel = hiltViewModel(),
+    jobCardTechnicianViewModel: JobCardTechnicianViewModel = hiltViewModel(),
+    employeesViewModel: EmployeesViewModel = hiltViewModel(),
+    controlChecklistViewModel: ControlChecklistViewModel = hiltViewModel(),
+    serviceChecklistViewModel: ServiceChecklistViewModel = hiltViewModel(),
+    stateChecklistViewModel: StateChecklistViewModel = hiltViewModel()
 ) {
     val jobCard = viewModel.jobCard.collectAsState().value
     val focusManager = LocalFocusManager.current
@@ -190,16 +166,17 @@ fun JobCardDetailScreen(
             Scaffold (
                 topBar = {
                     TopBar(
-                        jobCardName = if (jobCard != null )jobCard!!.jobCardName else "Loading...",
+                        jobCardName = jobCard?.jobCardName ?: "Loading...",
                         navController = navController,
                         onClickPeople = { showDialog = !showDialog },
                         onClickDelete = { viewModel.setDeleteJobCardConfirmation(true) },
                         saveState = viewModel.savingState.collectAsState().value,
-                        priority = if (jobCard != null ) jobCard.priority else false,
+                        priority = jobCard?.priority ?: false,
                         onClickPriority = { viewModel.togglePriority() },
                         showButtons = jobCard!=null,
                         jobId = jobCardId,
-                        comments = jobCard?.comments?.isNotEmpty() ?: false
+                        comments = jobCard?.comments?.isNotEmpty() ?: false,
+                        role = viewModel.userRole.collectAsState().value!!
                     )
                 }
             ){ innerPadding ->
@@ -251,7 +228,8 @@ fun JobCardDetailScreen(
                                         technicians = jobCardTechnicianViewModel.technicians.collectAsState().value,
                                         techniciansLoadingState = jobCardTechnicianViewModel.loadingState.collectAsState().value,
                                         techniciansList = employeesViewModel.technicians.collectAsState().value,
-                                        removeTechnician = jobCardTechnicianViewModel::removeTechnician
+                                        removeTechnician = jobCardTechnicianViewModel::removeTechnician,
+                                        userRole = viewModel.userRole.collectAsState().value!!
                                     )
                                 }
                             }
@@ -340,7 +318,8 @@ fun JobCardDetailScreen(
                                             else -> {
                                                 if (viewModel.jobCardStatusList.collectAsState().value.isNotEmpty()) {
                                                     StepIndicator(
-                                                        jobCardStatuses = viewModel.jobCardStatusList.collectAsState().value
+                                                        jobCardStatuses = viewModel.jobCardStatusList.collectAsState().value,
+                                                        role = viewModel.userRole.collectAsState().value!!
                                                     )
                                                 } else {
                                                     Text(text = "No Status Entry")
@@ -455,9 +434,9 @@ fun JobCardDetailScreen(
                                             onValueChange = { viewModel.updateDateAndTimeIn(it) },
                                             label = "Date In",
                                             modifier = Modifier.fillMaxWidth(),
-                                            enabled = when (SignedInUser.role) {
-                                                SignedInUser.Role.Supervisor -> false
-                                                SignedInUser.Role.Technician -> false
+                                            enabled = when (viewModel.userRole.collectAsState().value) {
+                                                SignedInUserManager.Role.Supervisor -> false
+                                                SignedInUserManager.Role.Technician -> false
                                                 else -> {
                                                     true
                                                 }
@@ -469,8 +448,8 @@ fun JobCardDetailScreen(
                                             onValueChange = { viewModel.updateJobCardDeadline(it) },
                                             label = "Deadline",
                                             modifier = Modifier.fillMaxWidth(),
-                                            enabled = when (SignedInUser.role) {
-                                                SignedInUser.Role.Technician -> false
+                                            enabled = when (viewModel.userRole.collectAsState().value) {
+                                                SignedInUserManager.Role.Technician -> false
                                                 else -> {
                                                     true
                                                 }
@@ -489,9 +468,9 @@ fun JobCardDetailScreen(
                                             label = "Date Frozen",
                                             modifier = Modifier
                                                 .fillMaxWidth(),
-                                            enabled = when (SignedInUser.role) {
-                                                SignedInUser.Role.Supervisor -> false
-                                                SignedInUser.Role.Technician -> false
+                                            enabled = when (viewModel.userRole.collectAsState().value) {
+                                                SignedInUserManager.Role.Supervisor -> false
+                                                SignedInUserManager.Role.Technician -> false
                                                 else -> {
                                                     true
                                                 }
@@ -526,9 +505,9 @@ fun JobCardDetailScreen(
                                             onSave = { reportsViewModel.saveServiceAdvisorReport() },
                                             modifier = Modifier.fillMaxWidth(),
                                             loadingState = reportsViewModel.serviceAdvisorReportLoadingState.collectAsState().value,
-                                            enabled = when (SignedInUser.role) {
-                                                SignedInUser.Role.Supervisor -> false
-                                                SignedInUser.Role.Technician -> false
+                                            enabled = when (viewModel.userRole.collectAsState().value) {
+                                                SignedInUserManager.Role.Supervisor -> false
+                                                SignedInUserManager.Role.Technician -> false
                                                 else -> {
                                                     true
                                                 }
@@ -543,9 +522,9 @@ fun JobCardDetailScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .padding(top = 20.dp),
-                                            enabled = when (SignedInUser.role) {
-                                                SignedInUser.Role.Admin -> true
-                                                SignedInUser.Role.Technician -> true
+                                            enabled = when (viewModel.userRole.collectAsState().value) {
+                                                SignedInUserManager.Role.Admin -> true
+                                                SignedInUserManager.Role.Technician -> true
                                                 else -> {
                                                     false
                                                 }
@@ -559,9 +538,9 @@ fun JobCardDetailScreen(
                                             onSave = { timeSheetViewModel.onSaveDiagnosticsReport() },
                                             modifier = Modifier.fillMaxWidth(),
                                             loadingState = timeSheetViewModel.savingDiagnosticsState.collectAsState().value,
-                                            enabled = when (SignedInUser.role) {
-                                                SignedInUser.Role.Admin -> true
-                                                SignedInUser.Role.Technician -> true
+                                            enabled = when (viewModel.userRole.collectAsState().value) {
+                                                SignedInUserManager.Role.Admin -> true
+                                                SignedInUserManager.Role.Technician -> true
                                                 else -> {
                                                     false
                                                 }
@@ -575,9 +554,9 @@ fun JobCardDetailScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .padding(bottom = 10.dp, top = 10.dp),
-                                            enabled = when (SignedInUser.role) {
-                                                SignedInUser.Role.Admin -> true
-                                                SignedInUser.Role.Technician -> true
+                                            enabled = when (viewModel.userRole.collectAsState().value) {
+                                                SignedInUserManager.Role.Admin -> true
+                                                SignedInUserManager.Role.Technician -> true
                                                 else -> {
                                                     false
                                                 }
@@ -590,9 +569,9 @@ fun JobCardDetailScreen(
                                             label = "E.T.C.",
                                             modifier = Modifier
                                                 .fillMaxWidth(),
-                                            enabled = when (SignedInUser.role) {
-                                                SignedInUser.Role.Admin -> true
-                                                SignedInUser.Role.Supervisor -> true
+                                            enabled = when (viewModel.userRole.collectAsState().value) {
+                                                SignedInUserManager.Role.Admin -> true
+                                                SignedInUserManager.Role.Supervisor -> true
                                                 else -> {
                                                     false
                                                 }
@@ -614,8 +593,8 @@ fun JobCardDetailScreen(
                                         ) {
                                             MediumTitleText(name = "Timesheets/work done ")
 
-                                            when (SignedInUser.role) {
-                                                SignedInUser.Role.ServiceAdvisor -> {}
+                                            when (viewModel.userRole.collectAsState().value) {
+                                                SignedInUserManager.Role.ServiceAdvisor -> {}
                                                 else -> {
                                                     TextButton(
                                                         onClick = {
@@ -694,6 +673,7 @@ fun JobCardDetailScreen(
                                                         onReportChange = timeSheetViewModel::updateTimesheetReport,
                                                         onDialogDismiss = timeSheetViewModel::timeSheetDialogDismissRequest,
                                                         onSave = timeSheetViewModel::saveUpdatedTimesheet,
+                                                        signedInEmployee = viewModel.signedInEmployee.collectAsState().value!!
                                                     )
                                                 }
 
@@ -764,9 +744,9 @@ fun JobCardDetailScreen(
                                         label = "Quality control clock in",
                                         modifier = Modifier
                                             .fillMaxWidth(),
-                                        enabled = when (SignedInUser.role) {
-                                            SignedInUser.Role.Admin -> true
-                                            SignedInUser.Role.Supervisor -> true
+                                        enabled = when (viewModel.userRole.collectAsState().value) {
+                                            SignedInUserManager.Role.Admin -> true
+                                            SignedInUserManager.Role.Supervisor -> true
                                             else -> {
                                                 false
                                             }
@@ -781,9 +761,9 @@ fun JobCardDetailScreen(
                                         onSave = { timeSheetViewModel.onSaveControlReport() },
                                         modifier = Modifier.fillMaxWidth(),
                                         loadingState = timeSheetViewModel.savingControlState.collectAsState().value,
-                                        enabled = when (SignedInUser.role) {
-                                            SignedInUser.Role.Admin -> true
-                                            SignedInUser.Role.Supervisor -> true
+                                        enabled = when (viewModel.userRole.collectAsState().value) {
+                                            SignedInUserManager.Role.Admin -> true
+                                            SignedInUserManager.Role.Supervisor -> true
                                             else -> {
                                                 false
                                             }
@@ -797,9 +777,9 @@ fun JobCardDetailScreen(
                                         label = "Quality control clock out",
                                         modifier = Modifier
                                             .fillMaxWidth(),
-                                        enabled = when (SignedInUser.role) {
-                                            SignedInUser.Role.Admin -> true
-                                            SignedInUser.Role.Supervisor -> true
+                                        enabled = when (viewModel.userRole.collectAsState().value) {
+                                            SignedInUserManager.Role.Admin -> true
+                                            SignedInUserManager.Role.Supervisor -> true
                                             else -> {
                                                 false
                                             }
@@ -815,9 +795,9 @@ fun JobCardDetailScreen(
                                         },
                                         label = "Date Closed",
                                         modifier = Modifier.fillMaxWidth(),
-                                        enabled = when (SignedInUser.role) {
-                                            SignedInUser.Role.Admin -> true
-                                            SignedInUser.Role.ServiceAdvisor -> true
+                                        enabled = when (viewModel.userRole.collectAsState().value) {
+                                            SignedInUserManager.Role.Admin -> true
+                                            SignedInUserManager.Role.ServiceAdvisor -> true
                                             else -> {
                                                 false
                                             }
@@ -924,7 +904,8 @@ fun JobCardDetailScreen(
                     onFuelLevelInChange = stateChecklistViewModel::updateFuelLevelIn,
                     onFuelLevelOutChange = stateChecklistViewModel::updateFuelLevelOut,
                     onMillageInChange = stateChecklistViewModel::updateMillageIn,
-                    onMillageOutChange = stateChecklistViewModel::updateMillageOut
+                    onMillageOutChange = stateChecklistViewModel::updateMillageOut,
+                    signedInEmployee = stateChecklistViewModel.signedInEmployee.collectAsState().value!!
                 )
 
             }
@@ -963,7 +944,9 @@ fun JobCardDetailScreen(
                     onRefreshChecklist = serviceChecklistViewModel::refreshServiceChecklist,
                     onSaveServiceChecklist = serviceChecklistViewModel::saveServiceChecklist,
                     resetSaveState = serviceChecklistViewModel::resetSaveState,
-                    onClose = { showServiceChecklistDialog = false }
+                    onClose = { showServiceChecklistDialog = false },
+                    signedInEmployee = serviceChecklistViewModel.signedInEmployee.collectAsState().value!!,
+                    userRole = serviceChecklistViewModel.userRole.collectAsState().value!!
                 )
 
             }
@@ -1001,7 +984,9 @@ fun JobCardDetailScreen(
                     onRefreshChecklist = { controlChecklistViewModel.refreshControlChecklist() },
                     onSaveControlChecklist = controlChecklistViewModel::saveControlChecklist,
                     resetSaveState = controlChecklistViewModel::resetSaveState,
-                    onClose = { showControlChecklistDialog = false }
+                    onClose = { showControlChecklistDialog = false },
+                    role = controlChecklistViewModel.currentUserRole.collectAsState().value!!,
+                    signedInEmployee = controlChecklistViewModel.currentSignedInEmployee.collectAsState().value!!
                 )
 
 

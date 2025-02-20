@@ -5,13 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -50,7 +47,7 @@ import com.example.designsystem.theme.people
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 
 
 @Composable
@@ -64,7 +61,8 @@ fun TopBar(
     saveState: JobCardDetailsViewModel.SaveState,
     showButtons: Boolean,
     jobId: String,
-    comments: Boolean
+    comments: Boolean,
+    role: SignedInUserManager.Role
 ) {
     var optionDropDown by remember { mutableStateOf(false) }
 
@@ -118,9 +116,9 @@ fun TopBar(
                         onClick = onClickPriority,
                         icon = if (priority) bookmarkFull else bookmarkOutline,
                         color = DarkGrey,
-                        enabled = when (SignedInUser.role) {
-                            SignedInUser.Role.Supervisor -> false
-                            SignedInUser.Role.Technician -> false
+                        enabled = when (role) {
+                            SignedInUserManager.Role.Supervisor -> false
+                            SignedInUserManager.Role.Technician -> false
                             else -> {
                                 true
                             }
@@ -202,10 +200,10 @@ fun TopBar(
                             }
                         )
 
-                        when (SignedInUser.role) {
-                            SignedInUser.Role.Supervisor -> {}
-                            SignedInUser.Role.Technician -> {}
-                            SignedInUser.Role.ServiceAdvisor -> {}
+                        when (role) {
+                            SignedInUserManager.Role.Supervisor -> {}
+                            SignedInUserManager.Role.Technician -> {}
+                            SignedInUserManager.Role.ServiceAdvisor -> {}
                             else -> {
                                 DropdownMenuItem(
                                     text = {

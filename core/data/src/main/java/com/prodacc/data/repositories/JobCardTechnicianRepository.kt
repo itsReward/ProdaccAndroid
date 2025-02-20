@@ -1,16 +1,23 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.dao.JobCardTechnician
-import com.prodacc.data.remote.services.JobCardTechniciansService
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class JobCardTechnicianRepository {
-    private val service = ApiInstance.jobCardTechniciansService
+@Singleton
+class JobCardTechnicianRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val dispatcher: CoroutineDispatchers
+){
+    private val service get() = apiServiceContainer.jobCardTechniciansService
 
-    suspend fun getJobCardTechnicians(jobCardId: UUID): LoadingResult {
-        return try {
+    suspend fun getJobCardTechnicians(jobCardId: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getTechniciansForJobCard(jobCardId)
 
             if (response.isSuccessful) {
@@ -26,8 +33,8 @@ class JobCardTechnicianRepository {
         }
     }
 
-    suspend fun getJobCardsForTechnician(technicianId: UUID): LoadingResult {
-        return try {
+    suspend fun getJobCardsForTechnician(technicianId: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getJobCardsForTechnician(technicianId)
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body()!!)
@@ -43,8 +50,8 @@ class JobCardTechnicianRepository {
         }
     }
 
-    suspend fun addTechnicianToJobCard(jobCardTechnician: JobCardTechnician): LoadingResult {
-        return try {
+    suspend fun addTechnicianToJobCard(jobCardTechnician: JobCardTechnician): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.addTechnicianToJobCard(jobCardTechnician)
 
             if (response.isSuccessful) {
@@ -60,8 +67,8 @@ class JobCardTechnicianRepository {
         }
     }
 
-    suspend fun removeTechnician(jobCardTechnician: JobCardTechnician): LoadingResult {
-        return try {
+    suspend fun removeTechnician(jobCardTechnician: JobCardTechnician): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.removeTechnicianFromJobCard(jobCardTechnician)
 
             if (response.isSuccessful) {

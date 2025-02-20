@@ -47,6 +47,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.ErrorStateColumn
 import com.example.designsystem.designComponents.LargeTitleText
@@ -62,7 +63,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun NewEmployeeScreen(
     navController: NavController,
-    viewModel: NewEmployeeViewModel = NewEmployeeViewModel()
+    viewModel: NewEmployeeViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.collectAsState()
     val scroll = rememberScrollState()

@@ -10,24 +10,25 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.prodacc.ui.login.LogInScreen
-import com.example.prodacc.ui.clients.screens.ClientsScreen
-import com.example.prodacc.ui.employees.screens.EmployeesScreen
-import com.example.prodacc.ui.jobcards.screens.JobCardsScreen
 import com.example.prodacc.ui.clients.screens.ClientDetailScreen
+import com.example.prodacc.ui.clients.screens.ClientsScreen
 import com.example.prodacc.ui.clients.screens.EditClientDetailScreen
 import com.example.prodacc.ui.clients.screens.NewClientScreen
 import com.example.prodacc.ui.employees.screens.EditEmployeeScreen
 import com.example.prodacc.ui.employees.screens.EmployeeDetailScreen
+import com.example.prodacc.ui.employees.screens.EmployeesScreen
 import com.example.prodacc.ui.employees.screens.NewEmployeeScreen
 import com.example.prodacc.ui.jobcards.screens.CommentsScreen
 import com.example.prodacc.ui.jobcards.screens.JobCardDetailScreen
+import com.example.prodacc.ui.jobcards.screens.JobCardsScreen
 import com.example.prodacc.ui.jobcards.screens.NewJobCardScreen
+import com.example.prodacc.ui.login.LogInScreen
 import com.example.prodacc.ui.search.screen.SearchScreen
 import com.example.prodacc.ui.vehicles.screen.EditVehicleDetailsScreen
 import com.example.prodacc.ui.vehicles.screen.NewVehicleScreen
 import com.example.prodacc.ui.vehicles.screen.VehicleDetailsScreen
 import com.example.prodacc.ui.vehicles.screen.VehiclesScreen
+import com.example.products.navigation.productsGraph
 
 
 @Composable
@@ -75,8 +76,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     animationSpec = tween(durationMillis = 300)
                 )
             }
-        ){ backStackEntry ->
-            val vehicleId = backStackEntry.arguments?.getString("vehicleId") ?: ""
+        ){
             NewJobCardScreen(navController)
         }
 
@@ -127,7 +127,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             }
         ) { backStackEntry ->
             val vehicleId = backStackEntry.arguments?.getString("vehicleId") ?: ""
-            EditVehicleDetailsScreen(navController, vehicleId)
+            EditVehicleDetailsScreen(navController)
         }
         composable(
             route = Route.NewVehicle.path,
@@ -155,6 +155,8 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 fadeIn(animationSpec = tween(1))
             }
         ) { ClientsScreen(navController) }
+
+
         composable(
             route = Route.ClientDetails.path,
             arguments = listOf(navArgument("clientId") { type = NavType.StringType }),
@@ -172,7 +174,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             }
         ) { backStackEntry ->
             val clientId = backStackEntry.arguments?.getString("clientId") ?: ""
-            ClientDetailScreen(navController, clientId)
+            ClientDetailScreen(navController)
         }
         composable(
             route = Route.EditClient.path,
@@ -191,7 +193,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             }
         ) { backStackEntry ->
             val clientId = backStackEntry.arguments?.getString("clientId") ?: ""
-            EditClientDetailScreen(navController, clientId)
+            EditClientDetailScreen(navController)
         }
 
         composable(
@@ -237,7 +239,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             arguments = listOf(navArgument("employeeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
-            EmployeeDetailScreen(navController, employeeId)
+            EmployeeDetailScreen(navController)
         }
         composable(
             route = Route.EditEmployee.path,
@@ -256,7 +258,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             arguments = listOf(navArgument("employeeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
-            EditEmployeeScreen(navController, employeeId)
+            EditEmployeeScreen(navController)
         }
         composable(
             route = Route.NewEmployee.path,
@@ -314,8 +316,14 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
             }
         ){ backStackEntry ->
             val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
-            CommentsScreen(navController = navController, jobId = jobId)
+            CommentsScreen(navController = navController)
 
         }
+
+        //Products Screen
+        productsGraph (
+            onNavigateBack = {  navController.navigateUp() },
+            navController = navController
+        )
     }
 }

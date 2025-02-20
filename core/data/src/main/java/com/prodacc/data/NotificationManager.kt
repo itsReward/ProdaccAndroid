@@ -20,15 +20,28 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.content.ContextCompat
-import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.repositories.JobCardTechnicianRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object NotificationManager {
-    const val WORKSHOP_CHANNEL_ID = "workshop_notifications"
-    const val SERVICE_CHANNEL_ID = "foreground_service_channel"
+@Singleton
+class NotificationManager @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val jobCardTechnicianRepository: JobCardTechnicianRepository,
+    private val signedInUserManager: SignedInUserManager,
+)
+{
+
     private var notificationId = 100
+
+    companion object {
+        const val WORKSHOP_CHANNEL_ID = "workshop_notifications"
+        const val SERVICE_CHANNEL_ID = "foreground_service_channel"
+        private const val NOTIFICATION_PERMISSION_CODE = 123
+    }
 
     fun createNotificationChannels(context: Context) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
@@ -83,16 +96,14 @@ object NotificationManager {
     }
 
     fun showNotification(
-        context: Context,
         title: String,
         message: String,
         type: String,
-        entityId: UUID
+        entityId: UUID,
+        activity: Activity? = null
     ) {
-        if (!checkNotificationPermission(context)) {
-            (context as? Activity)?.let { activity ->
-                showNotificationPermissionDialog(activity)
-            }
+        if (!checkNotificationPermission(activity)) {
+            activity?.let { showNotificationPermissionDialog(it) }
             return
         }
 
@@ -144,6 +155,7 @@ object NotificationManager {
         }
     }
 
+
     fun createServiceNotification(context: Context, stopIntent: PendingIntent): Notification {
         return NotificationCompat.Builder(context, SERVICE_CHANNEL_ID)
             .setContentTitle("Workshop App")
@@ -161,25 +173,25 @@ object NotificationManager {
     }
 
     private suspend fun shouldShowNotification(type: String, entityId: UUID): Boolean {
-        return when (SignedInUser.role) {
-            is SignedInUser.Role.Admin -> true // Admin sees everything
-            is SignedInUser.Role.Supervisor -> shouldShowSupervisorNotification(type, entityId)
-            is SignedInUser.Role.ServiceAdvisor -> shouldShowServiceAdvisorNotification(type, entityId)
-            is SignedInUser.Role.Technician -> shouldShowTechnicianNotification(type, entityId)
+        return when (signedInUserManager.role.value) {
+            is SignedInUserManager.Role.Admin -> true // Admin sees everything
+            is SignedInUserManager.Role.Supervisor -> shouldShowSupervisorNotification(type, entityId)
+            is SignedInUserManager.Role.ServiceAdvisor -> shouldShowServiceAdvisorNotification(type, entityId)
+            is SignedInUserManager.Role.Technician -> shouldShowTechnicianNotification(type, entityId)
             null -> false
         }
     }
 
     private suspend fun shouldShowTechnicianNotification(type: String, entityId: UUID): Boolean {
         // For technicians, only show notifications for their assigned job cards
-        val technicianId = SignedInUser.employee?.id ?: return false
+        val technicianId = signedInUserManager.employee.value!!.id
 
         return when (type) {
             "NEW_COMMENT", "DELETE_COMMENT",
             "NEW_JOB_CARD_TECHNICIAN",
             "DELETE_JOB_CARD_TECHNICIAN" -> {
                 // Check if the technician is assigned to this job card
-                val jobCardTechs = JobCardTechnicianRepository().getJobCardTechnicians(entityId)
+                val jobCardTechs = jobCardTechnicianRepository.getJobCardTechnicians(entityId)
                 when (jobCardTechs) {
                     is JobCardTechnicianRepository.LoadingResult.Success ->
                         jobCardTechs.list.contains(technicianId)
@@ -209,9 +221,7 @@ object NotificationManager {
         }
     }
 
-    private const val NOTIFICATION_PERMISSION_CODE = 123
-
-    private fun checkNotificationPermission(context: Context): Boolean {
+    private fun checkNotificationPermission(activity: Activity?): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
                 ContextCompat.checkSelfPermission(
@@ -219,9 +229,9 @@ object NotificationManager {
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED -> true
 
-                context is Activity -> {
+                activity != null -> {
                     ActivityCompat.requestPermissions(
-                        context,
+                        activity,
                         arrayOf(Manifest.permission.POST_NOTIFICATIONS),
                         NOTIFICATION_PERMISSION_CODE
                     )
@@ -231,7 +241,7 @@ object NotificationManager {
                 else -> false
             }
         } else {
-            true // Permission not required for Android 12 and below
+            true
         }
     }
 

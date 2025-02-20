@@ -7,16 +7,17 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import com.prodacc.data.remote.ApiInstance
 import com.prodacc.data.remote.WebSocketInstance
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.UUID
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class NotificationService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var isServiceRunning = false
@@ -24,10 +25,15 @@ class NotificationService : Service() {
     private val stopServiceAction = "com.example.prodacc.STOP_SERVICE"
     private val serviceRestartAction = "com.example.prodacc.RESTART_SERVICE"
 
+    @Inject
+    lateinit var notificationManager: NotificationManager
+
+    @Inject
+    lateinit var webSocketInstance: WebSocketInstance
+
     override fun onCreate() {
         super.onCreate()
         isServiceRunning = true
-        NotificationManager.createNotificationChannels(this)
         setupForegroundService()
         setupWebSocket()
     }
@@ -39,21 +45,23 @@ class NotificationService : Service() {
             Intent(this, NotificationService::class.java).apply { action = stopServiceAction },
             PendingIntent.FLAG_IMMUTABLE
         )
-        startForeground(serviceNotificationId, NotificationManager.createServiceNotification(this, stopIntent))
+        startForeground(
+            serviceNotificationId,
+            notificationManager.createServiceNotification(this, stopIntent)
+        )
     }
 
     private fun setupWebSocket() {
         serviceScope.launch {
             while (isServiceRunning) {
                 try {
-                    WebSocketInstance.initialize(applicationContext)
                     // Keep checking WebSocket state
-                    WebSocketInstance.webSocketState.collect { state ->
+                    webSocketInstance.webSocketState.collect { state ->
                         when (state) {
                             is WebSocketInstance.WebSocketState.Disconnected,
                             is WebSocketInstance.WebSocketState.Error -> {
                                 delay(5000)
-                                WebSocketInstance.reconnectWebSocket()
+                                webSocketInstance.reconnectWebSocket()
                             }
                             else -> { /* Connected or Reconnecting */ }
                         }
@@ -100,7 +108,7 @@ class NotificationService : Service() {
         super.onDestroy()
         isServiceRunning = false
         serviceScope.cancel()
-        WebSocketInstance.cleanup()
+        webSocketInstance.cleanup()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

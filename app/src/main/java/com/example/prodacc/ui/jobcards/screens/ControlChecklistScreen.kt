@@ -8,23 +8,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -43,10 +38,10 @@ import com.example.designsystem.designComponents.IconButton
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.designComponents.OptionDropdown
 import com.example.prodacc.ui.jobcards.viewModels.ControlChecklistViewModel
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.dao.ControlChecklist
+import com.prodacc.data.remote.dao.Employee
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 @Composable
@@ -57,7 +52,9 @@ fun ControlChecklistSection(
     onRefreshChecklist: () -> Unit,
     onSaveControlChecklist: (Map<String, String>) -> Unit,
     resetSaveState: () -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    role: SignedInUserManager.Role,
+    signedInEmployee: Employee
 ) {
     when (loadingState) {
         is ControlChecklistViewModel.ControlChecklistLoadingState.Loading -> {
@@ -84,7 +81,7 @@ fun ControlChecklistSection(
                 }
                 else -> {
 
-                    if (controlChecklist == null && SignedInUser.role != SignedInUser.Role.Technician && SignedInUser.role != SignedInUser.Role.Admin){
+                    if (controlChecklist == null && role != SignedInUserManager.Role.Technician && role != SignedInUserManager.Role.Admin){
                         Row(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically,
@@ -92,7 +89,7 @@ fun ControlChecklistSection(
                         ) {
                             IconButton(
                                 onClick = onClose,
-                                icon = Icons.Default.ArrowBack,
+                                icon = Icons.AutoMirrored.Filled.ArrowBack,
                                 color = Color.DarkGray
                             )
                             Text(text = "Technician has not created control checklist")
@@ -102,13 +99,14 @@ fun ControlChecklistSection(
                             existingChecklist = controlChecklist,
                             onClose = onClose,
                             onSave = { checklist -> onSaveControlChecklist(checklist) },
-                            enabled = when(SignedInUser.role){
-                                SignedInUser.Role.Admin -> true
-                                SignedInUser.Role.Technician -> true
+                            enabled = when(role){
+                                SignedInUserManager.Role.Admin -> true
+                                SignedInUserManager.Role.Technician -> true
                                 else -> {
                                     false
                                 }
-                            }
+                            },
+                            signedInEmployee = signedInEmployee
                         )
                     }
 
@@ -126,7 +124,8 @@ private fun ControlChecklistSectionContent(
     existingChecklist: ControlChecklist?,
     onClose: () -> Unit,
     onSave: (Map<String, String>) -> Unit,
-    enabled: Boolean
+    enabled: Boolean,
+    signedInEmployee: Employee
 ) {
     val scrollState = rememberScrollState()
     val options = listOf("OK", "Not Okay", "Action Taken")
@@ -178,8 +177,6 @@ private fun ControlChecklistSectionContent(
             put("firstAidKit", mutableStateOf(existingChecklist?.checklist?.get("firstAidKit") ?: "None"))
         }
     }
-
-    val date = remember { mutableStateOf(existingChecklist?.created ?: LocalDateTime.now()) }
 
     Scaffold(
         topBar = {
@@ -236,7 +233,7 @@ private fun ControlChecklistSectionContent(
                         ) {
                             BodyText(text = "Created on: ")
                             FormattedTime(time = LocalDateTime.now())
-                            BodyText(text = " by ${existingChecklist?.technicianName ?: SignedInUser.user!!.employeeName } ${SignedInUser.user!!.employeeSurname}")
+                            BodyText(text = " by ${signedInEmployee.employeeName } ${signedInEmployee.employeeSurname}")
                         }
                     }
                 }

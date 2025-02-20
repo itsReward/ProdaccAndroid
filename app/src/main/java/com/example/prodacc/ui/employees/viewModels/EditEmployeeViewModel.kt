@@ -1,23 +1,31 @@
 package com.example.prodacc.ui.employees.viewModels
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.NewEmployee
 import com.prodacc.data.repositories.EmployeeRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
 
-class EditEmployeeViewModel(
-    private val employeeRepository: EmployeeRepository = EmployeeRepository(),
-    private val employeeId: String
+@HiltViewModel
+class EditEmployeeViewModel @Inject constructor(
+    private val employeeRepository: EmployeeRepository,
+    private val webSocketInstance: WebSocketInstance,
+    savedStateHandle: SavedStateHandle
 ): ViewModel(), WebSocketInstance.WebSocketEventListener {
+    // Get employeeId from SavedStateHandle
+    private val employeeId: String = checkNotNull(savedStateHandle["employeeId"]) {
+        "employeeId parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
 
     private val _employee = MutableStateFlow<Employee?>(null)
     val employee = _employee.asStateFlow()
@@ -29,7 +37,7 @@ class EditEmployeeViewModel(
     val updateState = _updateState.asStateFlow()
 
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
 
         _loadState.value = LoadState.Loading
         viewModelScope.launch {
@@ -127,7 +135,7 @@ class EditEmployeeViewModel(
                     when (result) {
                         is EmployeeRepository.LoadingResult.EmployeeEntity -> {
                             _updateState.value = UpdateState.Success
-                            WebSocketInstance.sendWebSocketMessage("UPDATE_EMPLOYEE", result.employee.id)
+                            webSocketInstance.sendWebSocketMessage("UPDATE_EMPLOYEE", result.employee.id)
                             _employee.value = result.employee
                         }
                         is EmployeeRepository.LoadingResult.Error -> {

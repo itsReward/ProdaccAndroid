@@ -1,15 +1,22 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.dao.NewVehicle
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.remote.services.VehicleService
-import okhttp3.ResponseBody
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class VehicleRepository {
-    private val vehicleService : VehicleService = ApiInstance.vehicleService
+@Singleton
+class VehicleRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val dispatcher: CoroutineDispatchers
+) {
+    private val vehicleService: VehicleService get() = apiServiceContainer.vehicleService
 
     val mercedesBenzModels = listOf(
         // Sedans
@@ -91,24 +98,24 @@ class VehicleRepository {
     sealed class LoadingResult {
         data class Success(val vehicles: List<Vehicle>) : LoadingResult()
         data class Error(val message: String?) : LoadingResult()
-        data class ErrorSingleMessage(val message: String): LoadingResult()
+        data class ErrorSingleMessage(val message: String) : LoadingResult()
         data object NetworkError : LoadingResult()
         data class SingleEntity(val vehicle: Vehicle?, val error: String?) : LoadingResult()
     }
 
-    suspend fun getVehicleById(id: UUID): LoadingResult? {
-        return try {
+    suspend fun getVehicleById(id: UUID): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = vehicleService.getVehicle(id)
-            if (response.isSuccessful){
+            if (response.isSuccessful) {
                 if (response.body() == null) {
-                    return LoadingResult.SingleEntity(null, "Vehicle not found")
+                    LoadingResult.SingleEntity(null, "Vehicle not found")
                 } else {
-                    return LoadingResult.SingleEntity(response.body(), null)
+                    LoadingResult.SingleEntity(response.body(), null)
                 }
             } else {
-                return LoadingResult.SingleEntity(null, response.errorBody().toString())
+                LoadingResult.SingleEntity(null, response.errorBody().toString())
             }
-        } catch (e: Exception){
+        } catch (e: Exception) {
             when (e) {
                 is IOException -> LoadingResult.NetworkError
                 else -> LoadingResult.ErrorSingleMessage(e.message ?: "Unknown error occurred")
@@ -116,8 +123,8 @@ class VehicleRepository {
         }
     }
 
-    suspend fun getVehicles(): LoadingResult {
-        return try {
+    suspend fun getVehicles(): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = vehicleService.getVehicles()
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body() ?: emptyList())
@@ -134,12 +141,12 @@ class VehicleRepository {
 
     }
 
-    suspend fun createVehicle(vehicle: NewVehicle): LoadingResult {
-        return try {
+    suspend fun createVehicle(vehicle: NewVehicle): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = vehicleService.createVehicle(vehicle)
             if (response.isSuccessful) {
                 if (response.body() == null) {
-                    return LoadingResult.SingleEntity(null, "Vehicle not found")
+                    LoadingResult.SingleEntity(null, "Vehicle not found")
                 } else {
                     LoadingResult.SingleEntity(response.body(), null)
                 }
@@ -153,28 +160,29 @@ class VehicleRepository {
             }
         }
     }
-    suspend fun updateVehicle(id: UUID, vehicle: NewVehicle): LoadingResult {
-        println(vehicle)
-        return try {
-            val response = vehicleService.updateVehicle(id, vehicle )
 
-            if (response.isSuccessful) {
-                response.body()?.let {
-                    LoadingResult.SingleEntity(it, null)
-                } ?: LoadingResult.SingleEntity(null, "Update failed")
-            } else {
-                LoadingResult.Error(response.errorBody()?.string() ?: "Update failed")
-            }
-        } catch (e: Exception) {
-            when (e) {
-                is IOException -> LoadingResult.NetworkError
-                else -> LoadingResult.ErrorSingleMessage(e.message ?: "Update error")
+    suspend fun updateVehicle(id: UUID, vehicle: NewVehicle): LoadingResult =
+        withContext(dispatcher.io) {
+            try {
+                val response = vehicleService.updateVehicle(id, vehicle)
+
+                if (response.isSuccessful) {
+                    response.body()?.let {
+                        LoadingResult.SingleEntity(it, null)
+                    } ?: LoadingResult.SingleEntity(null, "Update failed")
+                } else {
+                    LoadingResult.Error(response.errorBody()?.string() ?: "Update failed")
+                }
+            } catch (e: Exception) {
+                when (e) {
+                    is IOException -> LoadingResult.NetworkError
+                    else -> LoadingResult.ErrorSingleMessage(e.message ?: "Update error")
+                }
             }
         }
-    }
 
-    suspend fun deleteVehicle(id: UUID): LoadingResult {
-        return try {
+    suspend fun deleteVehicle(id: UUID): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = vehicleService.deleteVehicle(id)
             if (response.isSuccessful) {
                 LoadingResult.Success(emptyList()) // Successful deletion
@@ -194,8 +202,8 @@ class VehicleRepository {
         model: String? = null,
         regNumber: String? = null,
         clientId: UUID? = null
-    ): LoadingResult {
-        return try {
+    ): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = vehicleService.searchVehicles(make, model, regNumber, clientId)
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body() ?: emptyList())

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.ClientsDropDown
 import com.example.designsystem.designComponents.ErrorStateColumn
@@ -47,15 +48,11 @@ import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.designsystem.theme.DarkGrey
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.vehicles.viewModels.EditVehicleDetailsViewModel
-import com.example.prodacc.ui.vehicles.viewModels.EditVehicleDetailsViewModelFactory
 
 @Composable
 fun EditVehicleDetailsScreen(
     navController: NavController,
-    vehicleId: String,
-    viewModel: EditVehicleDetailsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = EditVehicleDetailsViewModelFactory(vehicleId)
-    )
+    viewModel: EditVehicleDetailsViewModel = hiltViewModel()
 ) {
     val focusManager = LocalFocusManager.current
     val vehicle by viewModel.vehicle.collectAsState()

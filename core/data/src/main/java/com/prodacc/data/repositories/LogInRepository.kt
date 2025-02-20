@@ -2,18 +2,26 @@ package com.prodacc.data.repositories
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
-import com.prodacc.data.SignedInUser
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.TokenManager
 import com.prodacc.data.remote.dao.Token
 import com.prodacc.data.remote.dao.UserLogInDetails
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.logging.Logger
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class LogInRepository {
-    private var loginService = ApiInstance.logInService
+@Singleton
+class LogInRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val tokenManager: TokenManager,
+    private val gson: Gson,
+    private val dispatcher: CoroutineDispatchers
+){
+    private val loginService get() =  apiServiceContainer.logInService
     private val logger = Logger.getLogger(LogInRepository::class.java.name)
-    private val gson = Gson()
 
     sealed class LoginResult {
         data class Success(val token: Token) : LoginResult()
@@ -22,20 +30,20 @@ class LogInRepository {
         data object NetworkError : LoginResult()
     }
 
-    suspend fun login(username: String, password: String): LoginResult {
+    suspend fun login(username: String, password: String): LoginResult = withContext(dispatcher.io) {
         logger.info("LOGGING IN...")
-        return try {
+        try {
             val loginDetails = UserLogInDetails(username, password)
 
             if (username.isBlank() || password.isBlank()) {
-                return LoginResult.ErrorSingleMessage("Username or password cannot be empty")
+                LoginResult.ErrorSingleMessage("Username or password cannot be empty")
             }
             val response = loginService.logIn(loginDetails)
 
 
             if (response.isSuccessful) {
                 response.body()?.let { token ->
-                    TokenManager.saveToken(token)
+                    tokenManager.saveToken(token)
                     LoginResult.Success(token)
                 } ?: LoginResult.ErrorSingleMessage("Empty response body")
             } else {
@@ -53,9 +61,6 @@ class LogInRepository {
         }
     }
 
-    fun reinitializeService(){
-        loginService = ApiInstance.logInService
-    }
 }
 
 data class ErrorMessage(

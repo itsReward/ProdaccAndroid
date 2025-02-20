@@ -1,9 +1,7 @@
 package com.example.designsystem.designComponents
 
-import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,11 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -28,33 +22,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -71,18 +54,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.navigation.NavController
 import androidx.wear.compose.material.Text
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
@@ -91,33 +67,26 @@ import com.example.designsystem.theme.DarkBlue
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Orange
-import com.prodacc.data.SignedInUser
-import com.prodacc.data.remote.dao.Employee
-import com.prodacc.data.remote.dao.JobCard
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.dao.JobCardStatus
-import com.prodacc.data.remote.dao.Timesheet
-import java.time.DayOfWeek
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.TimeZone
-import java.util.UUID
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun StepIndicator(
-    jobCardStatuses: List<JobCardStatus>
+    jobCardStatuses: List<JobCardStatus>,
+    role: SignedInUserManager.Role
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     fun formatStatusText(status: String): String {
-        return if ((SignedInUser.role is SignedInUser.Role.Technician ||
-                    SignedInUser.role is SignedInUser.Role.Supervisor) &&
+        return if ((role is SignedInUserManager.Role.Technician ||
+                    role is SignedInUserManager.Role.Supervisor) &&
             status == "waiting_for_payment") {
             "waiting for client approval"
         } else {
@@ -230,13 +199,6 @@ fun StepIndicator(
                                     )
                                     FormattedTime(time = jobCardStatuses[index].createdAt)
 
-                                    //BodyText(text = " time spent: ")
-                                    /*androidx.compose.material3.Text(
-                                        text = " - $timeSpent",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = Orange,
-                                        fontWeight = FontWeight.Bold
-                                    )*/
                                     DurationText(timeSpentMinutes = timeSpent, color = DarkGrey)
 
 
@@ -383,8 +345,6 @@ fun DateTimePickerTextField(
                 .clickable {
                     if (enabled){
                         showDialog = true
-                    } else {
-
                     }
                 },
             colors = TextFieldDefaults.colors(
@@ -413,7 +373,7 @@ fun DateTimePickerTextField(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DateTimePickerDialog(
     initialDate: LocalDate,
@@ -440,8 +400,7 @@ fun DateTimePickerDialog(
         text = {
 
 
-            Column(
-            ) {
+            Column {
                 HorizontalPager(
                     state = pagerState, modifier = Modifier
                         .fillMaxWidth()
@@ -466,7 +425,7 @@ fun DateTimePickerDialog(
                 ) {
                     if (pagerState.currentPage == 1){
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "direction side"
                         )
                     }
@@ -475,7 +434,7 @@ fun DateTimePickerDialog(
                     Spacer(modifier = Modifier.width(20.dp))
                     if (pagerState.currentPage == 0){
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = "direction side"
                         )
                     }

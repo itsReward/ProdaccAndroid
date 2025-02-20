@@ -2,7 +2,6 @@ package com.prodacc.data.remote.services
 
 import com.prodacc.data.remote.dao.NewTimesheet
 import com.prodacc.data.remote.dao.Timesheet
-import com.prodacc.data.remote.dao.UpdateTimesheet
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE

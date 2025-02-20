@@ -1,11 +1,9 @@
 package com.example.prodacc.ui.jobcards.viewModels
 
-import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.CreateTimesheet
@@ -13,6 +11,7 @@ import com.prodacc.data.remote.dao.NewTimesheet
 import com.prodacc.data.remote.dao.Timesheet
 import com.prodacc.data.repositories.JobCardStatusRepository
 import com.prodacc.data.repositories.TimeSheetRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -20,13 +19,21 @@ import java.io.IOException
 import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
 
-class TimeSheetsViewModel(
-    private val timeSheetRepository: TimeSheetRepository = TimeSheetRepository(),
-    private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
-    private val signedInUser: SignedInUser = SignedInUser,
-    private val jobCardId: String
+@HiltViewModel
+class TimeSheetsViewModel @Inject constructor(
+    private val timeSheetRepository: TimeSheetRepository,
+    private val jobCardStatusRepository: JobCardStatusRepository,
+    private val webSocketInstance: WebSocketInstance,
+    private val signedInUserManager: SignedInUserManager,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel(), WebSocketInstance.WebSocketEventListener {
+    // Get jobCardId from SavedStateHandle
+    private val jobCardId: String = checkNotNull(savedStateHandle["jobCardId"]) {
+        "jobCardId parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
+
     private val _timeSheets = MutableStateFlow<List<Timesheet>>(emptyList())
     val timeSheets = _timeSheets.asStateFlow()
 
@@ -72,24 +79,28 @@ class TimeSheetsViewModel(
     private val _diagnosticsTimeSheet = MutableStateFlow<Timesheet?>(null)
     val diagnosticsTimeSheet = _diagnosticsTimeSheet.asStateFlow()
 
-    private val _diagnosticsClockIn = MutableStateFlow(_diagnosticsTimeSheet.asStateFlow().value?.clockInDateAndTime)
+    private val _diagnosticsClockIn =
+        MutableStateFlow(_diagnosticsTimeSheet.asStateFlow().value?.clockInDateAndTime)
     val diagnosticsClockIn = _diagnosticsClockIn.asStateFlow()
 
-    private val _diagnosticsClockOut = MutableStateFlow(_diagnosticsTimeSheet.asStateFlow().value?.clockOutDateAndTime)
+    private val _diagnosticsClockOut =
+        MutableStateFlow(_diagnosticsTimeSheet.asStateFlow().value?.clockOutDateAndTime)
     val diagnosticsClockOut = _diagnosticsClockOut.asStateFlow()
 
-    private val _diagnosticsReport = MutableStateFlow(_diagnosticsTimeSheet.asStateFlow().value?.report ?: "")
+    private val _diagnosticsReport =
+        MutableStateFlow(_diagnosticsTimeSheet.asStateFlow().value?.report ?: "")
     val diagnosticsReport = _diagnosticsReport.asStateFlow()
 
     private val _isDiagnosticsReportEdited = MutableStateFlow(false)
     val isDiagnosticsReportEdited = _isDiagnosticsReportEdited.asStateFlow()
 
 
-
-    private val _newDiagnosticsTimeSheetLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    private val _newDiagnosticsTimeSheetLoadState =
+        MutableStateFlow<LoadingState>(LoadingState.Idle)
     val newDiagnosticsTimeSheetLoadState = _newDiagnosticsTimeSheetLoadState.asStateFlow()
 
-    private val _updatingDiagnosticsTimeSheetLoadState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    private val _updatingDiagnosticsTimeSheetLoadState =
+        MutableStateFlow<LoadingState>(LoadingState.Idle)
     val updatingDiagnosticsTimeSheetLoadState = _updatingDiagnosticsTimeSheetLoadState.asStateFlow()
 
     //Control Report time sheet
@@ -99,7 +110,7 @@ class TimeSheetsViewModel(
     private val _controlClockOut = MutableStateFlow<LocalDateTime?>(null)
     val controlClockOut = _controlClockOut.asStateFlow()
 
-    private val _controlReport = MutableStateFlow<String>("")
+    private val _controlReport = MutableStateFlow("")
     val controlReport = _controlReport.asStateFlow()
 
     private val _isControlReportEdited = MutableStateFlow(false)
@@ -112,11 +123,10 @@ class TimeSheetsViewModel(
     val newControlTimesheetLoadState = _newControlTimesheetLoadState.asStateFlow()
 
 
-
     //New TimeSheet
-    private val _newTimeSheet = MutableStateFlow<CreateTimesheet>(
+    private val _newTimeSheet = MutableStateFlow(
         CreateTimesheet(
-            technicianId = signedInUser.user!!.employeeId,
+            technicianId = signedInUserManager.employee.value!!.id,
             jobCardId = UUID.fromString(jobCardId)
         )
     )
@@ -136,10 +146,10 @@ class TimeSheetsViewModel(
     val onClickTimesheet = _onClickTimesheet.asStateFlow()
 
     private val _isTimesheetEdited = MutableStateFlow(false)
-    val isTimesheetEdited= _isTimesheetEdited.asStateFlow()
+    val isTimesheetEdited = _isTimesheetEdited.asStateFlow()
 
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
 
         viewModelScope.launch {
             EventBus.events.collect { event ->
@@ -148,6 +158,7 @@ class TimeSheetsViewModel(
                         // Refresh status when status changed event is received
                         //updateJobCardsStatus(currentStatus)
                     }
+
                     is EventBus.JobCardEvent.Error -> {
                         // Handle error event if needed
                         _statusLoadingState.value = LoadingState.Error(event.message)
@@ -181,19 +192,19 @@ class TimeSheetsViewModel(
         _newTimeSheet.value = _newTimeSheet.value.copy(clockOutDateAndTime = date)
     }
 
-    fun updateTimeSheetClockOut(date: LocalDateTime){
+    fun updateTimeSheetClockOut(date: LocalDateTime) {
         _timesheet.value = _timesheet.value!!.copy(clockOutDateAndTime = date)
         _isTimesheetEdited.value = true
     }
 
-    fun updateTimesheetReport(report: String){
+    fun updateTimesheetReport(report: String) {
         _timesheet.value = _timesheet.value!!.copy(report = report)
         _isTimesheetEdited.value = true
     }
 
-    fun saveUpdatedTimesheet(){
-        viewModelScope.launch{
-            try{
+    fun saveUpdatedTimesheet() {
+        viewModelScope.launch {
+            try {
                 updateTimeSheet()
             } finally {
                 _isTimesheetEdited.value = false
@@ -202,7 +213,7 @@ class TimeSheetsViewModel(
     }
 
 
-    fun updateDiagnosticsClockIn(date: LocalDateTime){
+    fun updateDiagnosticsClockIn(date: LocalDateTime) {
         _diagnosticsClockIn.value = date
         viewModelScope.launch {
             try {
@@ -213,8 +224,7 @@ class TimeSheetsViewModel(
                         clockInDateAndTime = date,
                         clockOutDateAndTime = null,
                         jobCardId = UUID.fromString(jobCardId),
-                        employeeId = signedInUser.user!!.employeeId
-                    )
+                        employeeId = signedInUserManager.employee.value!!.id                    )
                 )
 
             } finally {
@@ -228,7 +238,7 @@ class TimeSheetsViewModel(
 
     }
 
-    fun updateDiagnosticsClockOut(date: LocalDateTime){
+    fun updateDiagnosticsClockOut(date: LocalDateTime) {
         _diagnosticsClockOut.value = date
         _diagnosticsTimeSheet.value = _diagnosticsTimeSheet.value!!.copy(clockOutDateAndTime = date)
         viewModelScope.launch {
@@ -246,13 +256,14 @@ class TimeSheetsViewModel(
 
     }
 
-    fun updateDiagnosticsReport(report: String){
+    fun updateDiagnosticsReport(report: String) {
         _isDiagnosticsReportEdited.value = true
         _diagnosticsReport.value = report
     }
 
-    fun onSaveDiagnosticsReport(){
-        _diagnosticsTimeSheet.value = _diagnosticsTimeSheet.value!!.copy(report = _diagnosticsReport.value)
+    fun onSaveDiagnosticsReport() {
+        _diagnosticsTimeSheet.value =
+            _diagnosticsTimeSheet.value!!.copy(report = _diagnosticsReport.value)
         viewModelScope.launch {
             try {
                 updateDiagnosticsTimeSheet(_diagnosticsTimeSheet.value!!)
@@ -263,10 +274,10 @@ class TimeSheetsViewModel(
         }
     }
 
-    fun updateControlClockIn(date: LocalDateTime){
+    fun updateControlClockIn(date: LocalDateTime) {
         _controlClockIn.value = date
         viewModelScope.launch {
-            try{
+            try {
                 addControlTimesheet(
                     NewTimesheet(
                         sheetTitle = "Quality Control Test",
@@ -274,7 +285,7 @@ class TimeSheetsViewModel(
                         clockInDateAndTime = date,
                         clockOutDateAndTime = null,
                         jobCardId = UUID.fromString(jobCardId),
-                        employeeId = signedInUser.user!!.employeeId
+                        employeeId = signedInUserManager.employee.value!!.id
                     )
                 )
 
@@ -286,7 +297,7 @@ class TimeSheetsViewModel(
         }
     }
 
-    fun updateControlClockOut(date: LocalDateTime){
+    fun updateControlClockOut(date: LocalDateTime) {
         _controlClockOut.value = date
         _controlTimeSheet.value = _controlTimeSheet.value!!.copy(clockOutDateAndTime = date)
         viewModelScope.launch {
@@ -301,12 +312,12 @@ class TimeSheetsViewModel(
 
     }
 
-    fun updateControlReport(report: String){
+    fun updateControlReport(report: String) {
         _isControlReportEdited.value = true
         _controlReport.value = report
     }
 
-    fun onSaveControlReport(){
+    fun onSaveControlReport() {
         _controlTimeSheet.value = _controlTimeSheet.value!!.copy(report = _controlReport.value)
         viewModelScope.launch {
             try {
@@ -418,7 +429,10 @@ class TimeSheetsViewModel(
 
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
                 _diagnosticsTimeSheet.value = response.timesheet
-                WebSocketInstance.sendWebSocketMessage("NEW_TIMESHEET", response.timesheet.jobCardId)
+                webSocketInstance.sendWebSocketMessage(
+                    "NEW_TIMESHEET",
+                    response.timesheet.jobCardId
+                )
                 _newDiagnosticsTimeSheetLoadState.value = LoadingState.Success
             }
         }
@@ -445,7 +459,10 @@ class TimeSheetsViewModel(
 
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
                 _controlTimeSheet.value = response.timesheet
-                WebSocketInstance.sendWebSocketMessage("NEW_TIMESHEET", response.timesheet.jobCardId)
+                webSocketInstance.sendWebSocketMessage(
+                    "NEW_TIMESHEET",
+                    response.timesheet.jobCardId
+                )
                 _newControlTimesheetLoadState.value = LoadingState.Success
             }
         }
@@ -489,7 +506,10 @@ class TimeSheetsViewModel(
 
                 is TimeSheetRepository.LoadingResult.TimeSheet -> {
                     EventBus.emitTimeSheetEvent(EventBus.TimesheetEvent.NewTimesheet)
-                    WebSocketInstance.sendWebSocketMessage("NEW_TIMESHEET", response.timesheet.jobCardId)
+                    webSocketInstance.sendWebSocketMessage(
+                        "NEW_TIMESHEET",
+                        response.timesheet.jobCardId
+                    )
                     _newTimeSheetState.value =
                         LoadingState.Success
 
@@ -498,7 +518,7 @@ class TimeSheetsViewModel(
         }
     }
 
-    private suspend fun updateDiagnosticsTimeSheet(timeSheet: Timesheet){
+    private suspend fun updateDiagnosticsTimeSheet(timeSheet: Timesheet) {
         _savingDiagnosticsState.value = LoadingState.Loading
         when (val response =
             timeSheetRepository.updateTimesheet(timeSheet.id, timeSheet)) {
@@ -518,14 +538,17 @@ class TimeSheetsViewModel(
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
                 _diagnosticsTimeSheet.value = response.timesheet
                 _diagnosticsClockOut.value = _diagnosticsTimeSheet.value!!.clockOutDateAndTime
-                WebSocketInstance.sendWebSocketMessage("UPDATE_TIMESHEET", response.timesheet.jobCardId)
+                webSocketInstance.sendWebSocketMessage(
+                    "UPDATE_TIMESHEET",
+                    response.timesheet.jobCardId
+                )
                 _savingDiagnosticsState.value =
                     LoadingState.Success
             }
         }
     }
 
-    private suspend fun updateControlTimeSheet(timeSheet: Timesheet){
+    private suspend fun updateControlTimeSheet(timeSheet: Timesheet) {
         _savingControlState.value = LoadingState.Loading
         when (val response =
             timeSheetRepository.updateTimesheet(timeSheet.id, timeSheet)) {
@@ -546,14 +569,17 @@ class TimeSheetsViewModel(
 
             is TimeSheetRepository.LoadingResult.TimeSheet -> {
                 _controlTimeSheet.value = response.timesheet
-                WebSocketInstance.sendWebSocketMessage("UPDATE_TIMESHEET", response.timesheet.jobCardId)
+                webSocketInstance.sendWebSocketMessage(
+                    "UPDATE_TIMESHEET",
+                    response.timesheet.jobCardId
+                )
                 _savingControlState.value =
                     LoadingState.Success
             }
         }
     }
 
-    private suspend fun updateTimeSheet(){
+    private suspend fun updateTimeSheet() {
         _updatingTimeSheetState.value = LoadingState.Loading
         try {
             when (val response =
@@ -574,7 +600,10 @@ class TimeSheetsViewModel(
                 is TimeSheetRepository.LoadingResult.TimeSheet -> {
                     timeSheetDialogDismissRequest()
                     _timesheet.value = response.timesheet
-                    WebSocketInstance.sendWebSocketMessage("UPDATE_TIMESHEET", response.timesheet.jobCardId)
+                    webSocketInstance.sendWebSocketMessage(
+                        "UPDATE_TIMESHEET",
+                        response.timesheet.jobCardId
+                    )
                     _updatingTimeSheetState.value = LoadingState.Success
                 }
             }
@@ -584,21 +613,28 @@ class TimeSheetsViewModel(
 
     }
 
-    private suspend fun updateJobCardsStatus(newStatus: String){
+    private suspend fun updateJobCardsStatus(newStatus: String) {
         _statusLoadingState.value = LoadingState.Loading
         try {
-            when(val response = jobCardStatusRepository.addNewJobCardStatus(UUID.fromString(jobCardId), newStatus)){
-                is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value = LoadingState.Error(response.message)
-                is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value = LoadingState.Loading
+            when (val response = jobCardStatusRepository.addNewJobCardStatus(
+                UUID.fromString(jobCardId),
+                newStatus
+            )) {
+                is JobCardStatusRepository.LoadingResult.Error -> _statusLoadingState.value =
+                    LoadingState.Error(response.message)
+
+                is JobCardStatusRepository.LoadingResult.Loading -> _statusLoadingState.value =
+                    LoadingState.Loading
+
                 is JobCardStatusRepository.LoadingResult.Success -> {
-                    WebSocketInstance.sendWebSocketMessage("JOB_CARD_STATUS_CHANGED", jobCardId)
+                    webSocketInstance.sendWebSocketMessage("JOB_CARD_STATUS_CHANGED", jobCardId)
                     _statusLoadingState.value = LoadingState.Success
                 }
             }
-        } catch (e: Exception){
-            when (e){
+        } catch (e: Exception) {
+            when (e) {
                 is IOException -> JobCardDetailsViewModel.LoadingState.Error("Network Error")
-                else -> JobCardDetailsViewModel.LoadingState.Error(e.message?:"Unknown Error")
+                else -> JobCardDetailsViewModel.LoadingState.Error(e.message ?: "Unknown Error")
             }
         }
     }
@@ -614,7 +650,7 @@ class TimeSheetsViewModel(
         }
     }
 
-    fun timeSheetDialogDismissRequest(){
+    fun timeSheetDialogDismissRequest() {
         _showTimesheetDialog.value = false
         _onClickTimesheet.value = false
     }
@@ -644,49 +680,39 @@ class TimeSheetsViewModel(
     fun resetNewTimeSheetLoadState() {
         _newTimeSheetState.value = LoadingState.Idle
         _newTimeSheet.value = CreateTimesheet(
-            technicianId = SignedInUser.employee!!.id,
+            technicianId = signedInUserManager.employee.value!!.id,
             jobCardId = UUID.fromString(jobCardId)
         )
 
     }
 
     override fun onWebSocketUpdate(update: WebSocketUpdate) {
-        when(update){
+        when (update) {
             is WebSocketUpdate.NewTimesheet -> {
-                if (update.id == UUID.fromString(jobCardId)){
+                if (update.id == UUID.fromString(jobCardId)) {
                     newTimeSheetCount++
                     refreshTimeSheets()
                 }
             }
+
             is WebSocketUpdate.UpdateTimesheet -> {
-                if (update.id == UUID.fromString(jobCardId)){
+                if (update.id == UUID.fromString(jobCardId)) {
                     refreshTimeSheets()
                 }
             }
+
             is WebSocketUpdate.DeleteTimesheet -> {
-                if (update.id == UUID.fromString(jobCardId)){
+                if (update.id == UUID.fromString(jobCardId)) {
                     refreshTimeSheets()
                 }
             }
+
             else -> {}
         }
     }
 
     override fun onWebSocketError(error: Throwable) {
-       //nothing to do here
-    }
-}
-
-class TimeSheetsViewModelFactory(private val jobCardId: String) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>,
-        extras: CreationExtras
-    ): T {
-        if (modelClass.isAssignableFrom(TimeSheetsViewModel::class.java)) {
-            return TimeSheetsViewModel(jobCardId = jobCardId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        //nothing to do here
     }
 }
 

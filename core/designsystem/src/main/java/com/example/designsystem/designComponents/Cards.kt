@@ -14,21 +14,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -56,14 +51,8 @@ import androidx.wear.compose.material.dialog.Dialog
 import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
-import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
-import com.example.designsystem.theme.DarkOrange
-import com.example.designsystem.theme.Green
-import com.example.designsystem.theme.Grey
-import com.example.designsystem.theme.LightGreen
 import com.example.designsystem.theme.LightGrey
-import com.example.designsystem.theme.LightOrange
 import com.example.designsystem.theme.Red
 import com.example.designsystem.theme.generateRandomColor
 import com.prodacc.data.remote.dao.JobCard
@@ -282,7 +271,7 @@ fun AllJobCardListItem(
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.End,
                 )
-                FormattedTime(time = closedDate!!)
+                FormattedTime(time = closedDate)
             }
 
         } else {

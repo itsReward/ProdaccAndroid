@@ -1,26 +1,34 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.NewClient
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ClientRepository {
-    private val service = ApiInstance.clientService
+@Singleton
+class ClientRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val dispatcher: CoroutineDispatchers
+){
+    private val service get()  = apiServiceContainer.clientService
 
 
-    suspend fun getClientsById(id: UUID): LoadingResult {
-        return try {
+    suspend fun getClientsById(id: UUID): LoadingResult  = withContext(dispatcher.io){
+        try {
             val response = service.getClient(id)
             if (response.isSuccessful) {
                 if (response.body() == null) {
-                    return LoadingResult.SingleEntity(null, "Client not found")
+                    LoadingResult.SingleEntity(null, "Client not found")
                 } else {
-                    return LoadingResult.SingleEntity(response.body(), null)
+                    LoadingResult.SingleEntity(response.body(), null)
                 }
             } else{
-                return LoadingResult.Error(response.raw().message)
+                LoadingResult.Error(response.raw().message)
             }
         } catch (e : Exception){
             when (e) {
@@ -30,8 +38,8 @@ class ClientRepository {
         }
     }
 
-    suspend fun getClients(): LoadingResult {
-        return try {
+    suspend fun getClients(): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getClients()
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body() ?: emptyList())
@@ -46,8 +54,8 @@ class ClientRepository {
         }
     }
 
-    suspend fun createClient(newClient: NewClient): LoadingResult {
-        return try {
+    suspend fun createClient(newClient: NewClient): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.createClient(newClient)
             if (response.isSuccessful) {
                 if (response.body() == null) {
@@ -66,8 +74,8 @@ class ClientRepository {
         }
     }
 
-    suspend fun updateClient(id: UUID, updatedClient: Client): LoadingResult {
-        return try {
+    suspend fun updateClient(id: UUID, updatedClient: Client): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.updateClient(id, updatedClient)
             if (response.isSuccessful) {
                 if (response.body() == null) {
@@ -86,8 +94,8 @@ class ClientRepository {
         }
     }
 
-    suspend fun deleteClient(id: UUID): LoadingResult {
-        return try {
+    suspend fun deleteClient(id: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.deleteClient(id)
             if (response.isSuccessful) {
                 LoadingResult.Success(emptyList())

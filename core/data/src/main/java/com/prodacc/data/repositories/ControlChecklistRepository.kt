@@ -1,18 +1,26 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.ControlChecklist
 import com.prodacc.data.remote.dao.NewControlChecklist
+import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.time.LocalDateTime
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ControlChecklistRepository {
-    private val service = ApiInstance.controlChecklistService
+@Singleton
+class ControlChecklistRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val webSocketInstance: WebSocketInstance,
+    private val dispatcher: CoroutineDispatchers
+){
+    private val service get() = apiServiceContainer.controlChecklistService
 
-    suspend fun getControlChecklist(jobCardId: UUID): LoadingResult {
-        return try {
+    suspend fun getControlChecklist(jobCardId: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getControlChecklistByJobCard(jobCardId = jobCardId)
 
             if (response.isSuccessful){
@@ -37,11 +45,11 @@ class ControlChecklistRepository {
         }
     }
 
-    suspend fun addControlChecklist(controlChecklist: NewControlChecklist): LoadingResult {
-        return try {
+    suspend fun addControlChecklist(controlChecklist: NewControlChecklist): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = service.createControlChecklist(controlChecklist)
             if (response.isSuccessful){
-                WebSocketInstance.sendWebSocketMessage("NEW_CONTROL_CHECKLIST", controlChecklist.jobCardId)
+                webSocketInstance.sendWebSocketMessage("NEW_CONTROL_CHECKLIST", controlChecklist.jobCardId)
                 LoadingResult.Success(response.body()!!)
             }else {
                 LoadingResult.Error(response.message())
@@ -54,11 +62,11 @@ class ControlChecklistRepository {
         }
     }
 
-    suspend fun updateControlChecklist(id : UUID, controlChecklist: NewControlChecklist): LoadingResult {
-        return try {
+    suspend fun updateControlChecklist(id : UUID, controlChecklist: NewControlChecklist): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.updateControlChecklist(id , controlChecklist)
             if (response.isSuccessful){
-                WebSocketInstance.sendWebSocketMessage("UPDATE_CONTROL_CHECKLIST", controlChecklist.jobCardId)
+                webSocketInstance.sendWebSocketMessage("UPDATE_CONTROL_CHECKLIST", controlChecklist.jobCardId)
                 LoadingResult.Success(response.body()!!)
             }else {
                 LoadingResult.Error(response.message())

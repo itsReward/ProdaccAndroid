@@ -2,22 +2,31 @@ package com.example.prodacc.ui.clients.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.designsystem.designComponents.ListCategory
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
+import com.prodacc.data.SignedInUserManager
+import com.prodacc.data.remote.TokenManager
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import kotlin.math.sign
 
-class ClientsViewModel(
-    private val clientRepository: ClientRepository = ClientRepository()
+@HiltViewModel
+class ClientsViewModel @Inject constructor(
+    private val clientRepository: ClientRepository,
+    webSocketInstance: WebSocketInstance,
+    signedInUserManager: SignedInUserManager,
+    private val tokenManager: TokenManager,
 ) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _clients = MutableStateFlow<List<Client>>(emptyList())
     val clients = _clients.asStateFlow()
 
+    val userRole = signedInUserManager.role
 
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
@@ -26,7 +35,7 @@ class ClientsViewModel(
     val loadState = _loadState.asStateFlow()
 
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
 
         viewModelScope.launch {
             EventBus.clientEvent.collect{ event ->
@@ -41,6 +50,10 @@ class ClientsViewModel(
         viewModelScope.launch {
             fetchClients()
         }
+    }
+
+    fun logOut(){
+        tokenManager.saveToken(null)
     }
 
     fun resetLoadState(){

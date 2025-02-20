@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -42,11 +41,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.ClientsDropDown
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.LoadingStateColumn
-import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.DarkGrey
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.vehicles.viewModels.NewVehicleViewModel
@@ -54,7 +53,7 @@ import com.example.prodacc.ui.vehicles.viewModels.NewVehicleViewModel
 @Composable
 fun NewVehicleScreen(
     navController: NavController,
-    viewModel: NewVehicleViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: NewVehicleViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState.collectAsState().value
     val saveState = viewModel.saveState.collectAsState().value
@@ -221,48 +220,52 @@ fun NewVehicleScreen(
                                 )
                             }
                             Column {
-                                if (uiState.make == "Mercedes-Benz") {
-                                    viewModel.vehicleModels["Mercedes-Benz"]?.forEach { model ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    text = model,
-                                                    color = DarkGrey
-                                                )
-                                            },
-                                            onClick = {
-                                                viewModel.updateModel(model)
-                                                modelExpanded = !modelExpanded
-                                            }
-                                        )
-                                    }
-                                } else if (uiState.make == "Jeep") {
-                                    viewModel.vehicleModels["Jeep"]?.forEach { model ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    text = model,
-                                                    color = DarkGrey
-                                                )
-                                            },
-                                            onClick = {
-                                                viewModel.updateModel(model)
-                                                modelExpanded = !modelExpanded
-                                            }
-                                        )
-                                    }
-                                } else {
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                text = "Select Make",
-                                                color = DarkGrey
+                                when (uiState.make) {
+                                    "Mercedes-Benz" -> {
+                                        viewModel.vehicleModels["Mercedes-Benz"]?.forEach { model ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = model,
+                                                        color = DarkGrey
+                                                    )
+                                                },
+                                                onClick = {
+                                                    viewModel.updateModel(model)
+                                                    modelExpanded = !modelExpanded
+                                                }
                                             )
-                                        },
-                                        onClick = {
-
                                         }
-                                    )
+                                    }
+                                    "Jeep" -> {
+                                        viewModel.vehicleModels["Jeep"]?.forEach { model ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = model,
+                                                        color = DarkGrey
+                                                    )
+                                                },
+                                                onClick = {
+                                                    viewModel.updateModel(model)
+                                                    modelExpanded = !modelExpanded
+                                                }
+                                            )
+                                        }
+                                    }
+                                    else -> {
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = "Select Make",
+                                                    color = DarkGrey
+                                                )
+                                            },
+                                            onClick = {
+
+                                            }
+                                        )
+                                    }
                                 }
 
                             }

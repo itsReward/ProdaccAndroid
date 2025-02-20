@@ -1,29 +1,37 @@
 package com.example.prodacc.ui.jobcards.viewModels
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import com.example.prodacc.ui.jobcards.viewModels.JobCardDetailsViewModel.LoadingState
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCardReport
 import com.prodacc.data.repositories.JobCardReportRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
+import javax.inject.Inject
 
-class JobCardReportsViewModel(
-    private val jobCardReportRepository: JobCardReportRepository = JobCardReportRepository(),
-    val jobId: String
-): ViewModel(), WebSocketInstance.WebSocketEventListener {
+@HiltViewModel
+class JobCardReportsViewModel @Inject constructor(
+    private val jobCardReportRepository: JobCardReportRepository,
+    private val webSocketInstance: WebSocketInstance,
+    private val signedInUserManager: SignedInUserManager,
+    savedStateHandle: SavedStateHandle
+) : ViewModel(), WebSocketInstance.WebSocketEventListener {
+    // Get jobCardId from SavedStateHandle
+    private val jobId: String = checkNotNull(savedStateHandle["jobCardId"]) {
+        "jobCardId parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
+
     private val _jobCardReports = MutableStateFlow<List<JobCardReport>>(emptyList())
     private val jobCardReports = _jobCardReports.asStateFlow()
 
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
         viewModelScope.launch {
             fetchJobCardReports()
         }
@@ -35,15 +43,14 @@ class JobCardReportsViewModel(
 
 
     //Reports Loading State
-    private val _serviceAdvisorReportLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    private val _serviceAdvisorReportLoadingState =
+        MutableStateFlow<LoadingState>(LoadingState.Idle)
     val serviceAdvisorReportLoadingState = _serviceAdvisorReportLoadingState.asStateFlow()
-
 
 
     // Report editing states
     private val _isServiceAdvisorReportEdited = MutableStateFlow(false)
     val isServiceAdvisorReportEdited = _isServiceAdvisorReportEdited.asStateFlow()
-
 
 
     private fun fetchJobCardReports() {
@@ -69,8 +76,8 @@ class JobCardReportsViewModel(
         }
     }
 
-    fun refreshReports(){
-        _serviceAdvisorReportLoadingState.value  = LoadingState.Loading
+    fun refreshReports() {
+        _serviceAdvisorReportLoadingState.value = LoadingState.Loading
         _jobCardReports.value = emptyList()
         _serviceAdvisorReport.value = null
         viewModelScope.launch {
@@ -79,13 +86,12 @@ class JobCardReportsViewModel(
     }
 
 
-
-    fun editServiceAdvisorReport(newReport: String){
-        _serviceAdvisorReport.value = _serviceAdvisorReport.value?.copy(jobReport = newReport)?:
-            JobCardReport(
+    fun editServiceAdvisorReport(newReport: String) {
+        _serviceAdvisorReport.value =
+            _serviceAdvisorReport.value?.copy(jobReport = newReport) ?: JobCardReport(
                 reportId = UUID.randomUUID(),
                 jobCardId = UUID.fromString(jobId),
-                employeeId = SignedInUser.user!!.employeeId,
+                employeeId = signedInUserManager.employee.value!!.id,
                 jobReport = newReport,
                 reportType = "serviceAdvisorReport"
             )
@@ -106,14 +112,21 @@ class JobCardReportsViewModel(
             try {
                 if (jobCardReports.value.any { it.reportType == report.reportType }) {
                     // Update existing report
-                    when (val response = jobCardReportRepository.updateJobCardReport(report.reportId, report)){
-                        is JobCardReportRepository.LoadingResult.Error -> _serviceAdvisorReportLoadingState.value = LoadingState.Error(response.message)
+                    when (val response =
+                        jobCardReportRepository.updateJobCardReport(report.reportId, report)) {
+                        is JobCardReportRepository.LoadingResult.Error -> _serviceAdvisorReportLoadingState.value =
+                            LoadingState.Error(response.message)
+
                         is JobCardReportRepository.LoadingResult.SingleEntitySuccess -> {
                             EventBus.emit(EventBus.JobCardEvent.ReportCRUD(UUID.fromString(jobId)))
                             _serviceAdvisorReport.value = response.response
-                            WebSocketInstance.sendWebSocketMessage("UPDATE_JOB_CARD_REPORT", response.response.jobCardId)
+                            webSocketInstance.sendWebSocketMessage(
+                                "UPDATE_JOB_CARD_REPORT",
+                                response.response.jobCardId
+                            )
                             _serviceAdvisorReportLoadingState.value = LoadingState.Success
                         }
+
                         is JobCardReportRepository.LoadingResult.Success -> {
                             //will never happen
                         }
@@ -121,13 +134,19 @@ class JobCardReportsViewModel(
 
                 } else {
                     // Create new report
-                    when(val response = jobCardReportRepository.newJobCardReport(report)){
-                        is JobCardReportRepository.LoadingResult.Error -> _serviceAdvisorReportLoadingState.value = LoadingState.Error(response.message)
+                    when (val response = jobCardReportRepository.newJobCardReport(report)) {
+                        is JobCardReportRepository.LoadingResult.Error -> _serviceAdvisorReportLoadingState.value =
+                            LoadingState.Error(response.message)
+
                         is JobCardReportRepository.LoadingResult.SingleEntitySuccess -> {
                             EventBus.emit(EventBus.JobCardEvent.ReportCRUD(UUID.fromString(jobId)))
-                            WebSocketInstance.sendWebSocketMessage("NEW_JOB_CARD_REPORT", response.response.jobCardId)
+                            webSocketInstance.sendWebSocketMessage(
+                                "NEW_JOB_CARD_REPORT",
+                                response.response.jobCardId
+                            )
                             _serviceAdvisorReport.value = response.response
                         }
+
                         is JobCardReportRepository.LoadingResult.Success -> {
                             //Will never happen
                         }
@@ -141,43 +160,32 @@ class JobCardReportsViewModel(
         }
     }
 
-    open class LoadingState{
-        data object Idle: LoadingState()
-        data object Loading: LoadingState()
-        data object Success: LoadingState()
-        data class Error(val message: String): LoadingState()
+    open class LoadingState {
+        data object Idle : LoadingState()
+        data object Loading : LoadingState()
+        data object Success : LoadingState()
+        data class Error(val message: String) : LoadingState()
     }
 
     override fun onWebSocketUpdate(update: WebSocketUpdate) {
-        when(update){
+        when (update) {
             is WebSocketUpdate.NewReport -> {
-                if (update.id == UUID.fromString(jobId)){
+                if (update.id == UUID.fromString(jobId)) {
                     refreshReports()
                 }
             }
+
             is WebSocketUpdate.UpdateReport -> {
-                if (update.id == UUID.fromString(jobId)){
+                if (update.id == UUID.fromString(jobId)) {
                     refreshReports()
                 }
             }
+
             else -> {}
         }
     }
 
     override fun onWebSocketError(error: Throwable) {
         //nothing to do here
-    }
-}
-
-class JobCardReportsViewModelFactory(private val jobCardId: String) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>,
-        extras: CreationExtras
-    ): T {
-        if (modelClass.isAssignableFrom(JobCardReportsViewModel::class.java)) {
-            return JobCardReportsViewModel(jobId = jobCardId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

@@ -1,27 +1,37 @@
 package com.example.prodacc.ui.jobcards.viewModels
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.JobCardStatus
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardStatusRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.time.LocalDateTime
 import java.util.UUID
+import javax.inject.Inject
 
-class JobCardDetailsViewModel(
-    private val jobCardRepository: JobCardRepository = JobCardRepository(),
-    private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
-    private val jobId: String
+@HiltViewModel
+class JobCardDetailsViewModel @Inject constructor(
+    private val jobCardRepository: JobCardRepository,
+    private val jobCardStatusRepository: JobCardStatusRepository,
+    private val webSocketInstance: WebSocketInstance,
+    signedInUserManager: SignedInUserManager,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel(), WebSocketInstance.WebSocketEventListener {
+    // Get jobCardId from SavedStateHandle
+    private val jobId: String = checkNotNull(savedStateHandle["jobCardId"]) {
+        "jobCardId parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
+
     private val _jobCard = MutableStateFlow<JobCard?>(null)
     val jobCard = _jobCard.asStateFlow()
 
@@ -40,8 +50,11 @@ class JobCardDetailsViewModel(
     private val _statusLoadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val statusLoadingState = _statusLoadingState.asStateFlow()
 
+    val userRole = signedInUserManager.role
+    val signedInEmployee = signedInUserManager.employee
+
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
 
         // Add event bus collection
         viewModelScope.launch {
@@ -145,7 +158,7 @@ class JobCardDetailsViewModel(
 
                 is JobCardStatusRepository.LoadingResult.Success -> {
                     EventBus.emit(EventBus.JobCardEvent.StatusChanged(UUID.fromString(jobId)))
-                    WebSocketInstance.sendWebSocketMessage(
+                    webSocketInstance.sendWebSocketMessage(
                         "JOB_CARD_STATUS_CHANGED",
                         UUID.fromString(jobId)
                     )
@@ -274,7 +287,7 @@ class JobCardDetailsViewModel(
 
                     is JobCardRepository.LoadingResult.SingleEntity -> {
                         _jobCard.value = response.jobCard
-                        WebSocketInstance.sendWebSocketMessage(
+                        webSocketInstance.sendWebSocketMessage(
                             "UPDATE_JOB_CARD",
                             response.jobCard.id
                         )
@@ -303,7 +316,7 @@ class JobCardDetailsViewModel(
             try {
                 jobCardRepository.deleteJobCard(jobCard.value!!.id)
                 EventBus.emit(EventBus.JobCardCRUDEvent.JobCardDeleted(jobCard.value!!.id))
-                WebSocketInstance.sendWebSocketMessage("DELETE_JOB_CARD", jobCard.value!!.id)
+                webSocketInstance.sendWebSocketMessage("DELETE_JOB_CARD", jobCard.value!!.id)
             } catch (e: Exception) {
                 throw e
             }
@@ -351,18 +364,5 @@ class JobCardDetailsViewModel(
     }
 
     override fun onWebSocketError(error: Throwable) {
-    }
-}
-
-class JobCardDetailsViewModelFactory(private val jobCardId: String) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>,
-        extras: CreationExtras
-    ): T {
-        if (modelClass.isAssignableFrom(JobCardDetailsViewModel::class.java)) {
-            return JobCardDetailsViewModel(jobId = jobCardId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

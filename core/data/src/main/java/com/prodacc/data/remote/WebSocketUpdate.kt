@@ -48,3 +48,4 @@ sealed class WebSocketUpdate {
     data class UpdateComment(val id: UUID): WebSocketUpdate()
     data class DeleteComment(val id: UUID): WebSocketUpdate()
 }
+

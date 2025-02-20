@@ -1,29 +1,41 @@
 package com.example.prodacc.ui.vehicles.viewModels
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.Vehicle
-import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.VehicleRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
+import kotlin.math.sign
 
-class VehicleDetailsViewModel(
-    private val vehicleRepository: VehicleRepository = VehicleRepository(),
-    private val jobCardRepository: JobCardRepository = JobCardRepository(),
-    private val clientsRepository: ClientRepository = ClientRepository(),
-    private val vehicleId: String
+@HiltViewModel
+class VehicleDetailsViewModel @Inject constructor(
+    private val vehicleRepository: VehicleRepository,
+    private val jobCardRepository: JobCardRepository,
+    private val webSocketInstance: WebSocketInstance,
+    private val signedInUserManager: SignedInUserManager,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel(), WebSocketInstance.WebSocketEventListener {
+
+    // Get vehicleId from SavedStateHandle
+    private val vehicleId: String = checkNotNull(savedStateHandle["vehicleId"]) {
+        "vehicleId parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
+
+    val userRole = signedInUserManager.role
+
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
     val vehicle = _vehicle.asStateFlow()
 
@@ -40,7 +52,7 @@ class VehicleDetailsViewModel(
     val deleteConfirmation = _deleteConfirmation.asStateFlow()
 
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
         viewModelScope.launch {
             fetchVehicle()
             fetchJobCards()
@@ -166,7 +178,7 @@ class VehicleDetailsViewModel(
 
                     is VehicleRepository.LoadingResult.Success -> {
                         EventBus.emitVehicleEvents(EventBus.VehicleEvent.VehicleDeleted)
-                        WebSocketInstance.sendWebSocketMessage("DELETE_VEHICLE", UUID.fromString(vehicleId))
+                        webSocketInstance.sendWebSocketMessage("DELETE_VEHICLE", UUID.fromString(vehicleId))
                         _deleteState.value = DeleteVehicleState.Success
                     }
                 }
@@ -229,15 +241,3 @@ class VehicleDetailsViewModel(
     }
 }
 
-class VehicleDetailsViewModelFactory(private val vehicleId: String) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>,
-        extras: CreationExtras
-    ): T {
-        if (modelClass.isAssignableFrom(VehicleDetailsViewModel::class.java)) {
-            return VehicleDetailsViewModel(vehicleId = vehicleId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}

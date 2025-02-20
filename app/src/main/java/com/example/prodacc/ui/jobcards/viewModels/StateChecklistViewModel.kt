@@ -1,16 +1,15 @@
 package com.example.prodacc.ui.jobcards.viewModels
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.NewStateChecklist
 import com.prodacc.data.remote.dao.StateChecklist
-import com.prodacc.data.remote.dao.User
 import com.prodacc.data.repositories.StateChecklistRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,11 +17,22 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.time.LocalDateTime
 import java.util.UUID
+import javax.inject.Inject
 
-class StateChecklistViewModel(
-    private val stateChecklistRepository: StateChecklistRepository = StateChecklistRepository(),
-    private val jobCardId: String
+@HiltViewModel
+class StateChecklistViewModel @Inject constructor(
+    private val stateChecklistRepository: StateChecklistRepository,
+    webSocketInstance: WebSocketInstance,
+    private val signedInUserManager: SignedInUserManager,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel(), WebSocketInstance.WebSocketEventListener {
+    // Get jobCardId from SavedStateHandle
+    private val jobCardId: String = checkNotNull(savedStateHandle["jobCardId"]) {
+        "jobCardId parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
+
+    val signedInEmployee = signedInUserManager.employee
+
     private val _stateChecklist = MutableStateFlow<StateChecklist?>(null)
     val stateChecklist: StateFlow<StateChecklist?> = _stateChecklist
 
@@ -36,7 +46,8 @@ class StateChecklistViewModel(
     private val _fuelLevelIn = MutableStateFlow(_stateChecklist.value?.fuelLevelIn.let { "Select" })
     val fuelLevelIn = _fuelLevelIn.asStateFlow()
 
-    private val _fuelLevelOut = MutableStateFlow(_stateChecklist.value?.fuelLevelOut.let { "Select" })
+    private val _fuelLevelOut =
+        MutableStateFlow(_stateChecklist.value?.fuelLevelOut.let { "Select" })
     val fuelLevelOut = _fuelLevelOut.asStateFlow()
 
     private val _millageIn = MutableStateFlow(_stateChecklist.value?.millageIn.let { "" })
@@ -47,7 +58,7 @@ class StateChecklistViewModel(
 
 
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
 
         viewModelScope.launch {
             fetchStateChecklist()
@@ -67,7 +78,7 @@ class StateChecklistViewModel(
 
                 is StateChecklistRepository.LoadingResults.Success -> {
                     println(response.stateChecklist)
-                    if (response.stateChecklist != null){
+                    if (response.stateChecklist != null) {
                         _stateChecklist.value = response.stateChecklist
                         _fuelLevelIn.value = _stateChecklist.value!!.fuelLevelIn
                         _fuelLevelOut.value = _stateChecklist.value!!.fuelLevelOut
@@ -118,7 +129,7 @@ class StateChecklistViewModel(
                     fuelLevelOut = _fuelLevelOut.value,
                     millageIn = _millageIn.value,
                     millageOut = millageOut.value,
-                    technicianId = SignedInUser.employee!!.id
+                    technicianId = signedInUserManager.employee.value!!.id
                 )
 
                 val result = if (_stateChecklist.value == null) {
@@ -140,6 +151,7 @@ class StateChecklistViewModel(
                     is SaveState.Success -> {
                         fetchStateChecklist()
                     }
+
                     else -> {}
                 }
 
@@ -177,41 +189,32 @@ class StateChecklistViewModel(
     }
 
     override fun onWebSocketUpdate(update: WebSocketUpdate) {
-        when(update){
+        when (update) {
             is WebSocketUpdate.NewStateChecklist -> {
-                if (update.id == UUID.fromString(jobCardId)){
+                if (update.id == UUID.fromString(jobCardId)) {
                     refreshStateChecklist()
                 }
             }
+
             is WebSocketUpdate.UpdateStateChecklist -> {
-                if (update.id == UUID.fromString(jobCardId)){
+                if (update.id == UUID.fromString(jobCardId)) {
                     refreshStateChecklist()
                 }
             }
+
             is WebSocketUpdate.DeleteStateChecklist -> {
-                if (update.id == UUID.fromString(jobCardId)){
-                    _loadingState.value = StateChecklistLoadingState.Error("State Checklist has been deleted")
+                if (update.id == UUID.fromString(jobCardId)) {
+                    _loadingState.value =
+                        StateChecklistLoadingState.Error("State Checklist has been deleted")
                     _stateChecklist.value = null
                 }
             }
+
             else -> {}
         }
     }
 
     override fun onWebSocketError(error: Throwable) {
-       //nothing to do here
-    }
-}
-
-class StateChecklistViewModelFactory(private val jobCardId: String) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>,
-        extras: CreationExtras
-    ): T {
-        if (modelClass.isAssignableFrom(StateChecklistViewModel::class.java)) {
-            return StateChecklistViewModel(jobCardId = jobCardId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        //nothing to do here
     }
 }

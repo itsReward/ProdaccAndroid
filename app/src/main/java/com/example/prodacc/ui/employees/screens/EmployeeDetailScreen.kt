@@ -28,7 +28,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.DisplayTextField
@@ -57,18 +56,14 @@ import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
-import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModelFactory
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeDetailScreen(
     navController: NavController,
-    employeeId: String,
-    viewModel: EmployeeDetailsViewModel = viewModel(
-        factory = EmployeeDetailsViewModelFactory(employeeId)
-    )
+    viewModel: EmployeeDetailsViewModel = hiltViewModel()
 ) {
     val employee = viewModel.employee.collectAsState().value
     val jobCards = viewModel.jobCards.collectAsState()
@@ -99,7 +94,7 @@ fun EmployeeDetailScreen(
                             Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
                         }
 
-                        if (SignedInUser.role == SignedInUser.Role.Admin) {
+                        if (viewModel.userRole.collectAsState().value == SignedInUserManager.Role.Admin) {
                             IconButton(onClick = { viewModel.toggleDeleteConfirmation() }) {
                                 Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
                             }
@@ -275,8 +270,6 @@ fun EmployeeDetailScreen(
                 }
             }
 
-            else -> {
-            }
         }
 
         when (viewModel.deleteState.collectAsState().value) {

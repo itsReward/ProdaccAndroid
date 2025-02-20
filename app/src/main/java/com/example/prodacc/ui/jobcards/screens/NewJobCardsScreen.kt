@@ -22,7 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.EmployeeDropDown
 import com.example.designsystem.designComponents.ErrorStateColumn
@@ -46,17 +46,14 @@ import com.example.designsystem.theme.person
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.jobcards.viewModels.NewJobCardViewModel
-import com.example.prodacc.ui.jobcards.viewModels.NewJobCardViewModelFactory
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewJobCardScreen(
     navController: NavController,
-    viewModel: NewJobCardViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = NewJobCardViewModelFactory()
-    )
+    viewModel: NewJobCardViewModel = hiltViewModel()
 ) {
 
     val vehicle by viewModel.vehicle.collectAsState()
@@ -237,8 +234,8 @@ fun NewJobCardScreen(
                             label = { Text(text = "Service Advisor") },
                             leadingIcon = { Icon(imageVector = person, contentDescription = "employee") },
                             trailingIcon = {
-                                when(SignedInUser.role){
-                                    SignedInUser.Role.ServiceAdvisor -> {}
+                                when(viewModel.signedInUserRole.collectAsState().value){
+                                    SignedInUserManager.Role.ServiceAdvisor -> {}
                                     else -> {
                                         IconButton(onClick = {
                                             viewModel.toggleServiceAdvisor()

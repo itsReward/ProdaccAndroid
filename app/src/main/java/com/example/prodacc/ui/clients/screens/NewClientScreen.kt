@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.PopupProperties
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.LargeTitleText
 import com.example.designsystem.designComponents.LoadingStateColumn
@@ -66,7 +67,7 @@ import com.example.prodacc.ui.clients.viewModels.NewClientViewModel
 @Composable
 fun NewClientScreen(
     navController: NavController,
-    viewModel: NewClientViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: NewClientViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState.collectAsState().value
     val scroll = rememberScrollState()

@@ -1,18 +1,25 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.dao.JobCardStatus
 import com.prodacc.data.remote.dao.NewJobCardStatus
-import com.prodacc.data.remote.services.JobCardStatusService
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.time.LocalDateTime
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class JobCardStatusRepository {
-    private val service = ApiInstance.jobCardStatusService
+@Singleton
+class JobCardStatusRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val dispatcher: CoroutineDispatchers
+){
+    private val service get() = apiServiceContainer.jobCardStatusService
 
-    suspend fun addNewJobCardStatus(jobCardId: UUID, status: String): LoadingResult{
-        return try {
+    suspend fun addNewJobCardStatus(jobCardId: UUID, status: String): LoadingResult = withContext(dispatcher.io){
+        try {
             val jobCardStatus = NewJobCardStatus(
                 jobCardId,
                 status,
@@ -37,8 +44,8 @@ class JobCardStatusRepository {
         }
     }
 
-    suspend fun getJobCardStatusesByJobId(id: UUID): LoadingResult {
-        return try {
+    suspend fun getJobCardStatusesByJobId(id: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getJobCardStatusesByJobId(id)
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body()!!)

@@ -1,13 +1,10 @@
 package com.example.prodacc.ui.employees.viewModels
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import com.example.designsystem.theme.female
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
-import com.example.prodacc.ui.search.screen.SearchViewModel.LoadingState
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Employee
@@ -15,18 +12,30 @@ import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.repositories.EmployeeRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardTechnicianRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
 
-class EmployeeDetailsViewModel (
-    private val employeeId: String,
-    private val employeeRepository: EmployeeRepository = EmployeeRepository(),
-    private val jobCardRepository: JobCardRepository = JobCardRepository(),
-    private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository()
+@HiltViewModel
+class EmployeeDetailsViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val employeeRepository: EmployeeRepository,
+    private val jobCardRepository: JobCardRepository,
+    private val jobCardTechnicianRepository: JobCardTechnicianRepository,
+    private val signedInUserManager: SignedInUserManager,
+    private val webSocketInstance: WebSocketInstance
 ): ViewModel(), WebSocketInstance.WebSocketEventListener {
+    // Get employeeId from SavedStateHandle
+    private val employeeId: String = checkNotNull(savedStateHandle["employeeId"]) {
+        "employeeId parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
+
+    val userRole = signedInUserManager.role
+
     private val _employee = MutableStateFlow<Employee?>(null)
     val employee = _employee.asStateFlow()
 
@@ -46,7 +55,7 @@ class EmployeeDetailsViewModel (
     var jobCards = _jobCards.asStateFlow()
 
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
 
         _jobCardLoadState.value = LoadingState.Loading
         _employeeLoadState.value = EmployeeLoadState.Loading
@@ -158,7 +167,7 @@ class EmployeeDetailsViewModel (
                 when (val result = employeeRepository.deleteEmployee(UUID.fromString(employeeId))) {
                     EmployeeRepository.LoadingResult.Success() -> {
                         EventBus.emitEmployeeEvent(EventBus.EmployeeEvent.EmployeeDeleted)
-                        WebSocketInstance.sendWebSocketMessage("DELETE_EMPLOYEE", UUID.fromString(employeeId))
+                        webSocketInstance.sendWebSocketMessage("DELETE_EMPLOYEE", UUID.fromString(employeeId))
                         _deleteState.value = DeleteState.Success
                     }
                     is EmployeeRepository.LoadingResult.Error -> {
@@ -240,17 +249,4 @@ class EmployeeDetailsViewModel (
 
     }
 
-}
-
-class EmployeeDetailsViewModelFactory(private val employeeId: String) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>,
-        extras: CreationExtras
-    ): T {
-        if (modelClass.isAssignableFrom(EmployeeDetailsViewModel::class.java)) {
-            return EmployeeDetailsViewModel(employeeId = employeeId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
 }

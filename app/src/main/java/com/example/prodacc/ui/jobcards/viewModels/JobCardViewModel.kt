@@ -2,7 +2,8 @@ package com.example.prodacc.ui.jobcards.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
+import com.prodacc.data.remote.TokenManager
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.JobCard
@@ -12,20 +13,25 @@ import com.prodacc.data.repositories.JobCardReportRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardStatusRepository
 import com.prodacc.data.repositories.JobCardTechnicianRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
 
-class JobCardViewModel(
-    private val jobCardRepository: JobCardRepository = JobCardRepository(),
-    private val jobCardReportRepository: JobCardReportRepository = JobCardReportRepository(),
-    private val jobCardStatusRepository: JobCardStatusRepository = JobCardStatusRepository(),
-    private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository()
+@HiltViewModel
+class JobCardViewModel @Inject constructor(
+    private val jobCardRepository: JobCardRepository,
+    private val jobCardReportRepository: JobCardReportRepository,
+    private val jobCardStatusRepository: JobCardStatusRepository,
+    private val jobCardTechnicianRepository: JobCardTechnicianRepository,
+    private val tokenManager: TokenManager,
+    private val webSocketInstance: WebSocketInstance,
+    private val signedInUserManager: SignedInUserManager
 ) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _jobCards = MutableStateFlow<List<JobCard>>(emptyList())
 
@@ -44,9 +50,14 @@ class JobCardViewModel(
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
 
+    val role = signedInUserManager.role
 
     private val _jobCardsFilter = MutableStateFlow<JobCardsFilter>(JobCardsFilter.All())
     val jobCardsFilter = _jobCardsFilter.asStateFlow()
+
+    fun logOut(){
+        tokenManager.saveToken(null)
+    }
 
     fun onToggleAllFilterChip() {
         _jobCardsFilter.value = JobCardsFilter.All()
@@ -95,7 +106,7 @@ class JobCardViewModel(
 
 
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
 
         _jobCardLoadState.value = LoadingState.Loading
 
@@ -135,11 +146,12 @@ class JobCardViewModel(
         }
 
         viewModelScope.launch {
-            EventBus.commentEvent.collect() { event ->
-                when (event){
+            EventBus.commentEvent.collect { event ->
+                when (event) {
                     EventBus.CommentEvent.CommentCreated -> {
                         refreshJobCards()
                     }
+
                     EventBus.CommentEvent.CommentDeleted -> {
                         refreshJobCards()
                     }
@@ -219,9 +231,9 @@ class JobCardViewModel(
 
     private suspend fun fetchJobCards() {
 
-        when (SignedInUser.role) {
-            is SignedInUser.Role.Technician -> {
-                jobCardTechnicianRepository.getJobCardsForTechnician(SignedInUser.employee!!.id)
+        when (signedInUserManager.role.value) {
+            is SignedInUserManager.Role.Technician -> {
+                jobCardTechnicianRepository.getJobCardsForTechnician(signedInUserManager.employee.value!!.id)
                     .let { result ->
                         when (result) {
                             is JobCardTechnicianRepository.LoadingResult.Error -> _jobCardLoadState.value =
@@ -493,8 +505,7 @@ class JobCardViewModel(
     }
 
 
-
-    sealed class JobCardsFilter{
+    sealed class JobCardsFilter {
         data class All(val name: String = "all") : JobCardsFilter()
         data class Open(val name: String = "open") : JobCardsFilter()
         data class Approval(val name: String = "approval") : JobCardsFilter()
@@ -510,14 +521,16 @@ class JobCardViewModel(
         viewModelScope.launch {
             when (update) {
                 is WebSocketUpdate.JobCardCreated -> {
-                    when(SignedInUser.role){
-                        is SignedInUser.Role.Technician -> {
+                    when (signedInUserManager.role.value) {
+                        is SignedInUserManager.Role.Technician -> {
                             fetchJobCards()
                         }
+
                         else -> refreshJobCards()
                     }
 
                 }
+
                 is WebSocketUpdate.JobCardUpdated -> refreshJobCards()
                 is WebSocketUpdate.StatusChanged -> refreshSingleJobCardStatus(update.jobCardId)
                 is WebSocketUpdate.JobCardDeleted -> {
@@ -529,25 +542,30 @@ class JobCardViewModel(
                     _reportsMap.value -= update.jobCardId
                     _statusMap.value -= update.jobCardId
                 }
+
                 is WebSocketUpdate.NewReport -> refreshSingleJobCardReport(update.id)
                 is WebSocketUpdate.UpdateReport -> refreshSingleJobCardReport(update.id)
                 is WebSocketUpdate.DeleteReport -> refreshSingleJobCardReport(update.id)
                 is WebSocketUpdate.NewTechnician -> {
-                    when(SignedInUser.role){
-                        is SignedInUser.Role.Technician -> {
+                    when (signedInUserManager.role.value) {
+                        is SignedInUserManager.Role.Technician -> {
                             fetchJobCards()
                         }
+
                         else -> refreshJobCards()
                     }
                 }
+
                 is WebSocketUpdate.DeleteTechnician -> {
-                    when(SignedInUser.role){
-                        is SignedInUser.Role.Technician -> {
+                    when (signedInUserManager.role.value) {
+                        is SignedInUserManager.Role.Technician -> {
                             fetchJobCards()
                         }
+
                         else -> refreshJobCards()
                     }
                 }
+
                 is WebSocketUpdate.NewComment -> refreshJobCards()
                 is WebSocketUpdate.DeleteComment -> refreshJobCards()
 
@@ -561,7 +579,7 @@ class JobCardViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        WebSocketInstance.removeWebSocketListener(this)
+        webSocketInstance.removeWebSocketListener(this)
     }
 
 

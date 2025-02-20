@@ -4,20 +4,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
+import com.prodacc.data.SignedInUserManager
+import com.prodacc.data.remote.TokenManager
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.VehicleRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import kotlin.math.sign
 
-class VehiclesViewModel (
-    private val vehicleRepository: VehicleRepository = VehicleRepository()
+@HiltViewModel
+class VehiclesViewModel @Inject constructor (
+    private val vehicleRepository: VehicleRepository,
+    private val tokenManager: TokenManager,
+    private val signedInUserManager: SignedInUserManager,
+    webSocketInstance: WebSocketInstance
 ) : ViewModel(), WebSocketInstance.WebSocketEventListener {
     private val _vehicles: MutableStateFlow<List<Vehicle>> = MutableStateFlow(emptyList())
     val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
+
+    val userRole = signedInUserManager.role
 
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
@@ -29,7 +40,7 @@ class VehiclesViewModel (
     val activeVehicles: StateFlow<List<Vehicle>> = _activeVehicles
 
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
 
         viewModelScope.launch {
             EventBus.vehicleEvent.collect{ event ->
@@ -62,6 +73,10 @@ class VehiclesViewModel (
         viewModelScope.launch {
             getVehicles()
         }
+    }
+
+    fun logOut(){
+        tokenManager.saveToken(null)
     }
 
     private suspend fun getVehicles(){

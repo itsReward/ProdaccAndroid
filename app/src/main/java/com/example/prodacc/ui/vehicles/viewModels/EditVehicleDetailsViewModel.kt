@@ -1,10 +1,8 @@
 package com.example.prodacc.ui.vehicles.viewModels
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import com.example.prodacc.ui.clients.viewModels.ClientsViewModel.LoadState
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.WebSocketUpdate
 import com.prodacc.data.remote.dao.Client
@@ -12,17 +10,26 @@ import com.prodacc.data.remote.dao.NewVehicle
 import com.prodacc.data.remote.dao.Vehicle
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.VehicleRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
 
-class EditVehicleDetailsViewModel(
-    private val vehicleRepository: VehicleRepository = VehicleRepository(),
-    private val clientRepository: ClientRepository = ClientRepository(),
-    private val vehicleId: String
+@HiltViewModel
+class EditVehicleDetailsViewModel @Inject constructor(
+    private val vehicleRepository: VehicleRepository,
+    private val clientRepository: ClientRepository,
+    private val webSocketInstance: WebSocketInstance,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel(), WebSocketInstance.WebSocketEventListener {
+    // Get vehicleId from SavedStateHandle
+    private val vehicleId: String = checkNotNull(savedStateHandle["vehicleId"]) {
+        "vehicleId parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
+
     // State for the vehicle details
     private val _vehicle = MutableStateFlow<Vehicle?>(null)
     val vehicle = _vehicle.asStateFlow()
@@ -66,7 +73,7 @@ class EditVehicleDetailsViewModel(
 
     // Initialize by fetching vehicle details
     init {
-        WebSocketInstance.addWebSocketListener(this)
+        webSocketInstance.addWebSocketListener(this)
 
         viewModelScope.launch {
             fetchVehicle()
@@ -135,9 +142,7 @@ class EditVehicleDetailsViewModel(
     private suspend fun fetchVehicle() {
         try {
             _loadState.value = LoadState.Loading
-            val result = vehicleRepository.getVehicleById(UUID.fromString(vehicleId))
-
-            when (result) {
+            when (val result = vehicleRepository.getVehicleById(UUID.fromString(vehicleId))) {
                 is VehicleRepository.LoadingResult.SingleEntity -> {
                     _vehicle.value = result.vehicle
                     _loadState.value = LoadState.Success
@@ -181,11 +186,11 @@ class EditVehicleDetailsViewModel(
                     query,
                     true
                 ) || it.clientSurname.contains(query)
-            } ?: emptyList()
+            }
         }
     }
 
-    suspend fun fetchClients() {
+    private suspend fun fetchClients() {
         _clientLoadState.value = ClientLoadState.Loading
         try {
             when (val clients = clientRepository.getClients()) {
@@ -245,7 +250,7 @@ class EditVehicleDetailsViewModel(
                     when (result) {
                         is VehicleRepository.LoadingResult.SingleEntity -> {
                             _updateState.value = UpdateState.Success
-                            WebSocketInstance.sendWebSocketMessage(
+                            webSocketInstance.sendWebSocketMessage(
                                 "UPDATE_VEHICLE",
                                 result.vehicle!!.id
                             )
@@ -329,19 +334,5 @@ class EditVehicleDetailsViewModel(
 
     override fun onWebSocketError(error: Throwable) {
         //nothing to do here
-    }
-}
-
-class EditVehicleDetailsViewModelFactory(private val vehicleId: String) :
-    ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>,
-        extras: CreationExtras
-    ): T {
-        if (modelClass.isAssignableFrom(EditVehicleDetailsViewModel::class.java)) {
-            return EditVehicleDetailsViewModel(vehicleId = vehicleId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

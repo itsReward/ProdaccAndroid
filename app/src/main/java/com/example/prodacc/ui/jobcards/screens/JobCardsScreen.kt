@@ -36,10 +36,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.JobCardsScreenTopBar
-import com.example.designsystem.designComponents.TopBar
 import com.example.designsystem.theme.BlueA700
+import com.example.navigation.NavigationManager
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.WebSocketStateIndicator
@@ -47,13 +48,13 @@ import com.example.prodacc.ui.jobcards.viewModels.JobCardViewModel
 import com.example.prodacc.ui.jobcards.viewModels.LoadingState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.prodacc.data.SignedInUser
-import com.prodacc.data.remote.TokenManager
+import com.prodacc.data.SignedInUserManager
 
 @Composable
 fun JobCardsScreen(
     navController: NavController,
-    viewModel: JobCardViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: JobCardViewModel = hiltViewModel(),
+    navigationManager: NavigationManager = NavigationManager(navController)
 ) {
     val scroll = rememberScrollState()
 
@@ -69,22 +70,25 @@ fun JobCardsScreen(
         topBar = {
             Column(modifier = Modifier.statusBarsPadding()){
                 WebSocketStateIndicator()
-                JobCardsScreenTopBar(
-                    onSearchClick = { navController.navigate( Route.Search.path.replace("{title}", "Job Cards")) },
-                    logOut = {
-                        TokenManager.saveToken(null)
-                        navController.navigate(Route.LogIn.path)
-                    },
-                    products = {}
-                )
+                viewModel.role.collectAsState().value?.let {
+                    JobCardsScreenTopBar(
+                        onSearchClick = { navController.navigate( Route.Search.path.replace("{title}", "Job Cards")) },
+                        logOut = {
+                            viewModel.logOut()
+                            navController.navigate(Route.LogIn.path)
+                        },
+                        products = { navigationManager.navigateToProducts() },
+                        role = it
+                    )
+                }
             }
 
         }
         , bottomBar = { NavigationBar(navController) }, floatingActionButton = {
 
-            when(SignedInUser.role){
-                SignedInUser.Role.Supervisor -> {}
-                SignedInUser.Role.Technician -> {}
+            when(viewModel.role.collectAsState().value){
+                SignedInUserManager.Role.Supervisor -> {}
+                SignedInUserManager.Role.Technician -> {}
                 else -> {
                     FloatingActionButton(
                         onClick = {
@@ -179,7 +183,8 @@ fun JobCardsScreen(
                                 onClickFrozen = { viewModel.onToggleFrozenChip() },
                                 onClickTesting = { viewModel.onToggleTesting() },
                                 onClickWaitingForPayment = { viewModel.onToggleWaitingForPayment() },
-                                jobCardFilterState = viewModel.jobCardsFilter.collectAsState().value
+                                jobCardFilterState = viewModel.jobCardsFilter.collectAsState().value,
+                                role = viewModel.role.collectAsState().value!!
                             )
 
 
@@ -231,8 +236,8 @@ fun JobCardsScreen(
 
                             }
 
-                            when (SignedInUser.role) {
-                                is SignedInUser.Role.Technician -> {
+                            when (viewModel.role.collectAsState().value) {
+                                is SignedInUserManager.Role.Technician -> {
                                     Spacer(modifier = Modifier.height(10.dp))
                                 }
 

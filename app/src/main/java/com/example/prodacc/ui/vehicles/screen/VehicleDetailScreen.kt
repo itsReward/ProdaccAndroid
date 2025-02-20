@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,12 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.AllJobCardListItem
 import com.example.designsystem.designComponents.Details
@@ -49,16 +47,13 @@ import com.example.designsystem.theme.LightCardGrey
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModel
-import com.example.prodacc.ui.vehicles.viewModels.VehicleDetailsViewModelFactory
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 
 @Composable
 fun VehicleDetailsScreen(
     navController: NavController,
     vehicleId: String,
-    viewModel: VehicleDetailsViewModel = viewModel(
-        factory = VehicleDetailsViewModelFactory(vehicleId)
-    )
+    viewModel: VehicleDetailsViewModel = hiltViewModel()
 ) {
     val vehicle = viewModel.vehicle.collectAsState().value
     val loadState = viewModel.loadState.collectAsState()
@@ -123,9 +118,9 @@ fun VehicleDetailsScreen(
                 horizontalArrangement = Arrangement.End
             ) {
 
-                when(SignedInUser.role){
-                    SignedInUser.Role.Supervisor -> {}
-                    SignedInUser.Role.Technician -> {}
+                when(viewModel.userRole.collectAsState().value){
+                    SignedInUserManager.Role.Supervisor -> {}
+                    SignedInUserManager.Role.Technician -> {}
                     else -> {
                         com.example.designsystem.designComponents.IconButton(
                             onClick = {
@@ -204,7 +199,7 @@ fun VehicleDetailsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 5.dp,),
+                            .padding(bottom = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {

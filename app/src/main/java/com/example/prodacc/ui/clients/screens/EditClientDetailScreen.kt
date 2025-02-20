@@ -16,7 +16,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
@@ -42,6 +41,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.ErrorStateColumn
 import com.example.designsystem.designComponents.IdleStateColumn
@@ -57,17 +57,12 @@ import com.example.designsystem.theme.male
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.clients.viewModels.EditClientDetailsViewModel
-import com.example.prodacc.ui.clients.viewModels.EditClientDetailsViewModelFactory
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditClientDetailScreen(
     navController: NavController,
-    clientId: String,
-    viewModel: EditClientDetailsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = EditClientDetailsViewModelFactory(clientId = clientId)
-    )
+    viewModel: EditClientDetailsViewModel = hiltViewModel()
 ) {
     val focusManager = LocalFocusManager.current
     val client = viewModel.client.collectAsState().value

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.CategorisedList
 import com.example.designsystem.designComponents.ListCategory
@@ -33,17 +33,15 @@ import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.clients.viewModels.ClientsViewModel
-import com.example.prodacc.ui.vehicles.VehiclesViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.prodacc.data.SignedInUser
-import com.prodacc.data.remote.TokenManager
+import com.prodacc.data.SignedInUserManager
 
 
 @Composable
 fun ClientsScreen(
     navController: NavController,
-    viewModel: ClientsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ClientsViewModel = hiltViewModel()
 ) {
     val clients = viewModel.clients.collectAsState().value.sortedBy { it.clientName.first() }.groupBy { it.clientName.first() }
         .map { ListCategory(name = it.key.toString(), items = it.value) }
@@ -66,7 +64,7 @@ fun ClientsScreen(
                             )
                         },
                         logOut = {
-                            TokenManager.saveToken(null)
+                            viewModel.logOut()
                             navController.navigate(Route.LogIn.path)
                         }
                     )
@@ -75,8 +73,8 @@ fun ClientsScreen(
             },
             bottomBar = { NavigationBar(navController) },
             floatingActionButton = {
-                when (SignedInUser.role){
-                    SignedInUser.Role.Admin -> {
+                when (viewModel.userRole.collectAsState().value){
+                    SignedInUserManager.Role.Admin -> {
                         FloatingActionButton(
                             onClick = { navController.navigate(Route.NewClient.path) },
                             shape = CircleShape,
@@ -85,7 +83,7 @@ fun ClientsScreen(
                             Icon(imageVector = Icons.Default.Add, contentDescription = "Add Client")
                         }
                     }
-                    SignedInUser.Role.ServiceAdvisor -> {
+                    SignedInUserManager.Role.ServiceAdvisor -> {
                         FloatingActionButton(
                             onClick = { navController.navigate(Route.NewClient.path) },
                             shape = CircleShape,

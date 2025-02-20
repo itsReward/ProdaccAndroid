@@ -16,19 +16,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
@@ -41,9 +37,7 @@ import com.example.designsystem.designComponents.FormattedTimeDisplay
 import com.example.designsystem.designComponents.MediumTitleText
 import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.Blue50
-import com.example.designsystem.theme.BlueA700
-import com.example.prodacc.ui.jobcards.viewModels.TimeSheetsViewModel
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.Timesheet
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -55,7 +49,7 @@ fun Timesheets(
 ) {
     val currentDateTime = LocalDate.now()
 
-    if (timeSheet != null){
+    if (timeSheet != null) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -81,7 +75,7 @@ fun Timesheets(
         }
 
 
-    } else{
+    } else {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -90,7 +84,7 @@ fun Timesheets(
                 .wrapContentHeight(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
-        ){
+        ) {
             Text(text = "Failed to load timesheet")
         }
     }
@@ -106,10 +100,11 @@ fun TimeSheetDialog(
     onDialogDismiss: () -> Unit,
     clockOut: (LocalDateTime) -> Unit,
     onReportChange: (String) -> Unit,
-    onSave: () -> Unit
-){
+    onSave: () -> Unit,
+    signedInEmployee: Employee
+) {
     val focusManager = LocalFocusManager.current
-    val enabled by remember{ mutableStateOf(SignedInUser.employee!!.id == timeSheet.technicianId)}
+    val enabled by remember { mutableStateOf(signedInEmployee.id == timeSheet.technicianId) }
 
     AnimatedVisibility(visible = timeSheetDialogVisibility) {
         Dialog(onDismissRequest = onDialogDismiss) {
@@ -157,11 +152,17 @@ fun TimeSheetDialog(
                 )
 
                 DateTimePickerTextField(
-                    value = timeSheet.clockInDateAndTime, onValueChange = {}, label = "Start", enabled = enabled
+                    value = timeSheet.clockInDateAndTime,
+                    onValueChange = {},
+                    label = "Start",
+                    enabled = enabled
                 )
 
                 DateTimePickerTextField(
-                    value = timeSheet.clockOutDateAndTime, onValueChange = clockOut, label = "Stop", enabled = enabled
+                    value = timeSheet.clockOutDateAndTime,
+                    onValueChange = clockOut,
+                    label = "Stop",
+                    enabled = enabled
                 )
                 OutlinedTextField(
                     value = timeSheet.report,
@@ -193,7 +194,7 @@ fun TimeSheetDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
 
-                    if (isTimesheetEdited){
+                    if (isTimesheetEdited) {
                         Button(onClick = onSave) {
                             Text(text = "Save")
                         }

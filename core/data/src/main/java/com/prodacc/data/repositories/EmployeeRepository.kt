@@ -1,18 +1,24 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.dao.Employee
-import com.prodacc.data.remote.dao.EmployeeJobCard
-import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.NewEmployee
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class EmployeeRepository {
-    private val service = ApiInstance.employeeService
+@Singleton
+class EmployeeRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val dispatcher: CoroutineDispatchers
+) {
+    private val service get() = apiServiceContainer.employeeService
 
-    suspend fun getEmployees(): LoadingResult {
-        return try {
+    suspend fun getEmployees(): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getAllEmployees()
             if (response.isSuccessful) {
                 LoadingResult.Success(response.body()!!)
@@ -28,8 +34,8 @@ class EmployeeRepository {
         }
     }
 
-    suspend fun getEmployee(id: UUID): LoadingResult {
-        return try {
+    suspend fun getEmployee(id: UUID): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = service.getEmployeeById(id)
             if (response.isSuccessful) {
 
@@ -51,8 +57,8 @@ class EmployeeRepository {
     }
 
 
-    suspend fun updateEmployee(id: UUID, employee: NewEmployee): LoadingResult {
-        return try {
+    suspend fun updateEmployee(id: UUID, employee: NewEmployee): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.updateEmployee(id, employee)
             if (response.isSuccessful) {
                 response.body()?.let {
@@ -69,8 +75,8 @@ class EmployeeRepository {
         }
     }
 
-    suspend fun deleteEmployee(id: UUID): LoadingResult {
-        return try {
+    suspend fun deleteEmployee(id: UUID): LoadingResult = withContext(dispatcher.io) {
+        try {
             val response = service.deleteEmployee(id.toString())
             if (response.isSuccessful) {
                 LoadingResult.Success()
@@ -86,8 +92,8 @@ class EmployeeRepository {
 
     }
 
-    suspend fun createEmployee(newEmployee: NewEmployee): LoadingResult {
-        return try {
+    suspend fun createEmployee(newEmployee: NewEmployee): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.createEmployee(newEmployee)
             if (response.isSuccessful) {
                 response.body()?.let {

@@ -1,28 +1,29 @@
 package com.example.prodacc.ui.clients.viewModels
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
+import javax.inject.Inject
 
-class EditClientDetailsViewModel(
-    private val clientRepository: ClientRepository = ClientRepository(),
-    private val clientId: String
+@HiltViewModel
+class EditClientDetailsViewModel @Inject constructor(
+    private val clientRepository: ClientRepository,
+    private val webSocketInstance: WebSocketInstance,
+   savedStateHandle: SavedStateHandle
 ):ViewModel() {
-
+    // Get employeeId from SavedStateHandle
+    private val clientId: String = checkNotNull(savedStateHandle["clientId"]) {
+        "clientId parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
 
     // Mutable state for client details
     private val _client = MutableStateFlow<Client?>(null)
@@ -126,7 +127,7 @@ class EditClientDetailsViewModel(
                         result.client?.let {
                             _client.value = it
                             refreshClient()
-                            WebSocketInstance.sendWebSocketMessage("UPDATE_CLIENT", it.id)
+                            webSocketInstance.sendWebSocketMessage("UPDATE_CLIENT", it.id)
                             _loadingState.value = LoadingState.Success
                         } ?: run {
                             _loadingState.value = LoadingState.Error("Failed to update client")
@@ -155,17 +156,4 @@ class EditClientDetailsViewModel(
         data class Error(val message : String): LoadingState()
     }
 
-}
-
-class EditClientDetailsViewModelFactory(private val clientId: String) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>,
-        extras: CreationExtras
-    ): T {
-        if (modelClass.isAssignableFrom(EditClientDetailsViewModel::class.java)) {
-            return EditClientDetailsViewModel(clientId = clientId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
 }

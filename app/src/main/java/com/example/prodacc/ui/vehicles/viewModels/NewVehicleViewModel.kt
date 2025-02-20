@@ -1,25 +1,25 @@
 package com.example.prodacc.ui.vehicles.viewModels
 
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.example.prodacc.ui.vehicles.stateClasses.NewVehicleStateClass
-import com.google.android.libraries.mapsplatform.transportation.consumer.model.Vehicle
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.repositories.ClientRepository
 import com.prodacc.data.repositories.VehicleRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
+import javax.inject.Inject
 
-class NewVehicleViewModel(
-    private val vehicleRepository: VehicleRepository = VehicleRepository(),
-    private val clientRepository: ClientRepository = ClientRepository()
+@HiltViewModel
+class NewVehicleViewModel @Inject constructor(
+    private val vehicleRepository: VehicleRepository,
+    private val clientRepository: ClientRepository,
+    private val webSocketInstance: WebSocketInstance
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NewVehicleStateClass())
     val uiState = _uiState.asStateFlow()
@@ -27,7 +27,7 @@ class NewVehicleViewModel(
     private val _saveState = MutableStateFlow<SaveState>(SaveState.Idle)
     val saveState = _saveState.asStateFlow()
 
-    private val _clients = MutableStateFlow<LoadEntities>(LoadEntities(null, null))
+    private val _clients = MutableStateFlow(LoadEntities(null, null))
     val clients = _clients.asStateFlow()
 
     private val _filteredClients = MutableStateFlow(_clients.value.clients)
@@ -140,7 +140,7 @@ class NewVehicleViewModel(
 
                         is VehicleRepository.LoadingResult.SingleEntity -> {
                             EventBus.emitVehicleEvents(EventBus.VehicleEvent.VehicleCreated)
-                            WebSocketInstance.sendWebSocketMessage(
+                            webSocketInstance.sendWebSocketMessage(
                                 "NEW_VEHICLE",
                                 vehicle.vehicle!!.id
                             )

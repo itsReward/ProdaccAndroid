@@ -1,32 +1,24 @@
-package com.prodacc.data.repositories;
+package com.prodacc.data.repositories
 
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonDeserializer
-import com.prodacc.data.remote.ApiInstance
-import com.prodacc.data.remote.dao.JobCard;
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
+import com.prodacc.data.remote.dao.JobCard
 import com.prodacc.data.remote.dao.NewJobCard
 import com.prodacc.data.remote.dao.NewJobCardStatus
-import okhttp3.ResponseBody
+import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class JobCardRepository {
-    private val jobCardService = ApiInstance.jobCardService
-    private val jobCardStatusService = ApiInstance.jobCardStatusService
+@Singleton
+class JobCardRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val dispatcher: CoroutineDispatchers
+){
+    private val jobCardService get() = apiServiceContainer.jobCardService
+    private val jobCardStatusService get() = apiServiceContainer.jobCardStatusService
 
-
-    val gson = GsonBuilder()
-        .registerTypeAdapter(LocalDateTime::class.java, JsonDeserializer { json, _, _ ->
-            // Adjust the parsing format to match your actual JSON
-            val dateString = json.asString
-            LocalDateTime.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-            // Or use a custom formatter if the date format is different
-            // LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        })
-        .create()
 
     sealed class LoadingResult {
         data class Success(val jobCards: List<JobCard>) : LoadingResult()
@@ -37,8 +29,8 @@ class JobCardRepository {
     }
 
 
-    suspend fun newJobCard(newJobCard: NewJobCard): LoadingResult {
-        return try {
+    suspend fun newJobCard(newJobCard: NewJobCard): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = jobCardService.createJobCard(newJobCard)
             when {
                 response.isSuccessful -> {
@@ -69,8 +61,8 @@ class JobCardRepository {
         }
     }
 
-    suspend fun getJobCards(): LoadingResult {
-        return try {
+    suspend fun getJobCards(): LoadingResult = withContext(dispatcher.io){
+        try {
 
             val jobCards = jobCardService.getJobCards()
 
@@ -79,7 +71,7 @@ class JobCardRepository {
             if (jobCards.isSuccessful){
                 LoadingResult.Success(jobCards.body()?: emptyList())
             } else {
-                return LoadingResult.Error(jobCards.message())
+                LoadingResult.Error(jobCards.message())
             }
         } catch (e: Exception) {
             when (e) {
@@ -93,8 +85,8 @@ class JobCardRepository {
 
 
     }
-    suspend fun getJobCard(id: UUID): LoadingResult {
-        return try {
+    suspend fun getJobCard(id: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = jobCardService.getJobCard(id)
             if (response.isSuccessful){
                 response.body()?.let { LoadingResult.SingleEntity(it) } ?: LoadingResult.Error("Server returned null")
@@ -110,8 +102,8 @@ class JobCardRepository {
 
     }
 
-    suspend fun updateJobCard(id: UUID, jobCard: JobCard): LoadingResult{
-        return try {
+    suspend fun updateJobCard(id: UUID, jobCard: JobCard): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = jobCardService.updateJobCard(id, jobCard)
             println(response.code())
             println(response.body())
@@ -130,8 +122,8 @@ class JobCardRepository {
         }
     }
 
-    suspend fun deleteJobCard(id: UUID) : String {
-        return try {
+    suspend fun deleteJobCard(id: UUID) : String = withContext(dispatcher.io){
+        try {
             val response = jobCardService.deleteJobCard(id)
             if (response.isSuccessful){
                 response.body()?.let { "deleted successfully" } ?: "Server returned null"

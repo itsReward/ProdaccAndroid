@@ -1,18 +1,26 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.NewStateChecklist
 import com.prodacc.data.remote.dao.StateChecklist
+import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.time.LocalDateTime
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class StateChecklistRepository {
-    val service = ApiInstance.stateChecklistService
+@Singleton
+class StateChecklistRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val webSocketInstance: WebSocketInstance,
+    private val dispatcher: CoroutineDispatchers
+){
+    val service get() = apiServiceContainer.stateChecklistService
 
-    suspend fun getStateChecklist(id: UUID): LoadingResults {
-        return try {
+    suspend fun getStateChecklist(id: UUID): LoadingResults = withContext(dispatcher.io){
+        try {
             val response = service.getStateChecklistByJobCard(id)
 
             if (response.isSuccessful){
@@ -30,11 +38,11 @@ class StateChecklistRepository {
         }
     }
 
-    suspend fun newStateChecklist(checklist: NewStateChecklist): LoadingResults {
-        return try {
+    suspend fun newStateChecklist(checklist: NewStateChecklist): LoadingResults = withContext(dispatcher.io){
+        try {
             val response = service.createStateChecklist(checklist)
             if (response.isSuccessful){
-                WebSocketInstance.sendWebSocketMessage("NEW_STATE_CHECKLIST", checklist.jobCardId.toString())
+                webSocketInstance.sendWebSocketMessage("NEW_STATE_CHECKLIST", checklist.jobCardId.toString())
                 LoadingResults.Success(response.body()!!)
             } else {
                 LoadingResults.Error(response.message())
@@ -47,11 +55,11 @@ class StateChecklistRepository {
         }
     }
 
-    suspend fun updateStateChecklist(id: UUID, checklist: NewStateChecklist): LoadingResults {
-        return try {
+    suspend fun updateStateChecklist(id: UUID, checklist: NewStateChecklist): LoadingResults = withContext(dispatcher.io){
+        try {
             val response = service.updateStateChecklist(id, checklist)
             if (response.isSuccessful){
-                WebSocketInstance.sendWebSocketMessage("UPDATE_STATE_CHECKLIST", checklist.jobCardId.toString())
+                webSocketInstance.sendWebSocketMessage("UPDATE_STATE_CHECKLIST", checklist.jobCardId.toString())
                 LoadingResults.Success(response.body()!!)
             } else {
                 LoadingResults.Error(response.message())

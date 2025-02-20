@@ -56,6 +56,8 @@ dependencies {
     implementation(project(":core:auth"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:data"))
+    implementation(project(":products"))
+    implementation(project(":navigation"))
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")

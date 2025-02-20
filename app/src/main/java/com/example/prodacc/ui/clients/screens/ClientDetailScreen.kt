@@ -2,7 +2,6 @@ package com.example.prodacc.ui.clients.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -42,9 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.ClientVehicleRow
 import com.example.designsystem.designComponents.DisplayTextField
@@ -55,27 +52,20 @@ import com.example.designsystem.designComponents.ProfileAvatar
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGrey
-import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.companyIcon
 import com.example.designsystem.theme.errorIcon
 import com.example.designsystem.theme.workIcon
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModel
-import com.example.prodacc.ui.clients.viewModels.ClientDetailsViewModelFactory
-import com.example.prodacc.ui.employees.viewModels.EmployeeDetailsViewModel
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import kotlinx.coroutines.delay
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ClientDetailScreen(
     navController: NavController,
-    clientId: String,
-    viewModel: ClientDetailsViewModel = viewModel(
-        factory = ClientDetailsViewModelFactory(clientId)
-    )
+    viewModel: ClientDetailsViewModel = hiltViewModel()
 ) {
     val client = viewModel.client.collectAsState().value
 
@@ -97,8 +87,8 @@ fun ClientDetailScreen(
                     },
                     actions = {
 
-                        when (SignedInUser.role){
-                            is SignedInUser.Role.Admin -> {
+                        when (viewModel.currentUserRole.collectAsState().value){
+                            is SignedInUserManager.Role.Admin -> {
                                 IconButton(onClick = {
                                     navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
                                 }) {
@@ -109,7 +99,7 @@ fun ClientDetailScreen(
                                     Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete")
                                 }
                             }
-                            is SignedInUser.Role.ServiceAdvisor -> {
+                            is SignedInUserManager.Role.ServiceAdvisor -> {
                                 IconButton(onClick = {
                                     navController.navigate(Route.EditClient.path.replace("{clientId}", client!!.id.toString()))
                                 }) {
@@ -242,8 +232,8 @@ fun ClientDetailScreen(
                                 }
 
 
-                                when (SignedInUser.role){
-                                    SignedInUser.Role.Supervisor -> {
+                                when (viewModel.currentUserRole.collectAsState().value){
+                                    SignedInUserManager.Role.Supervisor -> {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center,
@@ -259,7 +249,7 @@ fun ClientDetailScreen(
                                         }
 
                                     }
-                                    SignedInUser.Role.Technician -> {
+                                    SignedInUserManager.Role.Technician -> {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center,
@@ -318,8 +308,8 @@ fun ClientDetailScreen(
                                 }
 
 
-                                when (SignedInUser.role){
-                                    SignedInUser.Role.Supervisor -> {
+                                when (viewModel.currentUserRole.collectAsState().value){
+                                    SignedInUserManager.Role.Supervisor -> {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center,
@@ -334,7 +324,7 @@ fun ClientDetailScreen(
                                             Text(text = "Not Authorised ")
                                         }
                                     }
-                                    SignedInUser.Role.Technician -> {
+                                    SignedInUserManager.Role.Technician -> {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center,
@@ -388,9 +378,9 @@ fun ClientDetailScreen(
                             ){
                                 MediumTitleText(name = "Vehicles", modifier = Modifier.padding(start = 20.dp, bottom = 10.dp))
 
-                                when(SignedInUser.role){
-                                    SignedInUser.Role.Supervisor -> {}
-                                    SignedInUser.Role.Technician -> {}
+                                when(viewModel.currentUserRole.collectAsState().value){
+                                    SignedInUserManager.Role.Supervisor -> {}
+                                    SignedInUserManager.Role.Technician -> {}
                                     else -> {
                                         IconButton(onClick = {navController.navigate(Route.NewVehicle.path)}){
                                             Icon(

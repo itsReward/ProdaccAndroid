@@ -21,9 +21,10 @@ import com.example.designsystem.theme.ProdaccTheme
 import com.example.prodacc.navigation.AppNavigation
 import com.prodacc.data.NotificationManager
 import com.prodacc.data.NotificationService
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity(){
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -34,7 +35,6 @@ class MainActivity : ComponentActivity(){
             // Permission is granted
             Log.d("Permissions", "Notification permission granted")
             // Initialize your notification channel here if needed
-            NotificationManager.createNotificationChannels(this)
         } else {
             // Show settings dialog if permission is denied
             if (!shouldShowRequestPermissionRationale(POST_NOTIFICATIONS)) {
@@ -118,7 +118,6 @@ class MainActivity : ComponentActivity(){
                     POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     // Permission is already granted
-                    NotificationManager.createNotificationChannels(this)
                 }
                 shouldShowRequestPermissionRationale(POST_NOTIFICATIONS) -> {
                     // Show in-app rationale about why notification is needed

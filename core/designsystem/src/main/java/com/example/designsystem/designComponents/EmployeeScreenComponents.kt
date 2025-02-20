@@ -1,14 +1,11 @@
 package com.example.designsystem.designComponents
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -21,12 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.wear.compose.material.Text
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGrey
 import com.prodacc.data.remote.dao.Employee
-import java.util.UUID
 
 
 @Composable
@@ -99,7 +94,7 @@ fun EmployeeDropDown(
         onDismissRequest = onDismissRequest,
         modifier = Modifier.fillMaxWidth()
     ) {
-        list.forEach { it ->
+        list.forEach {
             DropdownMenuItem(
                 text = {
                     Text(

@@ -36,7 +36,7 @@ import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.logOutIcon
 import com.example.designsystem.theme.pretendard
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,7 +98,8 @@ fun TopBar(title: String, onSearchClick: () -> Unit, logOut: () -> Unit) {
 }
 
 @Composable
-fun JobCardsScreenTopBar(onSearchClick: () -> Unit, logOut: () -> Unit, products: () -> Unit) {
+fun JobCardsScreenTopBar(
+    onSearchClick: () -> Unit, logOut: () -> Unit, products: () -> Unit, role: SignedInUserManager.Role) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,8 +126,8 @@ fun JobCardsScreenTopBar(onSearchClick: () -> Unit, logOut: () -> Unit, products
                 icon = Icons.Default.Search,
                 color = Color.DarkGray
             )
-            when(SignedInUser.role){
-                SignedInUser.Role.Technician -> {
+            when(role){
+                SignedInUserManager.Role.Technician -> {
                     IconButton(onClick = logOut, icon = logOutIcon, color = Color.DarkGray)
                 }
                 else -> {

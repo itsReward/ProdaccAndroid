@@ -3,14 +3,11 @@ package com.example.prodacc.ui.vehicles.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,27 +25,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.TopBar
-import com.example.designsystem.designComponents.VehicleStatusFilters
 import com.example.designsystem.designComponents.VehiclesList
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.LightCardGrey
-import com.example.designsystem.theme.LightGrey
 import com.example.prodacc.navigation.NavigationBar
 import com.example.prodacc.navigation.Route
 import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.vehicles.VehiclesViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.prodacc.data.SignedInUser
-import com.prodacc.data.remote.TokenManager
+import com.prodacc.data.SignedInUserManager
 
 @Composable
 fun VehiclesScreen(
     navController: NavController,
-    viewModel: VehiclesViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: VehiclesViewModel = hiltViewModel()
 )
 {
     val vehicles = viewModel.vehicles.collectAsState().value
@@ -72,7 +67,7 @@ fun VehiclesScreen(
                             )
                         },
                         logOut = {
-                            TokenManager.saveToken(null)
+                            viewModel.logOut()
                             navController.navigate(Route.LogIn.path)
                         }
                     )
@@ -82,9 +77,9 @@ fun VehiclesScreen(
             bottomBar = { NavigationBar(navController) },
             floatingActionButton = {
 
-                when(SignedInUser.role){
-                    SignedInUser.Role.Supervisor -> {}
-                    SignedInUser.Role.Technician -> {}
+                when(viewModel.userRole.collectAsState().value){
+                    SignedInUserManager.Role.Supervisor -> {}
+                    SignedInUserManager.Role.Technician -> {}
                     else -> {
                         FloatingActionButton(
                             onClick = {

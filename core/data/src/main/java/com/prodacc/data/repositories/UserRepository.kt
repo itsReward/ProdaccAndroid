@@ -1,16 +1,24 @@
 package com.prodacc.data.repositories
 
-import com.prodacc.data.remote.ApiInstance
+import com.prodacc.data.di.CoroutineDispatchers
+import com.prodacc.data.remote.ApiServiceContainer
 import com.prodacc.data.remote.dao.NewUser
 import com.prodacc.data.remote.dao.User
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class UserRepository {
-    private val service = ApiInstance.userService
+@Singleton
+class UserRepository @Inject constructor(
+    private val apiServiceContainer: ApiServiceContainer,
+    private val dispatcher: CoroutineDispatchers
+){
+    private val service get() = apiServiceContainer.userService
 
-    suspend fun getAllUsers(): LoadingResult {
-        return try {
+    suspend fun getAllUsers(): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getAllUsers()
             if (response.isSuccessful) {
                 println("Response Code: ${response.code()}")
@@ -28,8 +36,8 @@ class UserRepository {
         }
     }
 
-    suspend fun getUserById(id: UUID): LoadingResult {
-        return try {
+    suspend fun getUserById(id: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getUserById(id)
             println(response.body())
             if (response.isSuccessful) {
@@ -50,8 +58,8 @@ class UserRepository {
         }
     }
 
-    suspend fun getUserByUsername(username: String): LoadingResult {
-        return try {
+    suspend fun getUserByUsername(username: String): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getUserByUsername(username)
             println(response)
             if (response.isSuccessful) {
@@ -70,8 +78,8 @@ class UserRepository {
         }
     }
 
-    suspend fun getUserByEmail(email: String): LoadingResult {
-        return try {
+    suspend fun getUserByEmail(email: String): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getUserByEmail(email)
             if (response.isSuccessful) {
                 response.body()?.let {
@@ -88,8 +96,8 @@ class UserRepository {
         }
     }
 
-    suspend fun getUserByEmployeeId(employeeId: UUID): LoadingResult {
-        return try {
+    suspend fun getUserByEmployeeId(employeeId: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.getUserByEmployeeId(employeeId)
             if (response.isSuccessful) {
                 response.body()?.let {
@@ -106,8 +114,8 @@ class UserRepository {
         }
     }
 
-    suspend fun createUser(newUser: NewUser): LoadingResult {
-        return try {
+    suspend fun createUser(newUser: NewUser): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.createUser(newUser)
             if (response.isSuccessful) {
                 response.body()?.let {
@@ -124,8 +132,8 @@ class UserRepository {
         }
     }
 
-    suspend fun updateUser(id: UUID, userUpdate: NewUser): LoadingResult {
-        return try {
+    suspend fun updateUser(id: UUID, userUpdate: NewUser): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.updateUser(id, userUpdate)
             if (response.isSuccessful) {
                 response.body()?.let {
@@ -142,8 +150,8 @@ class UserRepository {
         }
     }
 
-    suspend fun deleteUser(id: UUID): LoadingResult {
-        return try {
+    suspend fun deleteUser(id: UUID): LoadingResult = withContext(dispatcher.io){
+        try {
             val response = service.deleteUser(id)
             println(response.raw())
             if (response.isSuccessful) {

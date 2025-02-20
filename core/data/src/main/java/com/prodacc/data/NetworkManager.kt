@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,15 +18,20 @@ import java.lang.ref.WeakReference
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.logging.Logger
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class NetworkManager private constructor(private val context: Context) {
+@Singleton
+class NetworkManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
     // Use WeakReference for context
     private val contextRef = WeakReference(context.applicationContext)
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val monitorScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val logger = Logger.getLogger(NetworkManager::class.java.name)
 
-    private val localServerIp = "10.78.238.123"
+    val localServerIp = "10.147.111.123"
     private val remoteServer = "api.silverstarzw.com"
     private val port = "5000"
 

@@ -2,18 +2,25 @@ package com.example.prodacc.ui.login.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.prodacc.data.SignedInUser
-import com.prodacc.data.remote.ApiInstance
-import com.prodacc.data.remote.WebSocketInstance
+import com.prodacc.data.NetworkManager
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.repositories.LogInRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import kotlin.math.sign
 
-
-class LogInViewModel(
-    private val logInRepository: LogInRepository = LogInRepository()
+@HiltViewModel
+class LogInViewModel @Inject constructor(
+    private val logInRepository: LogInRepository,
+    networkManager: NetworkManager,
+    private val signedInUserManager: SignedInUserManager,
 ) : ViewModel() {
+    val url = networkManager.localServerIp
+
+    val signedInEmployee = signedInUserManager.employee
 
     private val _navigateToJobCards = MutableStateFlow(false)
     val navigateToJobCards = _navigateToJobCards.asStateFlow()
@@ -59,10 +66,10 @@ class LogInViewModel(
             logInRepository.login(username.value, password.value).let { result ->
                 when (result) {
                     is LogInRepository.LoginResult.Success -> {
-                        when (val user = SignedInUser.initialize(username.value)){
+                        when (val user = signedInUserManager.initialize(username.value)){
 
-                            is SignedInUser.UserSignInResult.Error -> LogInState.Error(user.message)
-                            is SignedInUser.UserSignInResult.Success -> {
+                            is SignedInUserManager.UserSignInResult.Error -> LogInState.Error(user.message)
+                            is SignedInUserManager.UserSignInResult.Success -> {
                                 //WebSocketInstance.reconnectWebSocket()
                                 _loginState.value = LogInState.Success(result.token)
                                 // Set navigation state instead of directly navigating

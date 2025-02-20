@@ -1,8 +1,6 @@
 package com.example.prodacc.ui.employees.viewModels
 
 import android.util.Log
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prodacc.ui.employees.stateClasses.NewEmployeeState
@@ -10,18 +8,22 @@ import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.NewEmployee
 import com.prodacc.data.repositories.EmployeeRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
-class NewEmployeeViewModel(
-    private val employeeRepository: EmployeeRepository = EmployeeRepository()
+@HiltViewModel
+class NewEmployeeViewModel @Inject constructor(
+    private val employeeRepository: EmployeeRepository,
+    private val webSocketInstance: WebSocketInstance,
 ): ViewModel() {
-    private val _state = MutableStateFlow<NewEmployeeState>(NewEmployeeState())
+    private val _state = MutableStateFlow(NewEmployeeState())
     val state = _state.asStateFlow()
 
     private val _loadState = MutableStateFlow<SaveState>(SaveState.Idle)
@@ -89,13 +91,13 @@ class NewEmployeeViewModel(
                             // Save was successful
                             EventBus.emitEmployeeEvent(EventBus.EmployeeEvent.EmployeeCreated)
                             result.employees?.get(0)
-                                ?.let { WebSocketInstance.sendWebSocketMessage("NEW_EMPLOYEE", it.id) }
+                                ?.let { webSocketInstance.sendWebSocketMessage("NEW_EMPLOYEE", it.id) }
                             _loadState.value = SaveState.Success
                         }
                         is EmployeeRepository.LoadingResult.Error -> {
                             // Handle specific error scenarios
                             _loadState.value = SaveState.Error(
-                                result.message ?: "Failed to save employee"
+                                result.message
                             )
                         }
                         is EmployeeRepository.LoadingResult.NetworkError -> {
@@ -130,7 +132,7 @@ class NewEmployeeViewModel(
     // Input validation method
     private fun validateEmployeeData(): Boolean {
         try {
-            val currentState = state.value!!
+            val currentState = state.value
             return when {
                 currentState.employeeName?.isBlank() == true -> {
                     _loadState.value = SaveState.Error("First name cannot be empty")

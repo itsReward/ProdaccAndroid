@@ -1,14 +1,9 @@
 package com.example.prodacc.ui.search.screen
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import com.example.prodacc.ui.jobcards.viewModels.LoadingState
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.JobCard
@@ -18,19 +13,29 @@ import com.prodacc.data.repositories.EmployeeRepository
 import com.prodacc.data.repositories.JobCardRepository
 import com.prodacc.data.repositories.JobCardTechnicianRepository
 import com.prodacc.data.repositories.VehicleRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
+import javax.inject.Inject
 
-class SearchViewModel(
-    private val jobCardRepository: JobCardRepository = JobCardRepository(),
-    private val employeeRepository: EmployeeRepository = EmployeeRepository(),
-    private val clientRepository: ClientRepository = ClientRepository(),
-    private val vehicleRepository: VehicleRepository = VehicleRepository(),
-    private val jobCardTechnicianRepository: JobCardTechnicianRepository = JobCardTechnicianRepository(),
-    private val searchScreen: String
+@HiltViewModel
+class SearchViewModel @Inject constructor(
+    private val jobCardRepository: JobCardRepository,
+    private val employeeRepository: EmployeeRepository,
+    private val clientRepository: ClientRepository,
+    private val vehicleRepository: VehicleRepository,
+    private val jobCardTechnicianRepository: JobCardTechnicianRepository,
+    private val signedInUserManager: SignedInUserManager,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    // Get vehicleId from SavedStateHandle
+    private val searchScreen: String = checkNotNull(savedStateHandle["title"]) {
+        "title parameter wasn't found. Please make sure it's passed in the navigation arguments."
+    }
+
     private val searchQuery = MutableStateFlow("")
     val searchQueryState = searchQuery.asStateFlow()
 
@@ -155,22 +160,35 @@ class SearchViewModel(
     }
 
     private suspend fun fetchJobCards() {
-        when(SignedInUser.role){
-            SignedInUser.Role.Technician -> {
-                when(val jobCardIds = jobCardTechnicianRepository.getJobCardsForTechnician(SignedInUser.employee!!.id)){
-                    is JobCardTechnicianRepository.LoadingResult.Error ->  _loadingState.value = LoadingState.Error(jobCardIds.message)
-                    is JobCardTechnicianRepository.LoadingResult.Loading ->  _loadingState.value = LoadingState.Loading
+        when (signedInUserManager.role.value) {
+            SignedInUserManager.Role.Technician -> {
+                when (val jobCardIds =
+                    jobCardTechnicianRepository.getJobCardsForTechnician(signedInUserManager.employee.value!!.id)) {
+                    is JobCardTechnicianRepository.LoadingResult.Error -> _loadingState.value =
+                        LoadingState.Error(jobCardIds.message)
+
+                    is JobCardTechnicianRepository.LoadingResult.Loading -> _loadingState.value =
+                        LoadingState.Loading
+
                     is JobCardTechnicianRepository.LoadingResult.Success -> {
                         try {
                             jobCardIds.list.forEach {
-                                when(val response = jobCardRepository.getJobCard(it)){
-                                    is JobCardRepository.LoadingResult.Error -> _loadingState.value = LoadingState.Error(response.message)
-                                    is JobCardRepository.LoadingResult.ErrorSingleMessage ->  _loadingState.value = LoadingState.Error(response.message)
-                                    is JobCardRepository.LoadingResult.NetworkError ->  _loadingState.value = LoadingState.Error("Network Error")
+                                when (val response = jobCardRepository.getJobCard(it)) {
+                                    is JobCardRepository.LoadingResult.Error -> _loadingState.value =
+                                        LoadingState.Error(response.message)
+
+                                    is JobCardRepository.LoadingResult.ErrorSingleMessage -> _loadingState.value =
+                                        LoadingState.Error(response.message)
+
+                                    is JobCardRepository.LoadingResult.NetworkError -> _loadingState.value =
+                                        LoadingState.Error("Network Error")
+
                                     is JobCardRepository.LoadingResult.SingleEntity -> {
-                                        jobCards.value+=response.jobCard
+                                        jobCards.value += response.jobCard
                                     }
-                                    is JobCardRepository.LoadingResult.Success -> {/*Will never happen for a single entity search*/}
+
+                                    is JobCardRepository.LoadingResult.Success -> {/*Will never happen for a single entity search*/
+                                    }
                                 }
                             }
                         } finally {
@@ -181,12 +199,19 @@ class SearchViewModel(
                     }
                 }
             }
+
             else -> {
                 try {
                     when (val response = jobCardRepository.getJobCards()) {
-                        is JobCardRepository.LoadingResult.Error -> _loadingState.value = LoadingState.Error(response.message)
-                        is JobCardRepository.LoadingResult.ErrorSingleMessage ->  _loadingState.value = LoadingState.Error(response.message)
-                        is JobCardRepository.LoadingResult.NetworkError ->  _loadingState.value = LoadingState.Error("Network Error")
+                        is JobCardRepository.LoadingResult.Error -> _loadingState.value =
+                            LoadingState.Error(response.message)
+
+                        is JobCardRepository.LoadingResult.ErrorSingleMessage -> _loadingState.value =
+                            LoadingState.Error(response.message)
+
+                        is JobCardRepository.LoadingResult.NetworkError -> _loadingState.value =
+                            LoadingState.Error("Network Error")
+
                         is JobCardRepository.LoadingResult.SingleEntity -> _loadingState.value =
                             LoadingState.Error("Returned one entity instead of list")
 
@@ -220,7 +245,7 @@ class SearchViewModel(
     }
 
     private fun searchEmployees() {
-        if (searchQuery.value == ""){
+        if (searchQuery.value == "") {
             _filteredEmployees.value = employees.value
         } else _filteredEmployees.value = employees.value.filter {
             it.employeeName.contains(searchQuery.value, ignoreCase = true)
@@ -231,7 +256,7 @@ class SearchViewModel(
     }
 
     private fun searchVehicles() {
-        if (searchQuery.value == ""){
+        if (searchQuery.value == "") {
             _filteredVehicles.value = vehicles.value
         } else _filteredVehicles.value = vehicles.value.filter {
             it.regNumber.contains(searchQuery.value, ignoreCase = true)
@@ -241,15 +266,16 @@ class SearchViewModel(
     }
 
     private fun searchClients() {
-        if (searchQuery.value == ""){
+        if (searchQuery.value == "") {
             _filteredClients.value = clients.value
         } else _filteredClients.value = clients.value.filter {
             it.clientName.contains(searchQuery.value, ignoreCase = true)
-                    || it.clientSurname.contains(searchQuery.value, ignoreCase = true) }
+                    || it.clientSurname.contains(searchQuery.value, ignoreCase = true)
+        }
     }
 
     private fun searchJobCards() {
-        if (searchQuery.value == ""){
+        if (searchQuery.value == "") {
             _filteredJobCards.value = jobCards.value
         } else _filteredJobCards.value = jobCards.value.filter {
             it.jobCardName.contains(searchQuery.value, ignoreCase = true)
@@ -278,16 +304,4 @@ class SearchViewModel(
     }
 
 
-}
-
-class SearchViewModelFactory(private val searchScreen: String) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>, extras: CreationExtras
-    ): T {
-        if (modelClass.isAssignableFrom(SearchViewModel::class.java)) {
-            return SearchViewModel(searchScreen = searchScreen) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
 }

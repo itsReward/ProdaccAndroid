@@ -13,8 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,13 +20,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,10 +35,10 @@ import com.example.designsystem.designComponents.FormattedTime
 import com.example.designsystem.designComponents.IconButton
 import com.example.designsystem.designComponents.LoadingStateColumn
 import com.example.prodacc.ui.jobcards.viewModels.ServiceChecklistViewModel
-import com.prodacc.data.SignedInUser
+import com.prodacc.data.SignedInUserManager
+import com.prodacc.data.remote.dao.Employee
 import com.prodacc.data.remote.dao.ServiceChecklist
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 @Composable
 fun ServiceChecklistSection(
@@ -52,7 +48,9 @@ fun ServiceChecklistSection(
     onRefreshChecklist: () -> Unit,
     onSaveServiceChecklist: (Map<String, String>) -> Unit,
     resetSaveState: () -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    userRole: SignedInUserManager.Role,
+    signedInEmployee: Employee
 ) {
     when (loadingState) {
         is ServiceChecklistViewModel.ServiceChecklistLoadingState.Error -> {
@@ -82,24 +80,26 @@ fun ServiceChecklistSection(
                 }
 
                 else -> {
-                    if (serviceChecklist == null && SignedInUser.role != SignedInUser.Role.Technician && SignedInUser.role != SignedInUser.Role.Admin ){
-                        Row (
+                    if (serviceChecklist == null && userRole != SignedInUserManager.Role.Technician && userRole != SignedInUserManager.Role.Admin) {
+                        Row(
                             modifier = Modifier.fillMaxSize(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
-                        ){
+                        ) {
                             IconButton(
                                 onClick = onClose,
-                                icon = Icons.Default.ArrowBack,
+                                icon = Icons.AutoMirrored.Filled.ArrowBack,
                                 color = Color.DarkGray
                             )
                             Text("Technician has not created service checklist")
                         }
-                    }else {
+                    } else {
                         ServiceChecklistSectionContent(
                             existingChecklist = serviceChecklist,
                             onClose = onClose,
-                            onSave = { checklist -> onSaveServiceChecklist(checklist) }
+                            onSave = { checklist -> onSaveServiceChecklist(checklist) },
+                            signedInEmployee = signedInEmployee,
+                            role = userRole
                         )
                     }
 
@@ -114,7 +114,9 @@ fun ServiceChecklistSection(
 fun ServiceChecklistSectionContent(
     existingChecklist: ServiceChecklist?,
     onClose: () -> Unit,
-    onSave: (Map<String, String>) -> Unit
+    onSave: (Map<String, String>) -> Unit,
+    signedInEmployee: Employee,
+    role: SignedInUserManager.Role
 ) {
     val scrollState = rememberScrollState()
     val options = listOf("OK", "Rectified", "Not Authorised")
@@ -150,8 +152,6 @@ fun ServiceChecklistSectionContent(
             mutableStateOf(existingChecklist?.checklist?.get("coolantPressureTest") ?: "OK")
         )
     }
-
-    val date = remember { mutableStateOf(existingChecklist?.created ?: LocalDateTime.now()) }
 
     Scaffold(
         topBar = {
@@ -195,7 +195,7 @@ fun ServiceChecklistSectionContent(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (existingChecklist!= null){
+                        if (existingChecklist != null) {
                             Row(
                                 verticalAlignment = Alignment.Bottom,
                             ) {
@@ -208,7 +208,7 @@ fun ServiceChecklistSectionContent(
                             ) {
                                 BodyText(text = "Created on: ")
                                 FormattedTime(time = LocalDateTime.now())
-                                BodyText(text = " by ${existingChecklist?.technicianName ?: SignedInUser.user!!.employeeName } ${SignedInUser.user!!.employeeSurname}")
+                                BodyText(text = " by ${signedInEmployee.employeeName} ${signedInEmployee.employeeSurname}")
                             }
                         }
                     }
@@ -231,9 +231,11 @@ fun ServiceChecklistSectionContent(
                 horizontalArrangement = Arrangement.End
             ) {
 
-                when(SignedInUser.role){
-                    SignedInUser.Role.Supervisor -> {}
-                    SignedInUser.Role.ServiceAdvisor -> {}
+
+
+                when (role) {
+                    SignedInUserManager.Role.Supervisor -> {}
+                    SignedInUserManager.Role.ServiceAdvisor -> {}
                     else -> {
                         Button(
                             onClick = {
@@ -243,7 +245,7 @@ fun ServiceChecklistSectionContent(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text(if (existingChecklist==null)"Save" else "Update")
+                            Text(if (existingChecklist == null) "Save" else "Update")
                         }
                     }
                 }

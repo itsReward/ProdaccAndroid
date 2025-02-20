@@ -36,4 +36,6 @@ sealed class Route(val path: String) {
     //Comments Screen
     data object Comments: Route("comments/{jobId}")
 
+    //Products Screen
+    data object Products: Route("products")
 }

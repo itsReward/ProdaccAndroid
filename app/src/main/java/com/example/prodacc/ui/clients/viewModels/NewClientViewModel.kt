@@ -3,19 +3,22 @@ package com.example.prodacc.ui.clients.viewModels
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.prodacc.ui.WebSocketStateIndicator
 import com.example.prodacc.ui.clients.stateClasses.AddClientState
 import com.example.prodacc.ui.jobcards.viewModels.EventBus
 import com.prodacc.data.remote.WebSocketInstance
 import com.prodacc.data.remote.dao.Client
 import com.prodacc.data.remote.dao.NewClient
 import com.prodacc.data.repositories.ClientRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class NewClientViewModel(
-    private val clientRepository: ClientRepository = ClientRepository()
+@HiltViewModel
+class NewClientViewModel @Inject constructor(
+    private val clientRepository: ClientRepository,
+    private val webSocketInstance: WebSocketInstance
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AddClientState())
     val uiState = _uiState.asStateFlow()
@@ -82,9 +85,7 @@ class NewClientViewModel(
         viewModelScope.launch {
             try {
                 _saveState.value = SaveState.Loading
-                val result = clientRepository.createClient(state.toNewClient())
-
-                when (result) {
+                when (val result = clientRepository.createClient(state.toNewClient())) {
                     is ClientRepository.LoadingResult.Error -> {
                         _saveState.value = SaveState.Error(result.message ?: "Error")
                     }
@@ -102,7 +103,7 @@ class NewClientViewModel(
                         if (result.client == null) {
                             _saveState.value = SaveState.Error("Returned Null Value")
                         } else {
-                            WebSocketInstance.sendWebSocketMessage("NEW_CLIENT", result.client!!.id)
+                            webSocketInstance.sendWebSocketMessage("NEW_CLIENT", result.client!!.id)
                             _saveState.value = SaveState.Success(result.client!!)
                         }
 
