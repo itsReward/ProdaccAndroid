@@ -8,6 +8,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -29,6 +31,7 @@ import com.example.designsystem.theme.Grey
 import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.car
 import com.example.designsystem.theme.categories
+import com.example.designsystem.theme.history
 import com.example.designsystem.theme.work
 
 @Composable
@@ -40,11 +43,12 @@ fun NavigationBar(navController: NavController) {
         Route.Products.path -> 0
         Route.Vehicles.path -> 1
         Route.Categories.path -> 2
+        Route.History.path -> 3
         else -> 0 // Default to Products
     }
 
 
-    val items = listOf("Products", "Vehicles", "Categories")
+    val items = listOf("Products", "Vehicles", "Categories", "History")
 
     androidx.compose.material3.NavigationBar(
         containerColor = Color.Transparent,
@@ -120,6 +124,13 @@ fun NavigationBar(navController: NavController) {
                                 )
                             }
                         }
+                        "History" -> {
+                            navController.navigate(Route.History.path){
+                                popUpTo(
+                                    Route.Products.path
+                                )
+                            }
+                        }
 
                     }
                 },
@@ -152,8 +163,12 @@ fun NavigationBarItemIcon(item: String, modifier: Modifier) {
             Icon(imageVector = categories, contentDescription = "Categories", modifier = Modifier )
         }
 
+        "History" -> {
+            Icon(imageVector = history, contentDescription = "History" )
+        }
+
         else -> {
-            //Icon(imageVector = Icons.Rounded.Home, contentDescription = "Home" )
+
         }
     }
 }

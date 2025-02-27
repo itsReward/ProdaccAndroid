@@ -2,6 +2,7 @@ package com.example.designsystem.theme
 
 import android.app.Activity
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.rounded.Chat
@@ -12,6 +13,8 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
@@ -110,6 +113,8 @@ val bookmarkFull = Icons.Default.Bookmark
 val chat = Icons.AutoMirrored.Rounded.Chat
 val send = Icons.AutoMirrored.Filled.Send
 val categories = Icons.Filled.Category
+val label = Icons.AutoMirrored.Filled.Label
+val history = Icons.Default.History
 
 val pretendard = FontFamily(
     Font(R.font.pretendard_thin, FontWeight.Thin),

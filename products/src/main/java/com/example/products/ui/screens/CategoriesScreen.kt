@@ -1,9 +1,8 @@
-package com.example.products.ui
+package com.example.products.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -23,25 +22,22 @@ import androidx.navigation.NavController
 import com.example.products.navigation.NavigationBar
 
 @Composable
-fun VehiclesListScreen(
+fun CategoriesScreen(
     navController: NavController
 ){
-    Scaffold (
+    Scaffold(
         modifier = Modifier.systemBarsPadding(),
-        bottomBar = {
-            NavigationBar(navController = navController)
-        },
         topBar = {
             Row (
                 modifier = Modifier.fillMaxWidth().padding(end = 20.dp, start = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
-                ){
+            ){
                 Row (
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     Text(
-                        text = "Product Vehicles",
+                        text = "Product Categories",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Medium
                     )
@@ -53,16 +49,15 @@ fun VehiclesListScreen(
                 }
 
             }
+        },
+        bottomBar = {
+            NavigationBar(navController = navController)
         }
     ) { innerPadding ->
-
         Column (
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+            modifier = Modifier.padding(innerPadding)
+        ){
 
         }
-
     }
 }
