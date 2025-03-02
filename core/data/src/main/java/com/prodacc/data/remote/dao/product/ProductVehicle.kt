@@ -1,26 +1,27 @@
 package com.prodacc.data.remote.dao.product
 
+import com.google.gson.annotations.SerializedName
 import java.util.UUID
 
 data class CreateProductVehicle(
-    val make: String,
-    val model: String,
-    val year: Int
+    val make: String? = null,
+    val model: String? = null,
+    val year: Int? = null
 )
 
 data class ProductVehicle(
-    val id: UUID,
-    val make: String,
-    val model: String,
-    val year: Int,
-    val productCount: Int
+    @SerializedName("id") val id: UUID,
+    @SerializedName("make") val make: String,
+    @SerializedName("model") val model: String,
+    @SerializedName("year") val year: Int,
+    @SerializedName("productCount") val productCount: Int
 )
 
 data class ProductVehicleWithProducts(
-    val id: UUID,
-    val make: String,
-    val model: String,
-    val year: Int,
-    val products: List<Product>
+    @SerializedName("id") val id: UUID,
+    @SerializedName("make") val make: String,
+    @SerializedName("model") val model: String,
+    @SerializedName("year") val year: Int,
+    @SerializedName("products") val products: List<Product>
 )
 

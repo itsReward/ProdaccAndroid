@@ -46,7 +46,7 @@ interface ProductService {
     suspend fun getAllCategoriesWithProducts(): Response<List<ProductCategoryWithProduct>>
 
     @GET("/products/by-category/{categoryId}")
-    fun getProductsByCategory(@Path("categoryId") categoryId: UUID): Response<List<Product>>
+    suspend fun getProductsByCategory(@Path("categoryId") categoryId: UUID): Response<List<Product>>
 
     @GET("/products/categories/{categoryId}/with-products")
     suspend fun getCategoryByIdWithProducts(): Response<ProductCategoryWithProduct>
@@ -69,10 +69,10 @@ interface ProductService {
     suspend fun getVehicleList(): Response<List<ProductVehicle>>
 
     @GET("/products/vehicles/{vehicleId}/with-products")
-    fun getVehicleWithProducts(@Path("vehicleId") vehicleId: UUID): Response<ProductVehicleWithProducts>
+    suspend fun getVehicleWithProducts(@Path("vehicleId") vehicleId: UUID): Response<ProductVehicleWithProducts>
 
     @GET("/products/vehicles/with-products")
-    fun getAllVehiclesWithProducts(): Response<List<ProductVehicleWithProducts>>
+    suspend fun getAllVehiclesWithProducts(): Response<List<ProductVehicleWithProducts>>
 
     @POST("/products/vehicles/new-vehicle")
     suspend fun addNewVehicle(@Body vehicle: CreateProductVehicle): Response<ProductVehicle>

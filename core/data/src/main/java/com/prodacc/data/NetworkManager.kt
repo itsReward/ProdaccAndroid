@@ -31,7 +31,7 @@ class NetworkManager @Inject constructor(
     private val monitorScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val logger = Logger.getLogger(NetworkManager::class.java.name)
 
-    val localServerIp = "10.121.43.35"
+    val localServerIp = "10.10.136.35"
     private val remoteServer = "api.silverstarzw.com"
     private val port = "5000"
 

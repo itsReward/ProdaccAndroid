@@ -140,7 +140,18 @@ class ProductsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addNewVehicle(vehicle: CreateProductVehicle): Flow<Resource<ProductVehicle>> {
-        TODO("Not yet implemented")
+        return flow {
+            try {
+                val response = productService.addNewVehicle(vehicle)
+                if (response.isSuccessful){
+                    response.body()?.let { vehicle ->
+                        emit(Resource.Success(vehicle))
+                    }?:emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.localizedMessage ?: "An error occurred"))
+            }
+        }
     }
 
     override suspend fun addNewCategory(categories: CreateProductCategory): Flow<Resource<ProductCategory>> {

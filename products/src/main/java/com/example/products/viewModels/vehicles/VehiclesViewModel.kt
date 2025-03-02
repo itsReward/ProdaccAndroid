@@ -1,16 +1,12 @@
 package com.example.products.viewModels.vehicles
 
-import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.products.data.ProductsUseCase
 import com.example.products.data.Resource
-import com.example.products.viewModels.EventBus
-import com.prodacc.data.remote.dao.product.ProductVehicle
+import com.prodacc.data.remote.dao.product.CreateProductVehicle
 import com.prodacc.data.remote.dao.product.ProductVehicleWithProducts
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -20,14 +16,11 @@ import javax.inject.Inject
 class VehiclesViewModel @Inject constructor(
     private val productsUseCase: ProductsUseCase
 ): ViewModel(){
-    private val _vehicles = MutableStateFlow<List<ProductVehicle>>(emptyList())
+    private val _vehicles = MutableStateFlow<List<ProductVehicleWithProducts>>(emptyList())
     val vehicles = _vehicles.asStateFlow()
 
     private val _filteredVehicles = MutableStateFlow<List<ProductVehicleWithProducts>>(emptyList())
     val filteredVehicle = _filteredVehicles.asStateFlow()
-
-    private val _displayVehicles = MutableStateFlow<List<ProductVehicleWithProducts>>(emptyList())
-    val displayVehicles = _displayVehicles.asStateFlow()
 
     private val _loadingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
     val loadingState = _loadingState.asStateFlow()
@@ -38,11 +31,59 @@ class VehiclesViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
+    private val _newVehicle = MutableStateFlow<CreateProductVehicle>(CreateProductVehicle())
+    val newVehicle = _newVehicle.asStateFlow()
+
+    private val _newVehicleSavingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val newVehicleSavingState = _newVehicleSavingState.asStateFlow()
+
+    private val _newVehicleBottomSheetModalExpand = MutableStateFlow(false)
+    val newVehicleBottomSheetModalExpand = _newVehicleBottomSheetModalExpand.asStateFlow()
+
     init {
 
         _loadingState.value = LoadingState.Loading
         viewModelScope.launch {
             fetchVehicles()
+        }
+    }
+
+    private fun updateNewVehicle(createProductVehicle: CreateProductVehicle){
+        _newVehicle.value = createProductVehicle
+    }
+
+    fun newVehicleBottomSheetModalVisibiltyToggle(){
+        _newVehicleBottomSheetModalExpand.value = !_newVehicleBottomSheetModalExpand.value
+    }
+
+    fun onMakeChange(make : String){
+        updateNewVehicle(_newVehicle.value.copy(make = make))
+    }
+
+    fun onModelChange(model : String){
+        updateNewVehicle(_newVehicle.value.copy(model = model))
+    }
+
+    fun onYearChange(year : String){
+        try {
+            if  (year.length <= 4) {
+                updateNewVehicle(_newVehicle.value.copy(year = year.toInt()))
+            }
+        } catch (e: Exception){
+            _newVehicleSavingState.value = LoadingState.Error("Invalid year Format put eg. 2019 no spaces")
+        }
+    }
+
+    fun onSave(){
+        if (
+            _newVehicle.value.model == null || _newVehicle.value.make == null || _newVehicle.value.year == null
+        ) {
+            _newVehicleSavingState.value = LoadingState.Error("Invalid Inputs")
+        } else {
+            _newVehicleSavingState.value = LoadingState.Loading
+            viewModelScope.launch {
+                createNewVehicle()
+            }
         }
     }
 
@@ -57,13 +98,13 @@ class VehiclesViewModel @Inject constructor(
 
     private suspend fun fetchVehicles(){
         try {
-            productsUseCase.getVehicleList().collect { resource ->
+            productsUseCase.getVehiclesWithProducts().collect { resource ->
                 when(resource){
                     is Resource.Error -> _loadingState.value = LoadingState.Error(resource.message)
                     is Resource.Loading -> _loadingState.value = LoadingState.Loading
                     is Resource.Success -> {
                         _vehicles.value = resource.data
-                        fetchVehiclesWithProducts()
+                        _filteredVehicles.value = resource.data
                         _loadingState.value = LoadingState.Success
                     }
                 }
@@ -73,33 +114,35 @@ class VehiclesViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchVehiclesWithProducts(){
+    private suspend fun createNewVehicle(){
         try {
-            val displayVehicle = mutableListOf<ProductVehicleWithProducts>()
-            _vehicles.value.forEach {
-                productsUseCase.get().collect { resource ->
-                    when(resource){
-                        is Resource.Error -> _loadingState.value = LoadingState.Error(resource.message)
-                        is Resource.Loading -> _loadingState.value = LoadingState.Loading
-                        is Resource.Success -> {
-                            _vehicles.value = resource.data
-                            fetchVehiclesWithProducts()
-                            _loadingState.value = LoadingState.Success
-                        }
+            productsUseCase.addNewVehicle(_newVehicle.value).collect { resource ->
+                when (resource){
+                    is Resource.Error -> _newVehicleSavingState.value = LoadingState.Error(resource.message)
+                    is Resource.Loading -> _newVehicleSavingState.value = LoadingState.Loading
+                    is Resource.Success -> {
+                        _newVehicleSavingState.value = LoadingState.Success
+                        _newVehicleBottomSheetModalExpand.value = false
+                        refreshData()
                     }
                 }
             }
-            _displayVehicles.value = displayVehicle
         } catch (e: Exception){
-            _loadingState.value = LoadingState.Error(e.message?:"Unknown Error")
+            _newVehicleSavingState.value = LoadingState.Error(e.message?:"Unknown Error Occurred")
         }
     }
+
 
     private fun filterVehicles(){
         viewModelScope.launch {
             val currentVehicles = _filteredVehicles.value
-            _filteredVehicles.value = currentVehicles.filter {
-                it.model.contains(_searchQuery.value, ignoreCase = true) || it.make.contains(searchQuery.value, ignoreCase = true)
+            if (_searchQuery.value == ""){
+                _filteredVehicles.value = currentVehicles
+            }else {
+                _filteredVehicles.value = currentVehicles.filter {
+                    it.model.contains(_searchQuery.value, ignoreCase = true) || it.make.contains(searchQuery.value, ignoreCase = true)
+                }
+
             }
         }
     }
@@ -111,6 +154,10 @@ class VehiclesViewModel @Inject constructor(
 
         }
 
+    }
+
+    fun resetSavingState() {
+        _newVehicleSavingState.value = LoadingState.Idle
     }
 
     sealed class LoadingState{
