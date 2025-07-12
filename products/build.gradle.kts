@@ -1,7 +1,7 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
 }
 
@@ -38,9 +38,9 @@ android {
         jvmTarget = "1.8"
     }
 
-    kapt {
+    /*kapt {
         correctErrorTypes = true
-    }
+    }*/
 }
 
 dependencies {
@@ -65,7 +65,7 @@ dependencies {
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.51")
-    kapt("com.google.dagger:hilt-android-compiler:2.51")
+    ksp("com.google.dagger:hilt-android-compiler:2.51")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Navigation

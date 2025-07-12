@@ -1,36 +1,41 @@
 package com.example.products.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
-import com.example.designsystem.theme.Grey
+import com.prodacc.data.remote.dao.product.ProductVehicle
 
 @Composable
-fun LoadingComposable(){
+fun LoadingComposable() {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -52,7 +57,7 @@ fun LoadingComposable(){
 fun ErrorComposable(
     text: String,
     onClick: () -> Unit
-){
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -70,7 +75,7 @@ fun ErrorComposable(
 
 @Composable
 fun CustomTextField(
-    value : String,
+    value: String,
     onValueChange: (String) -> Unit,
     isError: Boolean,
     keyboardActions: KeyboardActions,
@@ -79,7 +84,7 @@ fun CustomTextField(
         capitalization = KeyboardCapitalization.Words
     ),
     leadingIcon: @Composable () -> Unit
-){
+) {
 
     TextField(
         value = value,
@@ -96,4 +101,30 @@ fun CustomTextField(
         isError = isError,
 
         )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun VehiclesFilterChips(
+    vehicle: ProductVehicle,
+    showRemoveButton: Boolean,
+    onRemoveButtonClick: () -> Unit
+) {
+    FilterChip(
+        selected = false,
+        onClick = onRemoveButtonClick,
+        label = { Text(text = "${vehicle.make} ${vehicle.model} ${vehicle.year}") },
+        leadingIcon = {
+            AnimatedVisibility(visible = showRemoveButton) {
+                IconButton(onClick = onRemoveButtonClick ) {
+                    Icon(
+                        Icons.Default.Clear,
+                        "Remove Vehicle"
+                    )
+                }
+            }
+        },
+        shape = RoundedCornerShape(100)
+    )
+
 }

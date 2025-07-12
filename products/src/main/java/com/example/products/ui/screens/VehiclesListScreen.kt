@@ -21,10 +21,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -50,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.designsystem.designComponents.ProductCards
@@ -61,6 +65,7 @@ import com.example.products.ui.components.CustomTextField
 import com.example.products.ui.components.ErrorComposable
 import com.example.products.ui.components.LoadingComposable
 import com.example.products.viewModels.vehicles.VehiclesViewModel
+import com.example.products.viewModels.vehicles.VehiclesViewModel.LoadingState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -171,18 +176,18 @@ fun VehiclesListScreen(
         ) {
 
             when (viewModel.loadingState.collectAsState().value) {
-                is VehiclesViewModel.LoadingState.Error -> {
-                    ErrorComposable(text = (viewModel.loadingState.collectAsState().value as VehiclesViewModel.LoadingState.Error).message) {
+                is LoadingState.Error -> {
+                    ErrorComposable(text = (viewModel.loadingState.collectAsState().value as LoadingState.Error).message) {
                         viewModel.refreshData()
                     }
                 }
 
-                is VehiclesViewModel.LoadingState.Idle -> {}
-                is VehiclesViewModel.LoadingState.Loading -> {
+                is LoadingState.Idle -> {}
+                is LoadingState.Loading -> {
                     LoadingComposable()
                 }
 
-                is VehiclesViewModel.LoadingState.Success -> {
+                is LoadingState.Success -> {
                     Spacer(modifier = Modifier.height(20.dp))
 
                     LazyColumn(
@@ -200,17 +205,31 @@ fun VehiclesListScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(text = "${vehicle.make} ${vehicle.model} ${vehicle.year}")
-                                IconButton(onClick = { showProducts = !showProducts }) {
-                                    Icon(
-                                        if (showProducts) {
-                                            Icons.Default.KeyboardArrowUp
-                                        } else {
-                                            Icons.Default.KeyboardArrowDown
-                                        },
+                                Row {
 
-                                        "Product Drop down"
-                                    )
+                                    AnimatedVisibility(visible = showProducts) {
+                                        IconButton(onClick = { viewModel.onDeleteDialogToggle() }) {
+                                            Icon(
+                                                Icons.Default.Delete,
+
+                                                "Delete"
+                                            )
+                                        }
+                                    }
+                                    IconButton(onClick = { showProducts = !showProducts }) {
+                                        Icon(
+                                            if (showProducts) {
+                                                Icons.Default.KeyboardArrowUp
+                                            } else {
+                                                Icons.Default.KeyboardArrowDown
+                                            },
+
+                                            "Product Drop down"
+                                        )
+                                    }
+
                                 }
+
                             }
 
                             AnimatedVisibility(visible = showProducts) {
@@ -241,11 +260,73 @@ fun VehiclesListScreen(
 
 
                             }
+
+
+                            if (viewModel.deleteDialogState.collectAsState().value) {
+                                val deleteState = viewModel.deleteVehicleState.collectAsState().value
+
+                                AlertDialog(
+                                    onDismissRequest = { viewModel.onDeleteDialogToggle() },
+                                    confirmButton = {
+                                        when (viewModel.deleteVehicleState.collectAsState().value) {
+                                            is LoadingState.Success -> {}
+                                            else -> {
+                                                Button(onClick = { viewModel.deleteVehicle(vehicle.id) }, colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color.Red
+                                                )) {
+                                                    Text(text = "Delete")
+                                                }
+                                            }
+                                        }
+
+                                    },
+                                    title = {
+                                        Text(
+                                            text = when (viewModel.deleteVehicleState.collectAsState().value) {
+                                                is LoadingState.Error -> "Error"
+                                                is LoadingState.Idle -> "Confirm"
+                                                is LoadingState.Loading -> "Deleting"
+                                                is LoadingState.Success -> "Done"
+                                            }
+                                        )
+
+                                    },
+                                    text = {
+                                        Text(
+                                            text = when (viewModel.deleteVehicleState.collectAsState().value) {
+                                                is LoadingState.Error -> (viewModel.deleteVehicleState.collectAsState().value as LoadingState.Error).message
+                                                is LoadingState.Idle -> "Are you sure you want to delete this vehicle?,\n" +
+                                                        "Products associated with the vehicle will not be deleted"
+
+                                                is LoadingState.Loading -> "Deleting vehicle"
+                                                is LoadingState.Success -> "Vehicle Successfully Deleted"
+                                            }
+                                        )
+                                    },
+                                    dismissButton = {
+
+                                        Button(
+                                            onClick = {
+                                                when (deleteState) {
+                                                    is LoadingState.Success -> viewModel.refreshData()
+                                                    else -> viewModel.onDeleteDialogToggle()
+                                                }
+                                            }
+                                        ) {
+                                            Text(
+                                                text = when (viewModel.deleteVehicleState.collectAsState().value) {
+                                                    is LoadingState.Success -> "Done"
+                                                    else -> "Cancel"
+                                                }
+                                            )
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
-
         }
 
         AnimatedVisibility(visible = viewModel.newVehicleBottomSheetModalExpand.collectAsState().value) {
@@ -254,13 +335,13 @@ fun VehiclesListScreen(
                 containerColor = Color.White
             ) {
                 when (viewModel.newVehicleSavingState.collectAsState().value) {
-                    is VehiclesViewModel.LoadingState.Error -> {
-                        ErrorComposable(text = (viewModel.newVehicleSavingState.collectAsState().value as VehiclesViewModel.LoadingState.Error).message) {
+                    is LoadingState.Error -> {
+                        ErrorComposable(text = (viewModel.newVehicleSavingState.collectAsState().value as LoadingState.Error).message) {
                             viewModel.resetSavingState()
                         }
                     }
 
-                    VehiclesViewModel.LoadingState.Idle -> {
+                    LoadingState.Idle -> {
 
                         Column(
                             modifier = Modifier.padding(10.dp)
@@ -354,16 +435,17 @@ fun VehiclesListScreen(
                         }
                     }
 
-                    VehiclesViewModel.LoadingState.Loading -> {
+                    LoadingState.Loading -> {
                         LoadingComposable()
                     }
 
-                    VehiclesViewModel.LoadingState.Success -> {
+                    LoadingState.Success -> {
 
                     }
                 }
             }
         }
+
 
     }
 }

@@ -158,12 +158,37 @@ class ProductsRepositoryImpl @Inject constructor(
         TODO("Not yet implemented")
     }
 
+    override suspend fun addVehicleToProduct(
+        productId: UUID,
+        vehicleId: UUID
+    ): Flow<Resource<Unit>> {
+        return flow {
+            try {
+                val response = productService.addVehicleToProduct(productId, vehicleId)
+                if (response.isSuccessful){
+                    emit(Resource.Success(Unit))
+                }
+            } catch (e: Exception){
+                emit(Resource.Error(e.message?:"Unknown Error"))
+            }
+        }
+    }
+
     override suspend fun deleteProduct(id: UUID): Flow<Resource<Unit>> {
         TODO("Not yet implemented")
     }
 
     override suspend fun deleteVehicle(id: UUID): Flow<Resource<Unit>> {
-        TODO("Not yet implemented")
+        return flow {
+            try {
+                val response = productService.deleteVehicle(id)
+                if (response.isSuccessful){
+                    emit(Resource.Success(Unit))
+                }
+            } catch (e: Exception){
+                emit(Resource.Error(e.message?:"Unknown Error"))
+            }
+        }
     }
 
     override suspend fun deleteCategory(id: UUID): Flow<Resource<Unit>> {

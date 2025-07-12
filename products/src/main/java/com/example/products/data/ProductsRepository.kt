@@ -24,6 +24,8 @@ interface ProductsRepository {
     suspend fun addNewVehicle(vehicle: CreateProductVehicle): Flow<Resource<ProductVehicle>>
     suspend fun addNewCategory(categories: CreateProductCategory): Flow<Resource<ProductCategory>>
 
+    suspend fun addVehicleToProduct(productId: UUID, vehicleId : UUID): Flow<Resource<Unit>>
+
 
     suspend fun deleteProduct(id: UUID): Flow<Resource<Unit>>
     suspend fun deleteVehicle(id: UUID): Flow<Resource<Unit>>

@@ -11,6 +11,7 @@ import com.prodacc.data.remote.dao.product.Product
 import com.prodacc.data.remote.dao.product.ProductCategory
 import com.prodacc.data.remote.dao.product.ProductVehicle
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -22,7 +23,7 @@ import javax.inject.Inject
 class ViewProductViewModel @Inject constructor(
     private val productsUseCase: ProductsUseCase,
     savedStateHandle: SavedStateHandle
-): ViewModel() {
+) : ViewModel() {
     private val productId: String = checkNotNull(savedStateHandle["productId"]) {
         "ProductId parameter wasn't found. Please make sure it's passed in the navigation arguments."
     }
@@ -40,6 +41,9 @@ class ViewProductViewModel @Inject constructor(
     private val _vehicles = MutableStateFlow<List<ProductVehicle>>(emptyList())
     val vehicles = _vehicles.asStateFlow()
 
+    private val _filteredVehicles = MutableStateFlow<List<ProductVehicle>>(_vehicles.value)
+    val filteredVehicles = _filteredVehicles.asStateFlow()
+
     private val _updateProductState = MutableStateFlow<OperationState>(OperationState.Idle)
     val updateProductState = _updateProductState.asStateFlow()
 
@@ -49,18 +53,43 @@ class ViewProductViewModel @Inject constructor(
     private val _loading = MutableStateFlow<OperationState>(OperationState.Idle)
     val loading = _loading.asStateFlow()
 
+    private val _vehicleLoadingState = MutableStateFlow<OperationState>(OperationState.Idle)
+    val vehicleLoadingState = _vehicleLoadingState.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
+
+
 
     init {
         _loading.value = OperationState.Idle
         fetchProduct()
+        fetchVehicles()
+    }
+
+    fun updateSearchQuery(query: String){
+        _searchQuery.value = query
+        filterVehicles()
+    }
+
+    private fun filterVehicles(){
+        val vehicle = _vehicles.value
+        if (_searchQuery.value != ""){
+            _filteredVehicles.value = vehicle.filter {
+                it.model.contains(_searchQuery.value, ignoreCase = true) || it.make.contains(_searchQuery.value, ignoreCase = true)
+            }
+        } else {
+            _filteredVehicles.value = vehicle
+        }
+
     }
 
     private fun fetchProduct() {
         viewModelScope.launch {
             _loading.value = OperationState.Loading
             try {
-                productsUseCase.getProductById(UUID.fromString(productId)).collect{ resource ->
-                    when(resource){
+                productsUseCase.getProductById(UUID.fromString(productId)).collect { resource ->
+                    when (resource) {
                         is Resource.Error -> _loading.value = OperationState.Error(resource.message)
                         is Resource.Loading -> _loading.value = OperationState.Loading
                         is Resource.Success -> {
@@ -70,13 +99,35 @@ class ViewProductViewModel @Inject constructor(
                     }
                 }
 
-            } catch (e:Exception){
+            } catch (e: Exception) {
                 handleException(e)
             }
         }
     }
 
+    private fun fetchVehicles() {
+        _vehicleLoadingState.value = OperationState.Loading
+        viewModelScope.launch {
+            try {
+                productsUseCase.getVehicleList().collect { resource ->
+                    when (resource) {
+                        is Resource.Error -> _vehicleLoadingState.value =
+                            OperationState.Error(resource.message)
 
+                        is Resource.Loading -> _vehicleLoadingState.value = OperationState.Loading
+                        is Resource.Success -> {
+                            _vehicleLoadingState.value = OperationState.Success(resource.data)
+                            _vehicles.value = resource.data.filter { !_product.value?.vehicles?.contains(it)!!
+                                ?: false }
+                            _filteredVehicles.value = _vehicles.value
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _vehicleLoadingState.value = OperationState.Error(e.message ?: "Unknown Error")
+            }
+        }
+    }
 
     fun updateProduct(id: UUID, updatedProduct: Product) {
         viewModelScope.launch {
@@ -92,16 +143,20 @@ class ViewProductViewModel @Inject constructor(
                                 _updateProductState.value = OperationState.Error("No data returned")
                             }
                         }
+
                         is Resource.Error -> {
-                            _updateProductState.value = OperationState.Error(resource.message ?: "Unknown error")
+                            _updateProductState.value =
+                                OperationState.Error(resource.message ?: "Unknown error")
                         }
+
                         is Resource.Loading -> {
                             _updateProductState.value = OperationState.Loading
                         }
                     }
                 }
             } catch (e: Exception) {
-                _updateProductState.value = OperationState.Error(e.message ?: "Unknown error occurred")
+                _updateProductState.value =
+                    OperationState.Error(e.message ?: "Unknown error occurred")
             }
         }
     }
@@ -116,16 +171,20 @@ class ViewProductViewModel @Inject constructor(
                             EventBus.emit(EventBus.ProductEvent.DeleteProduct)
                             _deleteProductState.value = OperationState.Idle
                         }
+
                         is Resource.Error -> {
-                            _deleteProductState.value = OperationState.Error(resource.message ?: "Unknown error")
+                            _deleteProductState.value =
+                                OperationState.Error(resource.message ?: "Unknown error")
                         }
+
                         is Resource.Loading -> {
                             _deleteProductState.value = OperationState.Loading
                         }
                     }
                 }
             } catch (e: Exception) {
-                _deleteProductState.value = OperationState.Error(e.message ?: "Unknown error occurred")
+                _deleteProductState.value =
+                    OperationState.Error(e.message ?: "Unknown error occurred")
             }
         }
     }
@@ -141,6 +200,7 @@ class ViewProductViewModel @Inject constructor(
                                 _categories.value = _categories.value + category
                             }
                         }
+
                         else -> {} // Handle other states as needed
                     }
                 }
@@ -160,6 +220,7 @@ class ViewProductViewModel @Inject constructor(
                                 _vehicles.value = _vehicles.value + vehicle
                             }
                         }
+
                         else -> {} // Handle other states as needed
                     }
                 }
@@ -175,21 +236,44 @@ class ViewProductViewModel @Inject constructor(
     }
 
     fun associateProductWithVehicle(productId: UUID, vehicleId: UUID) {
-        // Implementation depends on your backend API
+        _updateProductState.value = OperationState.Loading
+        viewModelScope.launch {
+            try {
+                productsUseCase.addVehicleToProduct(productId, vehicleId).collect { resource ->
+                    when(resource){
+                        is Resource.Error -> _updateProductState.value = OperationState.Error(resource.message)
+                        is Resource.Loading -> _updateProductState.value = OperationState.Loading
+                        is Resource.Success -> {
+                            _updateProductState.value = OperationState.Success(resource)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _updateProductState.value = OperationState.Error(e.message?:"Unable to add vehicle to product")
+            }
+        }
     }
 
     private fun handleException(e: Exception) {
-        when (e){
-            is IOException -> _loading.value = OperationState.Error("NetWork Problems: ${e.message}")
-            else -> _loading.value = OperationState.Error(e.message ?:  "Unknown Error")
+        when (e) {
+            is IOException -> _loading.value =
+                OperationState.Error("NetWork Problems: ${e.message}")
+
+            else -> _loading.value = OperationState.Error(e.message ?: "Unknown Error")
         }
+    }
+
+    fun refetchProduct() {
+        _loading.value = OperationState.Loading
+        _product.value = null
+        fetchProduct()
     }
 
     // Operation state for CRUD operations
     sealed class OperationState {
         data object Idle : OperationState()
         data object Loading : OperationState()
-        data class Success(val data: Product) : OperationState()
+        data class Success(val data: Any) : OperationState()
         data class Error(val message: String) : OperationState()
     }
 }

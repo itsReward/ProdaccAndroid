@@ -1,5 +1,6 @@
 package com.example.products.viewModels.vehicles
 
+import android.media.VolumeShaper.Operation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.products.data.ProductsUseCase
@@ -7,9 +8,11 @@ import com.example.products.data.Resource
 import com.prodacc.data.remote.dao.product.CreateProductVehicle
 import com.prodacc.data.remote.dao.product.ProductVehicleWithProducts
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,7 +34,7 @@ class VehiclesViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    private val _newVehicle = MutableStateFlow<CreateProductVehicle>(CreateProductVehicle())
+    private val _newVehicle = MutableStateFlow(CreateProductVehicle())
     val newVehicle = _newVehicle.asStateFlow()
 
     private val _newVehicleSavingState = MutableStateFlow<LoadingState>(LoadingState.Idle)
@@ -39,6 +42,12 @@ class VehiclesViewModel @Inject constructor(
 
     private val _newVehicleBottomSheetModalExpand = MutableStateFlow(false)
     val newVehicleBottomSheetModalExpand = _newVehicleBottomSheetModalExpand.asStateFlow()
+
+    private val _deleteVehicleState = MutableStateFlow<LoadingState>(LoadingState.Idle)
+    val deleteVehicleState = _deleteVehicleState.asStateFlow()
+
+    private val _deleteDialogState = MutableStateFlow(false)
+    val deleteDialogState = _deleteDialogState.asStateFlow()
 
     init {
 
@@ -54,6 +63,10 @@ class VehiclesViewModel @Inject constructor(
 
     fun newVehicleBottomSheetModalVisibiltyToggle(){
         _newVehicleBottomSheetModalExpand.value = !_newVehicleBottomSheetModalExpand.value
+    }
+
+    fun onDeleteDialogToggle(){
+        _deleteDialogState.value = !_deleteDialogState.value
     }
 
     fun onMakeChange(make : String){
@@ -132,6 +145,24 @@ class VehiclesViewModel @Inject constructor(
         }
     }
 
+    fun deleteVehicle(id: UUID){
+        viewModelScope.launch {
+            try {
+                productsUseCase.deleteVehicle(id).collect { resource ->
+                    when(resource){
+                        is Resource.Error -> _deleteVehicleState.value = LoadingState.Error(resource.message)
+                        is Resource.Loading -> _deleteVehicleState.value = LoadingState.Loading
+                        is Resource.Success -> {
+                            _deleteVehicleState.value = LoadingState.Success
+                        }
+                    }
+                }
+            } catch (e: Exception){
+                _deleteVehicleState.value = LoadingState.Error(e.message?: "Delete Failed")
+            }
+        }
+
+    }
 
     private fun filterVehicles(){
         viewModelScope.launch {
@@ -150,14 +181,21 @@ class VehiclesViewModel @Inject constructor(
 
 
     fun refreshData() {
+        _loadingState.value = LoadingState.Loading
+        _deleteVehicleState.value  = LoadingState.Idle
+        _vehicles.value = emptyList()
+        _filteredVehicles.value = emptyList()
+        _deleteDialogState.value = false
+        resetSavingState()
         viewModelScope.launch {
-
+            fetchVehicles()
         }
 
     }
 
     fun resetSavingState() {
         _newVehicleSavingState.value = LoadingState.Idle
+        _newVehicle.value = CreateProductVehicle()
     }
 
     sealed class LoadingState{

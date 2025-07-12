@@ -22,7 +22,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ChipColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -48,13 +47,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.designsystem.theme.Blue50
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
-import com.example.designsystem.theme.LightGrey
 import com.example.designsystem.theme.label
 import com.example.designsystem.theme.vehicleIcon
 import com.example.products.viewModels.NewProductViewModel
@@ -120,12 +117,12 @@ fun NewProductScreen(
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
 
-                Row (
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(CardGrey)
                         .padding(10.dp)
-                ){
+                ) {
                     Text(text = "Product Details")
                 }
 
@@ -381,7 +378,7 @@ fun NewProductScreen(
 
 
                 Spacer(modifier = Modifier.height(40.dp))
-                Row (
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp),
@@ -392,7 +389,7 @@ fun NewProductScreen(
                     Text(text = "Categories : ")
                 }
 
-                Row (
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp),
@@ -411,7 +408,11 @@ fun NewProductScreen(
                             selectedLeadingIconColor = Color.White,
                             disabledContainerColor = DarkGrey,
                         ),
-                        border = FilterChipDefaults.filterChipBorder(enabled = false, selected = false, disabledBorderColor = Color.Transparent)
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = false,
+                            selected = false,
+                            disabledBorderColor = Color.Transparent
+                        )
 
                     )
 
@@ -427,7 +428,10 @@ fun NewProductScreen(
                             selectedLeadingIconColor = Color.White,
                             disabledContainerColor = DarkGrey,
                         ),
-                        border = FilterChipDefaults.filterChipBorder(enabled = false, selected = false)
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = false,
+                            selected = false
+                        )
 
                     )
                 }
@@ -435,7 +439,7 @@ fun NewProductScreen(
 
 
                 Spacer(modifier = Modifier.height(20.dp))
-                Row (
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp),
@@ -453,6 +457,7 @@ fun NewProductScreen(
                 is NewProductViewModel.OperationState.Idle -> {
 
                 }
+
                 is NewProductViewModel.OperationState.Loading -> {
                     Dialog(onDismissRequest = { }) {
                         Row(
@@ -472,7 +477,7 @@ fun NewProductScreen(
 
                         },
                         title = {
-                            Row (
+                            Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
@@ -488,7 +493,7 @@ fun NewProductScreen(
                                 )
                             }
 
-                        } ,
+                        },
                         text = {
                             Text(
                                 text = "New Product Successfully Added",
@@ -497,6 +502,8 @@ fun NewProductScreen(
                         }
                     )
                 }
+
+                else -> {}
             }
         }
 
