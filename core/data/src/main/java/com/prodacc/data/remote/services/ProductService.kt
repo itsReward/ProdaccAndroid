@@ -77,7 +77,7 @@ interface ProductService {
     @POST("/products/vehicles/new-vehicle")
     suspend fun addNewVehicle(@Body vehicle: CreateProductVehicle): Response<ProductVehicle>
 
-    @DELETE("/products/vehicles/delete/{id}")
+    @DELETE("/products/vehicles/{id}")
     suspend fun deleteVehicle(@Path("id") id: UUID): Response<Unit>
 
     @PUT("/products/vehicles/update/{id}")
@@ -88,25 +88,25 @@ interface ProductService {
 
     //Product Category and Vehicle Assign Operations
     @POST("/products/{productId}/categories/{categoryId}")
-    fun addCategoryToProduct(
+    suspend fun addCategoryToProduct(
         @Path("productId") productId: UUID,
         @Path("categoryId") categoryId: UUID
     ): Response<Unit>
 
     @DELETE("/products/{productId}/categories/{categoryId}")
-    fun removeCategoryFromProduct(
+    suspend fun removeCategoryFromProduct(
         @Path("productId") productId: UUID,
         @Path("categoryId") categoryId: UUID
     ): Response<Unit>
 
     @POST("/products/{productId}/vehicles/{vehicleId}")
-    fun addVehicleToProduct(
+    suspend fun addVehicleToProduct(
         @Path("productId") productId: UUID,
         @Path("vehicleId") vehicleId: UUID
     ): Response<Unit>
 
     @DELETE("/products/{productId}/vehicles/{vehicleId}")
-    fun removeVehicleFromProduct(
+    suspend fun removeVehicleFromProduct(
         @Path("productId") productId: UUID,
         @Path("vehicleId") vehicleId: UUID
     ): Response<Unit>
