@@ -60,7 +60,7 @@ interface ProductService {
     @PUT("/products/categories/update/{id}")
     suspend fun updateCategory(
         @Path("id") id: UUID,
-        @Body category: CreateProductCategory
+        @Body category: ProductCategory
     ): Response<ProductCategory>
 
 

@@ -155,7 +155,20 @@ class ProductsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addNewCategory(categories: CreateProductCategory): Flow<Resource<ProductCategory>> {
-        TODO("Not yet implemented")
+        return flow {
+            try {
+                val response = productService.addNewCategory(categories)
+                if (response.isSuccessful){
+                    response.body()?.let { category ->
+                        emit(Resource.Success(category))
+                    }?:emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }else {
+                    emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.localizedMessage ?: "An error occurred"))
+                }
+            }
     }
 
     override suspend fun addVehicleToProduct(
@@ -175,7 +188,18 @@ class ProductsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteProduct(id: UUID): Flow<Resource<Unit>> {
-        TODO("Not yet implemented")
+        return flow {
+            try {
+                val response = productService.deleteProduct(id)
+                if (response.isSuccessful) {
+                    emit(Resource.Success(Unit))
+                } else {
+                    emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.localizedMessage ?: "An error occurred"))
+            }
+        }
     }
 
     override suspend fun deleteVehicle(id: UUID): Flow<Resource<Unit>> {
@@ -192,26 +216,83 @@ class ProductsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteCategory(id: UUID): Flow<Resource<Unit>> {
-        TODO("Not yet implemented")
+        return flow {
+            try {
+                val response = productService.deleteCategory(id)
+                if (response.isSuccessful) {
+                    emit(Resource.Success(Unit))
+                } else {
+                    emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.localizedMessage ?: "An error occurred"))
+            }
+        }
     }
 
     override suspend fun updateProduct(id: UUID, product: Product): Flow<Resource<Product>> {
-        TODO("Not yet implemented")
+        val updatedProduct = NewProduct(
+            partName = product.partName,
+            partNumber = product.partNumber,
+            description = product.description,
+            arrivalPrice = product.arrivalPrice,
+            sellingPrice = product.sellingPrice.toFloat(),
+            healthyNumber = product.healthyNumber,
+            storageLocation = product.storageLocation,
+            inStock = product.inStock
+        )
+        return flow {
+            try {
+                val response = productService.updateProduct(id, updatedProduct)
+                if (response.isSuccessful) {
+                    response.body()?.let { updatedProduct ->
+                        emit(Resource.Success(updatedProduct))
+                    } ?: emit(Resource.Error("Empty response body"))
+                } else {
+                    emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.localizedMessage ?: "An error occurred"))
+            }
+        }
     }
 
     override suspend fun updateVehicle(
         id: UUID,
         vehicle: ProductVehicle
     ): Flow<Resource<ProductVehicle>> {
-        TODO("Not yet implemented")
+        return flow {
+            try {
+                val response = productService.updateVehicle(id, vehicle)
+                if (response.isSuccessful) {
+                    response.body()?.let { emit(Resource.Success(it)) }
+                        ?: emit(Resource.Error("Empty response body"))
+                } else {
+                    emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.localizedMessage ?: "An error occurred"))
+            }
+        }
     }
 
     override suspend fun updateCategory(
         id: UUID,
         category: ProductCategory
     ): Flow<Resource<ProductCategory>> {
-        TODO("Not yet implemented")
+        return flow {
+            try {
+                val response = productService.updateCategory(id, category)
+                if (response.isSuccessful) {
+                    response.body()?.let { updatedCategory ->
+                        emit(Resource.Success(updatedCategory))
+                    } ?: emit(Resource.Error("Empty response body"))
+                } else {
+                    emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.localizedMessage ?: "An error occurred"))
+            }
+        }
     }
-
-
 }

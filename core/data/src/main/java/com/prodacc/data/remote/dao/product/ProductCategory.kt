@@ -27,7 +27,7 @@ data class ProductCategoryWithProduct(
             id = this.id,
             name = this.name,
             description = this.description,
-            productCount = this.product.size
+            productCount = this.product?.size ?: 0
         )
     }
 }
