@@ -232,14 +232,17 @@ class ProductsRepositoryImpl @Inject constructor(
 
     override suspend fun updateProduct(id: UUID, product: Product): Flow<Resource<Product>> {
         val updatedProduct = NewProduct(
-            partName = product.partName,
-            partNumber = product.partNumber,
+            productCode = product.productCode,
+            productName = product.productName,
             description = product.description,
-            arrivalPrice = product.arrivalPrice,
-            sellingPrice = product.sellingPrice.toFloat(),
-            healthyNumber = product.healthyNumber,
-            storageLocation = product.storageLocation,
-            inStock = product.inStock
+            brand = product.brand,
+            unitOfMeasure = product.unitOfMeasure,
+            minimumStock = product.minimumStock,
+            maximumStock = product.maximumStock,
+            costPrice = product.costPrice,
+            sellingPrice = product.sellingPrice,
+            markupPercentage = product.markupPercentage,
+
         )
         return flow {
             try {
@@ -287,6 +290,44 @@ class ProductsRepositoryImpl @Inject constructor(
                     response.body()?.let { updatedCategory ->
                         emit(Resource.Success(updatedCategory))
                     } ?: emit(Resource.Error("Empty response body"))
+                } else {
+                    emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.localizedMessage ?: "An error occurred"))
+            }
+        }
+    }
+
+    override fun addCategoryToProduct(
+        id: UUID,
+        categoryId: UUID
+    ): Flow<Resource<Unit>> {
+        return flow {
+            emit(Resource.Loading())
+            try {
+                val response = productService.addCategoryToProduct(id, categoryId)
+                if (response.isSuccessful) {
+                    emit(Resource.Success(Unit))
+                } else {
+                    emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.localizedMessage ?: "An error occurred"))
+            }
+        }
+    }
+
+    override fun removeCategoryFromProduct(
+        id: UUID,
+        categoryId: UUID
+    ): Flow<Resource<Unit>> {
+        return flow {
+            emit(Resource.Loading())
+            try {
+                val response = productService.removeCategoryFromProduct(id, categoryId)
+                if (response.isSuccessful) {
+                    emit(Resource.Success(Unit))
                 } else {
                     emit(Resource.Error("Error: ${response.code()} ${response.message()}"))
                 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +30,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -64,17 +67,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.designsystem.designComponents.FormattedTime
 import com.example.designsystem.theme.BlueA700
 import com.example.designsystem.theme.CardGrey
 import com.example.designsystem.theme.DarkGreen
 import com.example.designsystem.theme.DarkGrey
 import com.example.designsystem.theme.Grey
+import com.example.designsystem.theme.LightGrey
+import com.example.designsystem.theme.Red
+import com.example.designsystem.theme.contactDetails
 import com.example.designsystem.theme.label
 import com.example.designsystem.theme.vehicleIcon
 import com.example.products.ui.components.ErrorComposable
 import com.example.products.ui.components.LoadingComposable
+import com.example.products.ui.components.ProductCategoriesSection
 import com.example.products.ui.components.VehiclesFilterChips
 import com.example.products.viewModels.ViewProductViewModel
+import com.prodacc.data.remote.dao.product.ProductVehicle
 import java.util.UUID
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -90,7 +99,7 @@ fun ProductScreen(
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
 
-    val productVehicles = viewModel.product.collectAsState().value?.vehicles ?: emptyList()
+    val productVehicles :List<ProductVehicle> =  emptyList()
 
     Box(modifier = Modifier
         .imePadding()
@@ -118,13 +127,13 @@ fun ProductScreen(
                             text = if (viewModel.product.collectAsState().value == null){
                                 "Loading..."
                             } else {
-                                viewModel.product.collectAsState().value!!.partName + " :"
+                                viewModel.product.collectAsState().value!!.productName + " :"
                             },
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = viewModel.product.collectAsState().value?.partNumber ?: "",
+                            text = viewModel.product.collectAsState().value?.productCode ?: "",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium
                         )
@@ -203,17 +212,34 @@ fun ProductScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(CardGrey)
-                                .padding(10.dp)
+                                .padding(10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Text(text = "Product Details")
+
+                            if (viewModel.product.collectAsState().value?.isLowStock == true){
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(text = "Low Stock", color = Red, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Icon(
+                                        imageVector = Icons.Outlined.Warning,
+                                        contentDescription = "Low Stock",
+                                        tint = if (viewModel.product.collectAsState().value?.isLowStock == true) Red else Color.Red,
+                                    )
+                                }
+                            }
+
+
                         }
 
                         TextField(
-                            value = viewModel.product.collectAsState().value?.partName ?: "",
+                            value = viewModel.product.collectAsState().value?.productName ?: "",
                             onValueChange = {},
                             leadingIcon = {
                                 Text(
-                                    text = "Part Name : ",
+                                    text = "Product Name : ",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(start = 10.dp),
@@ -243,11 +269,11 @@ fun ProductScreen(
                         )
 
                         TextField(
-                            value = viewModel.product.collectAsState().value?.partNumber ?: "",
+                            value = viewModel.product.collectAsState().value?.productCode ?: "",
                             onValueChange = {},
                             leadingIcon = {
                                 Text(
-                                    text = "Part Number : ",
+                                    text = "Product Code : ",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(start = 10.dp),
@@ -309,12 +335,119 @@ fun ProductScreen(
                             ),
                         )
 
+                        Row (
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp)
+
+                        ) {
+                            Text(
+                                text = "Category Name : ",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(start = 10.dp),
+                                color = Grey
+                            )
+
+                            Row (
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clip(RoundedCornerShape(100)).background(
+                                    LightGrey
+                                ).padding(horizontal = 5.dp)
+                            ){
+                                Icon(
+                                    imageVector = label,
+                                    contentDescription = "Label",
+                                    tint = Grey
+                                )
+
+                                Text(
+                                    text = viewModel.product.collectAsState().value?.categoryName ?: "",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 10.dp),
+                                    color = Grey
+                                )
+                            }
+                        }
+
+                        Box(
+                            Modifier.fillMaxWidth().height(1.dp).background(DarkGrey)
+                        )
+
+
                         TextField(
-                            value = viewModel.product.collectAsState().value?.inStock.toString(),
+                            value = viewModel.product.collectAsState().value?.brand ?: "",
                             onValueChange = {},
                             leadingIcon = {
                                 Text(
-                                    text = "In Stock : ",
+                                    text = "Brand : ",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 10.dp),
+                                    color = Grey
+                                )
+                            },
+                            colors = TextFieldDefaults.colors(
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Default,
+                                capitalization = KeyboardCapitalization.Sentences
+                            ),
+                            keyboardActions = KeyboardActions(onNext = {
+                                focusManager.moveFocus(
+                                    FocusDirection.Down
+                                )
+                            }),
+                            maxLines = 4,
+
+                            textStyle = TextStyle(
+                                textAlign = TextAlign.End
+                            ),
+                        )
+
+                        TextField(
+                            value = viewModel.product.collectAsState().value?.unitOfMeasure ?: "",
+                            onValueChange = {},
+                            leadingIcon = {
+                                Text(
+                                    text = "Unit of Measure : ",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 10.dp),
+                                    color = Grey
+                                )
+                            },
+                            colors = TextFieldDefaults.colors(
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Default,
+                                capitalization = KeyboardCapitalization.Sentences
+                            ),
+                            keyboardActions = KeyboardActions(onNext = {
+                                focusManager.moveFocus(
+                                    FocusDirection.Down
+                                )
+                            }),
+                            maxLines = 4,
+
+                            textStyle = TextStyle(
+                                textAlign = TextAlign.End
+                            ),
+                        )
+
+                        TextField(
+                            value = viewModel.product.collectAsState().value?.currentStock.toString(),
+                            onValueChange = {},
+                            leadingIcon = {
+                                Text(
+                                    text = "Current Stock : ",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(start = 10.dp),
@@ -345,11 +478,44 @@ fun ProductScreen(
                         )
 
                         TextField(
-                            value = viewModel.product.collectAsState().value?.healthyNumber.toString(),
+                            value = viewModel.product.collectAsState().value?.minimumStock.toString() ?: "",
                             onValueChange = {},
                             leadingIcon = {
                                 Text(
-                                    text = "Healthy No. : ",
+                                    text = "Minimum Stock : ",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 10.dp),
+                                    color = Grey
+                                )
+                            },
+                            colors = TextFieldDefaults.colors(
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Default,
+                                capitalization = KeyboardCapitalization.Sentences
+                            ),
+                            keyboardActions = KeyboardActions(onNext = {
+                                focusManager.moveFocus(
+                                    FocusDirection.Down
+                                )
+                            }),
+                            maxLines = 4,
+
+                            textStyle = TextStyle(
+                                textAlign = TextAlign.End
+                            ),
+                        )
+
+                        TextField(
+                            value = viewModel.product.collectAsState().value?.maximumStock.toString(),
+                            onValueChange = {},
+                            leadingIcon = {
+                                Text(
+                                    text = "Maximum Stock : ",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(start = 10.dp),
@@ -380,11 +546,11 @@ fun ProductScreen(
                         )
 
                         TextField(
-                            value = viewModel.product.collectAsState().value?.arrivalPrice.toString(),
+                            value = viewModel.product.collectAsState().value?.costPrice.toString(),
                             onValueChange = {},
                             leadingIcon = {
                                 Text(
-                                    text = "Arrival Price : ",
+                                    text = "Cost Price : ",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(start = 10.dp),
@@ -415,12 +581,11 @@ fun ProductScreen(
                         )
 
                         TextField(
-                            value = viewModel.product.collectAsState().value?.sellingPrice ?: "",
+                            value = viewModel.product.collectAsState().value?.sellingPrice.toString() ?: "",
                             onValueChange = {},
                             leadingIcon = {
                                 Text(
                                     text = "Selling Price : ",
-                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(start = 10.dp),
                                     color = Grey
@@ -450,11 +615,44 @@ fun ProductScreen(
                         )
 
                         TextField(
-                            value = viewModel.product.collectAsState().value?.storageLocation ?: "",
+                            value = viewModel.product.collectAsState().value?.markupPercentage.toString() ?: "",
                             onValueChange = {},
                             leadingIcon = {
                                 Text(
-                                    text = "Storage Location : ",
+                                    text = "Markup Percentage : ",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 10.dp),
+                                    color = Grey
+                                )
+                            },
+                            colors = TextFieldDefaults.colors(
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Default,
+                                capitalization = KeyboardCapitalization.Sentences
+                            ),
+                            keyboardActions = KeyboardActions(onNext = {
+                                focusManager.moveFocus(
+                                    FocusDirection.Down
+                                )
+                            }),
+                            maxLines = 4,
+
+                            textStyle = TextStyle(
+                                textAlign = TextAlign.End
+                            ),
+                        )
+
+                        TextField(
+                            value = viewModel.product.collectAsState().value?.supplierName ?: "",
+                            onValueChange = {},
+                            leadingIcon = {
+                                Text(
+                                    text = "Supplier Name : ",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(start = 10.dp),
@@ -483,73 +681,104 @@ fun ProductScreen(
 
                         )
 
-
-                        Spacer(modifier = Modifier.height(40.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 10.dp),
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(imageVector = label, contentDescription = "Categories")
-                            Text(text = "Categories : ")
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 10.dp),
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            FilterChip(
-                                selected = false,
-                                onClick = {  },
-                                label = { Text("Electrical") },
-                                shape = RoundedCornerShape(100),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = BlueA700,
-                                    containerColor = CardGrey,
-                                    selectedLabelColor = Color.White,
-                                    selectedLeadingIconColor = Color.White,
-                                    disabledContainerColor = DarkGrey,
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = false,
-                                    selected = false,
-                                    disabledBorderColor = Color.Transparent
+                        TextField(
+                            value = viewModel.product.collectAsState().value?.isActive.toString() ?: "",
+                            onValueChange = {},
+                            leadingIcon = {
+                                Text(
+                                    text = "Is Active : ",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 10.dp),
+                                    color = Grey
                                 )
+                            },
+                            colors = TextFieldDefaults.colors(
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Default,
+                                capitalization = KeyboardCapitalization.Sentences
+                            ),
+                            keyboardActions = KeyboardActions(onNext = {
+                                focusManager.moveFocus(
+                                    FocusDirection.Down
+                                )
+                            }),
+                            maxLines = 4,
 
+                            textStyle = TextStyle(
+                                textAlign = TextAlign.End
+                            ),
+                        )
+
+                        Row (
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp)
+
+                        ){
+                            Text(
+                                text = "Created At : ",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(start = 10.dp),
+                                color = Grey
                             )
-
-                            FilterChip(
-                                selected = false,
-                                onClick = { },
-                                label = { Text("Add") },
-                                shape = RoundedCornerShape(100),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = BlueA700,
-                                    containerColor = CardGrey,
-                                    selectedLabelColor = Color.White,
-                                    selectedLeadingIconColor = Color.White,
-                                    disabledContainerColor = DarkGrey,
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(enabled = false, selected = false)
-
+                            FormattedTime(
+                                time = viewModel.product.collectAsState().value?.createdAt!!,
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(end = 10.dp)
                             )
                         }
+
+                        Box(
+                            Modifier.fillMaxWidth().height(1.dp).background(DarkGrey)
+                        )
+                        Row (
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp)
+
+                        ) {
+                            Text(
+                                text = "Updated At : ",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(start = 10.dp),
+                                color = Grey
+                            )
+                            FormattedTime(
+                                time = viewModel.product.collectAsState().value?.updatedAt!!,
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(end = 10.dp)
+                            )
+                        }
+
+
+
+
+
 
 
 
                         Spacer(modifier = Modifier.height(20.dp))
-                        Column {
+                        Column (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(25))
+                                .background(CardGrey)
+                                .padding( horizontal = 20.dp)
+                        ){
                             var dropDownState by remember { mutableStateOf(false) }
 
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 10.dp),
+                                    //.padding(horizontal = 10.dp)
+                                    ,
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -557,8 +786,8 @@ fun ProductScreen(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(imageVector = vehicleIcon, contentDescription = "Vehicles")
-                                    Text(text = "Vehicles : ")
+                                    Icon(imageVector = vehicleIcon, contentDescription = "Vehicle Compatibility")
+                                    Text(text = "Vehicle Compatibility : ")
                                 }
 
                                 IconButton(onClick = { dropDownState = !dropDownState }) {
@@ -567,7 +796,7 @@ fun ProductScreen(
 
                             }
 
-                            AnimatedVisibility(visible = productVehicles.isNotEmpty()) {
+                            AnimatedVisibility(visible = false) {
                                 FlowRow(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -576,11 +805,6 @@ fun ProductScreen(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     productVehicles.forEach {
-                                        VehiclesFilterChips(
-                                            vehicle = it,
-                                            showRemoveButton = false,
-                                            onRemoveButtonClick = {}
-                                        )
 
                                     }
                                 }
@@ -588,7 +812,7 @@ fun ProductScreen(
                             }
 
                             AnimatedVisibility(visible = productVehicles.isEmpty()) {
-                                Text(text = "No stock for any specific vehicles")
+                                Text(text = "Not specified", modifier = Modifier.padding(bottom = 10.dp))
                             }
 
                             DropdownMenu(

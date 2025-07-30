@@ -273,7 +273,7 @@ fun CategoriesScreen(
                                                     ProductCards(
                                                         product = product,
                                                         onNavigate = {
-                                                            navController.navigate("${Route.Product.path}/${product.id}")
+                                                            navController.navigate("${Route.Product.path}/${product.productId}")
                                                         }
                                                     )
                                                 }

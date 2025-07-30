@@ -209,7 +209,7 @@ fun ProductsScreen(
                                 navController.navigate(
                                     Route.Product.path.replace(
                                         "{productId}",
-                                        product.id.toString()
+                                        product.productId.toString()
                                     )
                                 )
                             }

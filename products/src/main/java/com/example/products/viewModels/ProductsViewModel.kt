@@ -117,7 +117,7 @@ class ProductsViewModel @Inject constructor(
         viewModelScope.launch {
             val currentProducts = _products.value
             _filteredProducts.value = currentProducts.filter {
-                it.partName.contains(searchQuery.value, ignoreCase = true) || it.partNumber.contains(searchQuery.value, ignoreCase = true)
+                it.productName.contains(searchQuery.value, ignoreCase = true) || it.productCode.contains(searchQuery.value, ignoreCase = true)
             }
         }
     }

@@ -31,7 +31,7 @@ class NetworkManager @Inject constructor(
     private val monitorScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val logger = Logger.getLogger(NetworkManager::class.java.name)
 
-    val localServerIp = "10.56.110.123"
+    val localServerIp = "10.234.238.123"
     private val remoteServer = "api.silverstarzw.com"
     private val port = "5000"
 
@@ -151,11 +151,11 @@ class NetworkManager @Inject constructor(
         val newUrl = when (_networkState.value) {
             is NetworkState.Connected -> {
                 when ((_networkState.value as NetworkState.Connected).type) {
-                    NetworkType.LOCAL_WIFI -> "http://$localServerIp:$port"
-                    else -> "http://$localServerIp:$port"  //REMOVE LOCALSERVER IP AND REPLACE WITH REMOTE SERVER
+                    NetworkType.LOCAL_WIFI -> "http://$localServerIp:$port/"
+                    else -> "http://$localServerIp:$port/api/"  //REMOVE LOCALSERVER IP AND REPLACE WITH REMOTE SERVER
                 }
             }
-            NetworkState.Disconnected -> "http://$localServerIp:$port" //REMOVE LOCALSERVER IP AND REPLACE WITH REMOTE SERVER
+            NetworkState.Disconnected -> "http://$localServerIp:$port/" //REMOVE LOCALSERVER IP AND REPLACE WITH REMOTE SERVER
         }
 
         currentBaseUrl = newUrl

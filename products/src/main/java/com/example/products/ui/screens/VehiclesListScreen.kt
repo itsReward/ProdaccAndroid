@@ -240,7 +240,7 @@ fun VehiclesListScreen(
                                                 navController.navigate(
                                                     Route.Product.path.replace(
                                                         "{productId}",
-                                                        it.id.toString()
+                                                        it.productId.toString()
                                                     )
                                                 )
                                             }

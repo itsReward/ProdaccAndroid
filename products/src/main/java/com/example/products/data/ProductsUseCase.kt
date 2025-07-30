@@ -27,6 +27,9 @@ interface ProductsUseCase {
 
     suspend fun addVehicleToProduct(productId: UUID, vehicleId: UUID): Flow<Resource<Unit>>
 
+    suspend fun addCategoryToProduct(productId: UUID, categoryId: UUID): Flow<Resource<Unit>>
+    suspend fun removeCategoryFromProduct(productId: UUID, categoryId: UUID): Flow<Resource<Unit>>
+
     suspend fun deleteProduct(id: UUID): Flow<Resource<Unit>>
     suspend fun deleteVehicle(id: UUID): Flow<Resource<Unit>>
     suspend fun deleteCategory(id: UUID): Flow<Resource<Unit>>

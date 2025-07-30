@@ -37,6 +37,18 @@ class ViewProductViewModel @Inject constructor(
     private val _categories = MutableStateFlow<List<ProductCategory>>(emptyList())
     val categories = _categories.asStateFlow()
 
+    private val _addCategoryState = MutableStateFlow<OperationState>(OperationState.Idle)
+    val addCategoryState = _addCategoryState.asStateFlow()
+
+    private val _removeCategoryState = MutableStateFlow<OperationState>(OperationState.Idle)
+    val removeCategoryState = _removeCategoryState.asStateFlow()
+
+    private val _showCategorySelectionSheet = MutableStateFlow(false)
+    val showCategorySelectionSheet = _showCategorySelectionSheet.asStateFlow()
+
+    private val _availableCategories = MutableStateFlow<List<ProductCategory>>(emptyList())
+    val availableCategories = _availableCategories.asStateFlow()
+
     // State for Vehicles
     private val _vehicles = MutableStateFlow<List<ProductVehicle>>(emptyList())
     val vehicles = _vehicles.asStateFlow()
@@ -117,9 +129,10 @@ class ViewProductViewModel @Inject constructor(
                         is Resource.Loading -> _vehicleLoadingState.value = OperationState.Loading
                         is Resource.Success -> {
                             _vehicleLoadingState.value = OperationState.Success(resource.data)
-                            _vehicles.value = resource.data.filter { !_product.value?.vehicles?.contains(it)!!
+
+                            /*_vehicles.value = resource.data.filter { !_product.value?.vehicles?.contains(it)!!
                                 ?: false }
-                            _filteredVehicles.value = _vehicles.value
+                            _filteredVehicles.value = _vehicles.value*/
                         }
                     }
                 }
@@ -233,6 +246,86 @@ class ViewProductViewModel @Inject constructor(
     // Additional methods to manage product-category and product-vehicle relationships
     fun associateProductWithCategory(productId: UUID, categoryId: UUID) {
         // Implementation depends on your backend API
+    }
+
+    fun toggleCategorySelectionSheet() {
+        _showCategorySelectionSheet.value = !_showCategorySelectionSheet.value
+    }
+
+    fun addCategoryToProduct(categoryId: UUID) {
+        val currentProduct = _product.value ?: return
+
+        _addCategoryState.value = OperationState.Loading
+        viewModelScope.launch {
+            try {
+                productsUseCase.addCategoryToProduct(currentProduct.productId, categoryId).collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            _addCategoryState.value = OperationState.Success(resource)
+                            // Refresh product data to get updated categories
+                            fetchProduct()
+                        }
+                        is Resource.Error -> {
+                            _addCategoryState.value = OperationState.Error(resource.message ?: "Failed to add category")
+                        }
+                        is Resource.Loading -> {
+                            _addCategoryState.value = OperationState.Loading
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _addCategoryState.value = OperationState.Error(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    fun removeCategoryFromProduct(categoryId: UUID) {
+        val currentProduct = _product.value ?: return
+
+        _removeCategoryState.value = OperationState.Loading
+        viewModelScope.launch {
+            try {
+                productsUseCase.removeCategoryFromProduct(currentProduct.productId, categoryId).collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            _removeCategoryState.value = OperationState.Success(resource)
+                            // Refresh product data to get updated categories
+                            fetchProduct()
+                        }
+                        is Resource.Error -> {
+                            _removeCategoryState.value = OperationState.Error(resource.message ?: "Failed to remove category")
+                        }
+                        is Resource.Loading -> {
+                            _removeCategoryState.value = OperationState.Loading
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _removeCategoryState.value = OperationState.Error(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    private fun loadCategories() {
+        viewModelScope.launch {
+            try {
+                productsUseCase.getCategories().collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            _categories.value = resource.data ?: emptyList()
+                        }
+                        is Resource.Error -> {
+                            // Handle error if needed
+                        }
+                        is Resource.Loading -> {
+                            // Handle loading if needed
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle exception
+            }
+        }
     }
 
     fun associateProductWithVehicle(productId: UUID, vehicleId: UUID) {

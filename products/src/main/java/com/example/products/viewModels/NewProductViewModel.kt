@@ -10,127 +10,287 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID // Import UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class NewProductViewModel @Inject constructor(
     private val productsUseCase: ProductsUseCase
-): ViewModel() {
+) : ViewModel() {
     // Operation States
     private val _addProductState = MutableStateFlow<OperationState>(OperationState.Idle)
     val addProductState = _addProductState.asStateFlow()
 
-    private val _product = MutableStateFlow(NewProduct())
+    // Holds the complete NewProduct object being built
+    private val _product = MutableStateFlow(
+        NewProduct( // Initialize with default non-null values for required fields
+            productCode = "",
+            productName = "",
+            minimumStock = 0, // Default or consider making these string inputs too
+            maximumStock = 0,
+            costPrice = 0f,
+            sellingPrice = 0f,
+            markupPercentage = 0f
+        )
+    )
     val product = _product.asStateFlow()
 
-    private val _error = MutableStateFlow("")
-    val error = _error.asStateFlow()
+    // StateFlows for string inputs that need conversion/validation
+    // It's often cleaner to manage all text field inputs as strings initially
+    private val _productCodeString = MutableStateFlow("")
+    val productCodeString = _productCodeString.asStateFlow()
 
-    private val _inStock = MutableStateFlow("")
-    val inStock = _inStock.asStateFlow()
+    private val _productNameString = MutableStateFlow("")
+    val productNameString = _productNameString.asStateFlow()
 
-    private val _healthyNumber = MutableStateFlow("")
-    val healthyNumber = _healthyNumber.asStateFlow()
+    private val _descriptionString = MutableStateFlow("") // For optional field, can be empty
+    val descriptionString = _descriptionString.asStateFlow()
 
-    private val _arrivalPrice = MutableStateFlow("")
-    val arrivalPrice = _arrivalPrice.asStateFlow()
+    private val _categoryIdString = MutableStateFlow("")
+    val categoryIdString = _categoryIdString.asStateFlow()
 
-    private val _sellingPrice = MutableStateFlow("")
-    val sellingPrice = _sellingPrice.asStateFlow()
+    private val _brandString = MutableStateFlow("")
+    val brandString = _brandString.asStateFlow()
 
-    val errorMessage = "Required Field"
+    private val _unitOfMeasureString = MutableStateFlow("")
+    val unitOfMeasureString = _unitOfMeasureString.asStateFlow()
 
-    fun updateProduct(product: NewProduct){
-        _product.value = product
+    private val _minimumStockString = MutableStateFlow("")
+    val minimumStockString = _minimumStockString.asStateFlow()
+
+    private val _maximumStockString = MutableStateFlow("")
+    val maximumStockString = _maximumStockString.asStateFlow()
+
+    private val _costPriceString = MutableStateFlow("")
+    val costPriceString = _costPriceString.asStateFlow()
+
+    private val _sellingPriceString = MutableStateFlow("")
+    val sellingPriceString = _sellingPriceString.asStateFlow()
+
+    private val _markupPercentageString = MutableStateFlow("")
+    val markupPercentageString = _markupPercentageString.asStateFlow()
+
+    private val _supplierIdString = MutableStateFlow("")
+    val supplierIdString = _supplierIdString.asStateFlow()
+
+    // Error state for individual fields. Key is field name, value is error message or boolean.
+    // Using a single string to indicate the field with the first error found.
+    private val _errorField = MutableStateFlow<String?>(null)
+    val errorField = _errorField.asStateFlow()
+
+    val errorMessage = "Required Field" // Can be used generally or per field
+
+    // --- onChange functions for each input field ---
+
+    fun onProductCodeChange(code: String) {
+        _productCodeString.value = code
+        if (_errorField.value == "productCode") _errorField.value = null // Clear error on change
     }
 
-    fun onChangePartNumber(partNumber: String){
-        _product.value = _product.value.copy(partNumber = partNumber)
+    fun onProductNameChange(name: String) {
+        _productNameString.value = name
+        if (_errorField.value == "productName") _errorField.value = null
     }
 
-    fun onChangePartName(partName:String){
-        _product.value = _product.value.copy(partName = partName)
+    fun onDescriptionChange(description: String) {
+        _descriptionString.value = description
     }
 
-    fun onDescriptionChange(description: String){
-        _product.value = _product.value.copy(description = description)
+    fun onCategoryIdChange(id: String) {
+        _categoryIdString.value = id
+        // Optionally validate UUID format as user types or on blur
     }
 
-    fun onInStockChange(inStock : String){
-        _inStock.value = inStock
-
+    fun onBrandChange(brand: String) {
+        _brandString.value = brand
     }
 
-    fun onHealthyNumberChange(healthyNumber: String){
-        _healthyNumber.value = healthyNumber
+    fun onUnitOfMeasureChange(unit: String) {
+        _unitOfMeasureString.value = unit
     }
 
-    fun onArrivalPriceChange(arrivalPrice: String){
-        _arrivalPrice.value = arrivalPrice
+    fun onMinimumStockChange(stock: String) {
+        _minimumStockString.value = stock.filter { it.isDigit() } // Allow only digits
+        if (_errorField.value == "minimumStock") _errorField.value = null
     }
 
-    fun onSellingPriceChange(sellingPrice: String){
-        _sellingPrice.value = sellingPrice
+    fun onMaximumStockChange(stock: String) {
+        _maximumStockString.value = stock.filter { it.isDigit() }
+        if (_errorField.value == "maximumStock") _errorField.value = null
     }
 
-    fun onStorageLocationChange(storageLocation: String){
-        _product.value = _product.value.copy(storageLocation = storageLocation)
+    fun onCostPriceChange(price: String) {
+        _costPriceString.value = price // Allow decimal point, handle validation later
+        if (_errorField.value == "costPrice") _errorField.value = null
     }
 
-    private fun onCheckValidation(){
-        _error.value = if (_product.value.partNumber==null) "partNumber"
-        else if (_product.value.partName==null) "partName"
-        else if (_product.value.description==null) "description"
-        else if (_product.value.storageLocation==null) "storageLocation"
-        else "noError"
-
-        try { updateProduct(_product.value.copy(inStock = _inStock.value.toFloat()))} catch (e: Exception) {_error.value = "inStock"}
-        try { updateProduct(_product.value.copy(healthyNumber = _healthyNumber.value.toFloat())) } catch (e: Exception) {_error.value = "healthyNumber"}
-        try { updateProduct(_product.value.copy(arrivalPrice = _arrivalPrice.value.toFloat())) } catch (e: Exception) {_error.value = "arrivalPrice"}
-        try { updateProduct(_product.value.copy(sellingPrice = _sellingPrice.value.toFloat())) } catch (e:Exception){ _error.value = "sellingPrice" }
-
+    fun onSellingPriceChange(price: String) {
+        _sellingPriceString.value = price
+        if (_errorField.value == "sellingPrice") _errorField.value = null
     }
-    fun saveProduct(){
-        onCheckValidation()
-        if (_error.value == "noError"){
-            addProduct(_product.value)
+
+    fun onMarkupPercentageChange(percentage: String) {
+        _markupPercentageString.value = percentage
+        if (_errorField.value == "markupPercentage") _errorField.value = null
+    }
+
+    fun onSupplierIdChange(id: String) {
+        _supplierIdString.value = id
+    }
+
+    private fun validateAndBuildProduct(): NewProduct? {
+        _errorField.value = null // Reset errors
+
+        val productCode = _productCodeString.value.trim()
+        if (productCode.isEmpty()) {
+            _errorField.value = "productCode"
+            return null
         }
+
+        val productName = _productNameString.value.trim()
+        if (productName.isEmpty()) {
+            _errorField.value = "productName"
+            return null
+        }
+
+        val minimumStock = _minimumStockString.value.toIntOrNull()
+        if (minimumStock == null) {
+            _errorField.value = "minimumStock"
+            return null
+        }
+
+        val maximumStock = _maximumStockString.value.toIntOrNull()
+        if (maximumStock == null) {
+            _errorField.value = "maximumStock"
+            return null
+        }
+        if (maximumStock < minimumStock) {
+            _errorField.value = "maximumStock" // Or a more specific error like "maxStockLessThanMin"
+            // You might want a different error message here.
+            return null
+        }
+
+
+        val costPrice = _costPriceString.value.toFloatOrNull()
+        if (costPrice == null) {
+            _errorField.value = "costPrice"
+            return null
+        }
+
+        val sellingPrice = _sellingPriceString.value.toFloatOrNull()
+        if (sellingPrice == null) {
+            _errorField.value = "sellingPrice"
+            return null
+        }
+
+        val markupPercentage = _markupPercentageString.value.toFloatOrNull()
+        if (markupPercentage == null) {
+            _errorField.value = "markupPercentage"
+            return null
+        }
+
+        val categoryId = _categoryIdString.value.trim().let {
+            if (it.isEmpty()) null else try { UUID.fromString(it) } catch (e: IllegalArgumentException) {
+                _errorField.value = "categoryId"
+                return null // Invalid UUID format
+            }
+        }
+        // If an error occurred with categoryId conversion and it was set, return null
+        if (_errorField.value == "categoryId") return null
+
+
+        val supplierId = _supplierIdString.value.trim().let {
+            if (it.isEmpty()) null else try { UUID.fromString(it) } catch (e: IllegalArgumentException) {
+                _errorField.value = "supplierId"
+                return null // Invalid UUID format
+            }
+        }
+        // If an error occurred with supplierId conversion and it was set, return null
+        if (_errorField.value == "supplierId") return null
+
+        return NewProduct(
+            productCode = productCode,
+            productName = productName,
+            description = _descriptionString.value.trim().takeIf { it.isNotEmpty() },
+            categoryId = categoryId,
+            brand = _brandString.value.trim().takeIf { it.isNotEmpty() },
+            unitOfMeasure = _unitOfMeasureString.value.trim().takeIf { it.isNotEmpty() },
+            minimumStock = minimumStock,
+            maximumStock = maximumStock,
+            costPrice = costPrice,
+            sellingPrice = sellingPrice,
+            markupPercentage = markupPercentage,
+            supplierId = supplierId
+        )
     }
 
+    fun saveProduct() {
+        val newProductInstance = validateAndBuildProduct()
+        if (newProductInstance != null) {
+            addProduct(newProductInstance)
+        }
+        // If newProductInstance is null, _errorField is already set by validateAndBuildProduct()
+        // and the UI will react to it.
+    }
 
-    private fun addProduct(newProduct: NewProduct) {
+    private fun addProduct(productToSave: NewProduct) {
         viewModelScope.launch {
             _addProductState.value = OperationState.Loading
             try {
-                productsUseCase.addNewProduct(newProduct).collect { resource ->
+                // Assuming productsUseCase.addNewProduct returns Flow<Resource<Product>>
+                productsUseCase.addNewProduct(productToSave).collect { resource ->
                     when (resource) {
                         is Resource.Success -> {
-                            resource.data.let { product ->
-                                EventBus.emit(EventBus.ProductEvent.NewProduct)
-                                _product.value = NewProduct()
-                                _addProductState.value = OperationState.Success(product)
-                            } ?: run {
-                                _addProductState.value = OperationState.Error("No data returned")
+                            val returnedProduct = resource.data
+                            if (returnedProduct != null) {
+                                // EventBus.emit(EventBus.ProductEvent.NewProduct) // If you use EventBus
+                                clearForm() // Clear inputs on success
+                                _addProductState.value = OperationState.Success(returnedProduct)
+                            } else {
+                                _addProductState.value = OperationState.Error("No data returned from server.")
                             }
                         }
                         is Resource.Error -> {
-                            _addProductState.value = OperationState.Error(resource.message ?: "Unknown error")
+                            _addProductState.value = OperationState.Error(resource.message ?: "Unknown error occurred while adding product.")
                         }
                         is Resource.Loading -> {
-                            _addProductState.value = OperationState.Loading
+                            _addProductState.value = OperationState.Loading // Handled by initial state, but good practice
                         }
                     }
                 }
             } catch (e: Exception) {
-                _addProductState.value = OperationState.Error(e.message ?: "Unknown error occurred")
+                _addProductState.value = OperationState.Error(e.message ?: "An unexpected error occurred.")
             }
         }
     }
 
+    private fun clearForm() {
+        _productCodeString.value = ""
+        _productNameString.value = ""
+        _descriptionString.value = ""
+        _categoryIdString.value = ""
+        _brandString.value = ""
+        _unitOfMeasureString.value = ""
+        _minimumStockString.value = ""
+        _maximumStockString.value = ""
+        _costPriceString.value = ""
+        _sellingPriceString.value = ""
+        _markupPercentageString.value = ""
+        _supplierIdString.value = ""
+        _errorField.value = null
+        // Also reset the _product state if it was used for anything other than being the target of the form
+        _product.value = NewProduct(productCode = "", productName = "", minimumStock = 0, maximumStock = 0, costPrice = 0f, sellingPrice = 0f, markupPercentage = 0f)
+    }
+
+    fun resetOperationState() {
+        _addProductState.value = OperationState.Idle
+    }
+
+    // Sealed class for operation state (Success should ideally carry the created Product)
     sealed class OperationState {
         data object Idle : OperationState()
         data object Loading : OperationState()
-        data class Success(val data: Product) : OperationState()
+        data class Success(val data: Product) : OperationState() // Assuming Product is the type returned on success
         data class Error(val message: String) : OperationState()
     }
 }

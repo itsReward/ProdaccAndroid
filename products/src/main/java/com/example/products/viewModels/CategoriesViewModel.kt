@@ -116,8 +116,8 @@ class CategoriesViewModel @Inject constructor(
                 category.name.contains(query, ignoreCase = true) ||
                         category.description?.contains(query, ignoreCase = true) == true ||
                         category.product.any { product ->
-                            product.partName.contains(query, ignoreCase = true) ||
-                                    product.partNumber.contains(query, ignoreCase = true)
+                            product.productName.contains(query, ignoreCase = true) ||
+                                    product.productCode.contains(query, ignoreCase = true)
                         }
             }
         }

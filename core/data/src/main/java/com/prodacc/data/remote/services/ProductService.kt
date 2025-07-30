@@ -19,7 +19,7 @@ import java.util.UUID
 
 interface ProductService {
     //Product Requests
-    @GET("/products")
+    @GET("/products/all")
     suspend fun getProducts(): Response<List<Product>>
 
     @GET("/products/{id}")

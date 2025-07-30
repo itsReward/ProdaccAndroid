@@ -28,7 +28,7 @@ fun ProductCards(
     onNavigate: () -> Unit
 ) {
     val stockColor =
-        if (product.inStock > product.healthyNumber) DarkGreen else if (product.inStock == product.healthyNumber) Orange else Red
+        if (product.currentStock > product.minimumStock) DarkGreen else if (product.currentStock == product.minimumStock) Orange else Red
 
     Row(
         modifier = Modifier
@@ -51,13 +51,13 @@ fun ProductCards(
             verticalArrangement = Arrangement.Center
         ) {
 
-            Text(text = product.partName, fontWeight = FontWeight.Medium)
+            Text(text = product.productName, fontWeight = FontWeight.Medium)
             Row(
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "Part No. : ", style = MaterialTheme.typography.labelMedium)
-                Text(text = product.partNumber, style = MaterialTheme.typography.bodyMedium)
+                Text(text = product.productCode, style = MaterialTheme.typography.bodyMedium)
             }
         }
         Column(
@@ -73,7 +73,7 @@ fun ProductCards(
                     color = stockColor
                 )
                 Text(
-                    text = "${product.inStock}",
+                    text = "${product.currentStock}",
                     color = stockColor,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold

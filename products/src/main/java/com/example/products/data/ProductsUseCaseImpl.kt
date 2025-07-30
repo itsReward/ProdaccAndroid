@@ -81,4 +81,18 @@ class ProductsUseCaseImpl @Inject constructor(
     override suspend fun updateCategory(id: UUID, category: ProductCategory): Flow<Resource<ProductCategory>> {
         return repository.updateCategory(id, category)
     }
+
+    override suspend fun addCategoryToProduct(
+        productId: UUID,
+        categoryId: UUID
+    ): Flow<Resource<Unit>> {
+        return repository.addCategoryToProduct(productId, categoryId)
+    }
+
+    override suspend fun removeCategoryFromProduct(
+        productId: UUID,
+        categoryId: UUID
+    ): Flow<Resource<Unit>> {
+        return repository.removeCategoryFromProduct(productId, categoryId)
+    }
 }
