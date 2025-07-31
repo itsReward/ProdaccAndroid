@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Male
@@ -115,6 +117,8 @@ val send = Icons.AutoMirrored.Filled.Send
 val categories = Icons.Filled.Category
 val label = Icons.AutoMirrored.Filled.Label
 val history = Icons.Default.History
+val filterOn = Icons.Default.FilterList
+val filterOff = Icons.Default.FilterListOff
 
 val pretendard = FontFamily(
     Font(R.font.pretendard_thin, FontWeight.Thin),

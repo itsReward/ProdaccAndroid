@@ -52,7 +52,7 @@ class ApiServiceContainer @Inject constructor(
     private var _employeeService: EmployeeService = retrofit.create(EmployeeService::class.java)
     private var _userService: UserService = retrofit.create(UserService::class.java)
     private var _productService: ProductService = retrofit.create(ProductService::class.java)
-    private var _inventoryTransactionSevive: InventoryTransactionService = retrofit.create(InventoryTransactionService::class.java)
+    private var _inventoryTransactionService: InventoryTransactionService = retrofit.create(InventoryTransactionService::class.java)
     private var _controlChecklistService = retrofit.create(ControlChecklistService::class.java)
     private var _jobCardReportService = retrofit.create(JobCardReportService::class.java)
     private var _jobCardStatusService = retrofit.create(JobCardStatusService::class.java)
@@ -99,7 +99,7 @@ class ApiServiceContainer @Inject constructor(
         _timesheetService = retrofit.create(TimesheetService::class.java)
         _commentService = retrofit.create(CommentService::class.java)
         _productService = retrofit.create(ProductService::class.java)
-        _inventoryTransactionSevive = retrofit.create(InventoryTransactionService::class.java)
+        _inventoryTransactionService = retrofit.create(InventoryTransactionService::class.java)
     }
 
     // Service getters
@@ -118,7 +118,7 @@ class ApiServiceContainer @Inject constructor(
     val timesheetService: TimesheetService get() = _timesheetService
     val commentService: CommentService get() = _commentService
     val productService: ProductService get() = _productService
-    val inventoryTransactionService: InventoryTransactionService get() = _inventoryTransactionSevive
+    val inventoryTransactionService: InventoryTransactionService get() = _inventoryTransactionService
 
     fun cleanup() {
         networkManager.removeNetworkChangeListener(this)

@@ -1,6 +1,7 @@
 package com.prodacc.data.remote.services
 
 import com.prodacc.data.remote.dao.product.InventoryTransaction
+import com.prodacc.data.remote.dao.product.NewInventoryTransaction
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -16,7 +17,7 @@ interface InventoryTransactionService {
     suspend fun getInventoryTransactionsForVehicle(vehicleId: UUID): Response<List<InventoryTransaction>>
 
     @POST("/inventory-transactions/new")
-    suspend fun createInventoryTransaction(transaction: InventoryTransaction): Response<InventoryTransaction>
+    suspend fun createInventoryTransaction(transaction: NewInventoryTransaction): Response<InventoryTransaction>
 
 
 }
